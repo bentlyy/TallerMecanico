@@ -1,6 +1,10 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:15
+    ports:
+    - "5432:5432"
     environment:
       POSTGRES_USER: taller_user
       POSTGRES_PASSWORD: taller_password
@@ -22,3 +26,9 @@ services:
       DATABASE_URL: "postgresql://taller_user:taller_password@db:5432/taller_db?schema=public"
     ports:
       - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:

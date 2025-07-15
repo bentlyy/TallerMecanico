@@ -1,6 +1,6 @@
 import { PrismaClienteRepository } from '../db/prismaClienteRepository';
-import { ClienteRepository } from '../../domain/repositories/clienteRepository';
 import { PrismaVehiculoRepository } from "../db/prismaVehiculoRepository";
+import { ClienteRepository } from '../../domain/repositories/clienteRepository';
 import { VehiculoService } from "../../application/vehiculoService";
 
 const clienteRepository: ClienteRepository = new PrismaClienteRepository();
