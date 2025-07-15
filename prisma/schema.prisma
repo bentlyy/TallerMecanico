@@ -75,7 +75,7 @@ model vehiculos {
   id          Int      @id @default(autoincrement())
   marca       String
   modelo      String
-  año         Int?
+  anio        Int?
   patente     String   @unique
   kilometraje Int?
   cliente_id  Int
