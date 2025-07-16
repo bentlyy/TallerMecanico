@@ -1,30 +1,38 @@
-import { PiezaRepository } from "../domain/repositories/piezaRepository";
-import { Pieza } from "../domain/entities/pieza";
+import { PiezaRepository } from '../domain/repositories/piezaRepository';
+import { Pieza } from '../domain/entities/pieza';
 
 export class PiezaService {
-  constructor(private piezaRepository: PiezaRepository) {}
+  constructor(private readonly repository: PiezaRepository) {}
 
-  async listarPiezas(): Promise<Pieza[]> {
-    return this.piezaRepository.getAll();
+  async getAllPiezas(): Promise<Pieza[]> {
+    return this.repository.getAll();
   }
 
-  async obtenerPieza(id: number): Promise<Pieza | null> {
-    return this.piezaRepository.getById(id);
+  async getPiezaById(id: number): Promise<Pieza | null> {
+    return this.repository.getById(id);
   }
 
-  async obtenerPorCodigo(codigo: string): Promise<Pieza | null> {
-    return this.piezaRepository.getByCodigo(codigo);
+  async createPieza(data: Pieza): Promise<Pieza> {
+    return this.repository.create(data);
   }
 
-  async crearPieza(data: Omit<Pieza, "id">): Promise<Pieza> {
-    return this.piezaRepository.create(data);
+  async updatePieza(id: number, data: Partial<Pieza>): Promise<Pieza | null> {
+    return this.repository.update(id, data);
   }
 
-  async actualizarPieza(id: number, data: Partial<Omit<Pieza, "id">>): Promise<Pieza | null> {
-    return this.piezaRepository.update(id, data);
+  async deletePieza(id: number): Promise<void> {
+    return this.repository.delete(id);
   }
 
-  async eliminarPieza(id: number): Promise<void> {
-    return this.piezaRepository.delete(id);
+  async getPiezaByCodigo(codigo: string): Promise<Pieza | null> {
+    return this.repository.getByCodigo(codigo);
+  }
+
+  async actualizarStock(id: number, nuevaCantidad: number): Promise<Pieza | null> {
+    return this.repository.updateStock(id, nuevaCantidad);
+  }
+
+  async descontarStock(id: number, cantidad: number): Promise<Pieza | null> {
+    return this.repository.decreaseStock(id, cantidad);
   }
 }

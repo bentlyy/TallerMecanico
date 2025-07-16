@@ -1,13 +1,20 @@
-// import { Router } from "express";
-// import { DetalleReparacionController } from "../controllers/detalleReparacionController";
-// import { container } from "../../infrastructure/di/container";
+import { Router } from 'express';
+import { DetalleReparacionController } from '../controllers/detalleReparacionController';
+import { DetalleReparacionService } from '../../application/detalleReparacionService';
+import { PrismaDetalleReparacionRepository } from '../../infrastructure/db/prismaDetalleReparacionRepository';
+import { prisma } from '../../infrastructure/db/prisma';
 
-// const router = Router();
-// const controller = new DetalleReparacionController(container.detalleReparacionService);
+const detalleRouter = Router();
 
-// router.get("/:reparacionId", controller.getByReparacion);
-// router.post("/", controller.add);
-// router.put("/:reparacionId/:piezaId", controller.update);
-// router.delete("/:reparacionId/:piezaId", controller.delete);
+const repository = new PrismaDetalleReparacionRepository(prisma);
+const service = new DetalleReparacionService(repository);
+const controller = new DetalleReparacionController(service);
 
-// export default router;
+// Rutas para detalles de reparación
+detalleRouter.post('/reparacion/:reparacionId/detalle', controller.agregar.bind(controller));
+detalleRouter.delete('/reparacion/:reparacionId/detalle/:piezaId', controller.eliminar.bind(controller));
+detalleRouter.put('/reparacion/:reparacionId/detalle/:piezaId', controller.actualizar.bind(controller));
+detalleRouter.get('/reparacion/:reparacionId/detalles', controller.getDetalles.bind(controller));
+detalleRouter.get('/reparacion/:reparacionId/total-repuestos', controller.calcularTotal.bind(controller));
+
+export default detalleRouter;

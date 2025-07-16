@@ -1,29 +1,81 @@
-import { Request, Response } from "express";
-import { DetalleReparacionService } from "../../application/detalleReparacionService";
+import { Request, Response } from 'express';
+import { DetalleReparacionService } from '../../application/detalleReparacionService';
 
 export class DetalleReparacionController {
-  constructor(private service: DetalleReparacionService) {}
+  constructor(private readonly detalleService: DetalleReparacionService) {}
 
-  getByReparacion = async (req: Request, res: Response) => {
-    const reparacionId = parseInt(req.params.reparacionId);
-    const detalles = await this.service.obtenerPorReparacion(reparacionId);
-    res.json(detalles);
-  };
+  async agregar(req: Request, res: Response) {
+    try {
+      const reparacionId = parseInt(req.params.reparacionId);
+      const { piezaId, cantidad, precioUnitario } = req.body;
+      
+      if (!piezaId || !cantidad || !precioUnitario) {
+        return res.status(400).json({ error: 'Faltan campos obligatorios' });
+      }
+      
+      const detalle = await this.detalleService.agregarDetalle(
+        reparacionId,
+        piezaId,
+        cantidad,
+        precioUnitario
+      );
+      
+      res.status(201).json(detalle);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al agregar detalle' });
+    }
+  }
 
-  add = async (req: Request, res: Response) => {
-    const detalle = await this.service.agregarDetalle(req.body);
-    res.status(201).json(detalle);
-  };
+  async eliminar(req: Request, res: Response) {
+    try {
+      const reparacionId = parseInt(req.params.reparacionId);
+      const piezaId = parseInt(req.params.piezaId);
+      
+      await this.detalleService.eliminarDetalle(reparacionId, piezaId);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Error al eliminar detalle' });
+    }
+  }
 
-  update = async (req: Request, res: Response) => {
-    const { reparacionId, piezaId } = req.params;
-    const updated = await this.service.actualizarDetalle(parseInt(reparacionId), parseInt(piezaId), req.body);
-    updated ? res.json(updated) : res.status(404).json({ error: "Detalle no encontrado" });
-  };
+  async actualizar(req: Request, res: Response) {
+    try {
+      const reparacionId = parseInt(req.params.reparacionId);
+      const piezaId = parseInt(req.params.piezaId);
+      
+      const detalle = await this.detalleService.actualizarDetalle(
+        reparacionId,
+        piezaId,
+        req.body
+      );
+      
+      if (detalle) {
+        res.status(200).json(detalle);
+      } else {
+        res.status(404).json({ error: 'Detalle no encontrado' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Error al actualizar detalle' });
+    }
+  }
 
-  delete = async (req: Request, res: Response) => {
-    const { reparacionId, piezaId } = req.params;
-    await this.service.eliminarDetalle(parseInt(reparacionId), parseInt(piezaId));
-    res.status(204).send();
-  };
+  async getDetalles(req: Request, res: Response) {
+    try {
+      const reparacionId = parseInt(req.params.reparacionId);
+      const detalles = await this.detalleService.getDetallesDeReparacion(reparacionId);
+      res.status(200).json(detalles);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al obtener detalles' });
+    }
+  }
+
+  async calcularTotal(req: Request, res: Response) {
+    try {
+      const reparacionId = parseInt(req.params.reparacionId);
+      const total = await this.detalleService.calcularTotalRepuestos(reparacionId);
+      res.status(200).json({ total });
+    } catch (error) {
+      res.status(500).json({ error: 'Error al calcular total' });
+    }
+  }
 }

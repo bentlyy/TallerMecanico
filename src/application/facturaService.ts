@@ -1,41 +1,26 @@
-import { Factura } from "../domain/entities/factura";
-import { FacturaRepository } from "../domain/repositories/facturaRepository";
-import prisma from "../infrastructure/db/prisma";
+import { FacturaRepository } from '../domain/repositories/facturaRepository';
+import { Factura } from '../domain/entities/factura';
 
 export class FacturaService {
-  constructor(private facturaRepository: FacturaRepository) {}
+  constructor(private readonly repository: FacturaRepository) {}
 
-  async listar(): Promise<Factura[]> {
-    return this.facturaRepository.getAll();
+  async getAllFacturas(): Promise<Factura[]> {
+    return this.repository.getAll();
   }
 
-  async obtenerPorId(id: number): Promise<Factura | null> {
-    return this.facturaRepository.getById(id);
+  async getFacturaById(id: number): Promise<Factura | null> {
+    return this.repository.getById(id);
   }
 
-  async generarFactura(reparacionId: number): Promise<Factura> {
-    const reparacion = await prisma.reparacion.findUnique({
-      where: { id: reparacionId },
-      include: {
-        detalleReparacion: true,
-        cliente: true,
-      },
-    });
+  async createFactura(data: Factura): Promise<Factura> {
+    return this.repository.create(data);
+  }
 
-    if (!reparacion) throw new Error("Reparación no encontrada");
+  async getFacturasPorCliente(clienteId: number): Promise<Factura[]> {
+    return this.repository.getByCliente(clienteId);
+  }
 
-    // Calcular el total
-    const piezasTotal = reparacion.detalleReparacion.reduce(
-      (sum, d) => sum + d.precio_unitario * d.cantidad,
-      0
-    );
-
-    const total = piezasTotal + reparacion.costo_mano_obra;
-
-    return this.facturaRepository.create({
-      total,
-      clienteId: reparacion.cliente_id,
-      reparacionId,
-    });
+  async getFacturasPorReparacion(reparacionId: number): Promise<Factura | null> {
+    return this.repository.getByReparacion(reparacionId);
   }
 }

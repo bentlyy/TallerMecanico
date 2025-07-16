@@ -1,30 +1,51 @@
-import { UsuarioRepository } from "../domain/repositories/usuarioRepository";
-import { Usuario } from "../domain/entities/usuario";
+import { UsuarioRepository } from '../domain/repositories/usuarioRepository';
+import { Usuario, AuthCredentials } from '../domain/entities/usuario';
+import { Reparacion } from '../domain/entities/reparacion';
 
 export class UsuarioService {
-  constructor(private usuarioRepository: UsuarioRepository) {}
+  constructor(private readonly repository: UsuarioRepository) {}
 
-  async listarUsuarios(): Promise<Usuario[]> {
-    return this.usuarioRepository.getAll();
+  async getAllUsuarios(): Promise<Usuario[]> {
+    return this.repository.getAll();
   }
 
-  async obtenerUsuario(id: number): Promise<Usuario | null> {
-    return this.usuarioRepository.getById(id);
+  async getUsuarioById(id: number): Promise<Usuario | null> {
+    return this.repository.getById(id);
   }
 
-  async crearUsuario(data: Omit<Usuario, "id">): Promise<Usuario> {
-    return this.usuarioRepository.create(data);
+  async getUsuarioByEmail(email: string): Promise<Usuario | null> {
+    return this.repository.getByEmail(email);
   }
 
-  async actualizarUsuario(id: number, data: Partial<Omit<Usuario, "id">>): Promise<Usuario | null> {
-    return this.usuarioRepository.update(id, data);
+  async createUsuario(data: Usuario): Promise<Usuario> {
+    return this.repository.create(data);
   }
 
-  async eliminarUsuario(id: number): Promise<void> {
-    return this.usuarioRepository.delete(id);
+  async updateUsuario(id: number, data: Partial<Usuario>): Promise<Usuario | null> {
+    return this.repository.update(id, data);
   }
 
-  async obtenerPorEmail(email: string): Promise<Usuario | null> {
-    return this.usuarioRepository.getByEmail(email);
+  async deleteUsuario(id: number): Promise<void> {
+    return this.repository.delete(id);
+  }
+
+  async activarUsuario(id: number): Promise<Usuario | null> {
+    return this.repository.activate(id);
+  }
+
+  async desactivarUsuario(id: number): Promise<Usuario | null> {
+    return this.repository.deactivate(id);
+  }
+
+  async getUsuariosPorRol(rolId: number): Promise<Usuario[]> {
+    return this.repository.getByRol(rolId);
+  }
+
+  async verReparacionesAsignadasComoRecepcionista(usuarioId: number): Promise<Reparacion[]> {
+    return this.repository.getReparacionesAsRecepcionista(usuarioId);
+  }
+
+  async autenticar(email: string, password: string): Promise<Usuario | null> {
+    return this.repository.authenticate({ email, password });
   }
 }

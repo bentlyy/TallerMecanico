@@ -1,34 +1,50 @@
-import { RolRepository } from "../../domain/repositories/rolRepository";
-import { Rol } from "../../domain/entities/rol";
-import { prisma } from './prisma';
+import { PrismaClient } from '@prisma/client';
+import { RolRepository } from '../../domain/repositories/rolRepository';
+import { Rol, CreateRol, UpdateRol, Permisos } from '../../domain/entities/rol';
 
 export class PrismaRolRepository implements RolRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  private mapToEntity(rol: any): Rol {
+    return new Rol(
+      rol.id,
+      rol.nombre,
+      rol.permisos as Permisos
+    );
+  }
+
   async getAll(): Promise<Rol[]> {
-    const roles = await prisma.rol.findMany();
-    return roles.map(r => new Rol(r.id, r.nombre, r.permisos));
+    const roles = await this.prisma.rol.findMany();
+    return roles.map(this.mapToEntity);
   }
 
   async getById(id: number): Promise<Rol | null> {
-    const r = await prisma.rol.findUnique({ where: { id } });
-    return r ? new Rol(r.id, r.nombre, r.permisos) : null;
+    const rol = await this.prisma.rol.findUnique({ where: { id } });
+    return rol ? this.mapToEntity(rol) : null;
   }
 
-  async getByNombre(nombre: string): Promise<Rol | null> {
-    const r = await prisma.rol.findUnique({ where: { nombre } });
-    return r ? new Rol(r.id, r.nombre, r.permisos) : null;
+  async create(data: CreateRol): Promise<Rol> {
+    const rol = await this.prisma.rol.create({ data });
+    return this.mapToEntity(rol);
   }
 
-  async create(data: Omit<Rol, "id">): Promise<Rol> {
-    const r = await prisma.rol.create({ data });
-    return new Rol(r.id, r.nombre, r.permisos);
-  }
-
-  async update(id: number, data: Partial<Omit<Rol, "id">>): Promise<Rol | null> {
-    const r = await prisma.rol.update({ where: { id }, data });
-    return new Rol(r.id, r.nombre, r.permisos);
+  async update(id: number, data: UpdateRol): Promise<Rol | null> {
+    const rol = await this.prisma.rol.update({
+      where: { id },
+      data
+    });
+    return this.mapToEntity(rol);
   }
 
   async delete(id: number): Promise<void> {
-    await prisma.rol.delete({ where: { id } });
+    await this.prisma.rol.delete({ where: { id } });
+  }
+
+  async getPermisos(id: number): Promise<Permisos | null> {
+    const rol = await this.prisma.rol.findUnique({
+      where: { id },
+      select: { permisos: true }
+    });
+    return rol ? rol.permisos as Permisos : null;
   }
 }

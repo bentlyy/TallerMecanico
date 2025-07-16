@@ -1,14 +1,23 @@
-// import { Router } from "express";
-// import { RolController } from "../controllers/rolController";
-// import { container } from "../../infrastructure/di/container";
+import { Router } from 'express';
+import { RolController } from '../controllers/rolController';
+import { RolService } from '../../application/rolService';
+import { PrismaRolRepository } from '../../infrastructure/db/prismaRolRepository';
+import { prisma } from '../../infrastructure/db/prisma';
 
-// const router = Router();
-// const controller = new RolController(container.rolService);
+const rolRouter = Router();
 
-// router.get("/", controller.getAll);
-// router.get("/:id", controller.getById);
-// router.post("/", controller.create);
-// router.put("/:id", controller.update);
-// router.delete("/:id", controller.delete);
+const repository = new PrismaRolRepository(prisma);
+const service = new RolService(repository);
+const controller = new RolController(service);
 
-// export default router;
+// Rutas CRUD básicas
+rolRouter.get('/', controller.getAll.bind(controller));
+rolRouter.get('/:id', controller.getById.bind(controller));
+rolRouter.post('/', controller.create.bind(controller));
+rolRouter.put('/:id', controller.update.bind(controller));
+rolRouter.delete('/:id', controller.delete.bind(controller));
+
+// Ruta específica para permisos
+rolRouter.get('/:rolId/permisos', controller.getPermisos.bind(controller));
+
+export default rolRouter;

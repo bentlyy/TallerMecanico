@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import prisma from '../db/prisma';  // Ruta relativa correcta
+import {prisma} from '../db/prisma';  // Ruta relativa correcta
 
 export const healthRouter = Router();
 

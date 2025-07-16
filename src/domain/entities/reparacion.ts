@@ -1,5 +1,11 @@
-// src/domain/entities/reparacion.ts
-export type EstadoReparacion = 'en_revision' | 'en_reparacion' | 'terminado' | 'entregado';
+export const EstadosReparacion = {
+  EN_REVISION: 'EN_REVISION',
+  EN_REPARACION: 'EN_REPARACION',
+  TERMINADO: 'TERMINADO',
+  ENTREGADO: 'ENTREGADO'
+} as const;
+
+export type EstadoReparacion = typeof EstadosReparacion[keyof typeof EstadosReparacion];
 
 export class Reparacion {
   constructor(
@@ -7,7 +13,7 @@ export class Reparacion {
     public descripcion: string,
     public fechaEntrada: Date,
     public fechaSalida: Date | null,
-    public estado: EstadoReparacion, // Usa el tipo específico
+    public estado: EstadoReparacion, // Usamos el tipo específico
     public costoManoObra: number,
     public vehiculoId: number,
     public mecanicoId: number | null,

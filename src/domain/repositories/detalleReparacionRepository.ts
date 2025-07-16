@@ -1,8 +1,9 @@
-import { DetalleReparacion } from "../entities/detalleReparacion";
+import { DetalleReparacion, CreateDetalle, UpdateDetalle } from "../entities/detalleReparacion";
 
 export interface DetalleReparacionRepository {
-  getByReparacionId(reparacionId: number): Promise<DetalleReparacion[]>;
-  addDetalle(detalle: DetalleReparacion): Promise<DetalleReparacion>;
-  updateDetalle(reparacionId: number, piezaId: number, data: Partial<Omit<DetalleReparacion, "reparacionId" | "piezaId">>): Promise<DetalleReparacion | null>;
-  deleteDetalle(reparacionId: number, piezaId: number): Promise<void>;
+  create(data: CreateDetalle): Promise<DetalleReparacion>;
+  delete(reparacionId: number, piezaId: number): Promise<void>;
+  update(reparacionId: number, piezaId: number, data: UpdateDetalle): Promise<DetalleReparacion | null>;
+  getByReparacion(reparacionId: number): Promise<DetalleReparacion[]>;
+  calcularTotalRepuestos(reparacionId: number): Promise<number>;
 }

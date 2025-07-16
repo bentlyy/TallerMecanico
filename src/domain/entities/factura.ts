@@ -7,3 +7,6 @@ export class Factura {
     public reparacionId: number
   ) {}
 }
+
+export type CreateFactura = Omit<Factura, "id">;
+export type UpdateFactura = Partial<CreateFactura>;

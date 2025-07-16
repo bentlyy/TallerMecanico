@@ -1,39 +1,117 @@
-import { DetalleReparacion } from "../../domain/entities/detalleReparacion";
-import { DetalleReparacionRepository } from "../../domain/repositories/detalleReparacionRepository";
-import { prisma } from './prisma'; // ✅ Correcto
-
+import { PrismaClient } from '@prisma/client';
+import { DetalleReparacionRepository } from '../../domain/repositories/detalleReparacionRepository';
+import { DetalleReparacion, CreateDetalle, UpdateDetalle } from '../../domain/entities/detalleReparacion';
 
 export class PrismaDetalleReparacionRepository implements DetalleReparacionRepository {
-  async getByReparacionId(reparacionId: number): Promise<DetalleReparacion[]> {
-    const detalles = await prisma.detalleReparacion.findMany({
-      where: { reparacion_id: reparacionId },
-    });
-    return detalles.map(d => new DetalleReparacion(d.reparacion_id, d.pieza_id, d.cantidad, d.precio_unitario));
+  constructor(private prisma: PrismaClient) {}
+
+  private mapToEntity(detalle: any): DetalleReparacion {
+    return {
+      reparacionId: detalle.reparacionId,
+      piezaId: detalle.piezaId,
+      cantidad: detalle.cantidad,
+      precioUnitario: detalle.precioUnitario,
+      pieza: detalle.pieza ? {
+        id: detalle.pieza.id,
+        nombre: detalle.pieza.nombre,
+        marca: detalle.pieza.marca,
+        codigo: detalle.pieza.codigo
+      } : undefined
+    };
   }
 
-  async addDetalle(detalle: DetalleReparacion): Promise<DetalleReparacion> {
-    const d = await prisma.detalleReparacion.create({
+  async create(data: CreateDetalle): Promise<DetalleReparacion> {
+    const detalle = await this.prisma.detalleReparacion.create({
       data: {
-        reparacion_id: detalle.reparacionId,
-        pieza_id: detalle.piezaId,
-        cantidad: detalle.cantidad,
-        precio_unitario: detalle.precioUnitario,
+        reparacionId: data.reparacionId,
+        piezaId: data.piezaId,
+        cantidad: data.cantidad,
+        precioUnitario: data.precioUnitario
       },
+      include: { pieza: true }
     });
-    return new DetalleReparacion(d.reparacion_id, d.pieza_id, d.cantidad, d.precio_unitario);
+    
+    // Descontar stock de la pieza
+    await this.prisma.pieza.update({
+      where: { id: data.piezaId },
+      data: { stock: { decrement: data.cantidad } }
+    });
+    
+    return this.mapToEntity(detalle);
   }
 
-  async updateDetalle(reparacionId: number, piezaId: number, data: Partial<Omit<DetalleReparacion, "reparacionId" | "piezaId">>): Promise<DetalleReparacion | null> {
-    const d = await prisma.detalleReparacion.update({
-      where: { reparacion_id_pieza_id: { reparacion_id: reparacionId, pieza_id: piezaId } },
+  async delete(reparacionId: number, piezaId: number): Promise<void> {
+    // Primero obtenemos el detalle para saber la cantidad a devolver
+    const detalle = await this.prisma.detalleReparacion.findUnique({
+      where: {
+        reparacionId_piezaId: { reparacionId, piezaId }
+      }
+    });
+    
+    if (detalle) {
+      // Eliminar el detalle
+      await this.prisma.detalleReparacion.delete({
+        where: {
+          reparacionId_piezaId: { reparacionId, piezaId }
+        }
+      });
+      
+      // Devolver el stock
+      await this.prisma.pieza.update({
+        where: { id: piezaId },
+        data: { stock: { increment: detalle.cantidad } }
+      });
+    }
+  }
+
+  async update(reparacionId: number, piezaId: number, data: UpdateDetalle): Promise<DetalleReparacion | null> {
+    // Primero obtenemos el detalle actual
+    const detalleActual = await this.prisma.detalleReparacion.findUnique({
+      where: {
+        reparacionId_piezaId: { reparacionId, piezaId }
+      }
+    });
+    
+    if (!detalleActual) return null;
+    
+    // Actualizamos el detalle
+    const detalle = await this.prisma.detalleReparacion.update({
+      where: {
+        reparacionId_piezaId: { reparacionId, piezaId }
+      },
       data,
+      include: { pieza: true }
     });
-    return new DetalleReparacion(d.reparacion_id, d.pieza_id, d.cantidad, d.precio_unitario);
+    
+    // Si cambió la cantidad, ajustamos el stock
+    if (data.cantidad !== undefined) {
+      const diferencia = data.cantidad - detalleActual.cantidad;
+      await this.prisma.pieza.update({
+        where: { id: piezaId },
+        data: { stock: { decrement: diferencia } }
+      });
+    }
+    
+    return this.mapToEntity(detalle);
   }
 
-  async deleteDetalle(reparacionId: number, piezaId: number): Promise<void> {
-    await prisma.detalleReparacion.delete({
-      where: { reparacion_id_pieza_id: { reparacion_id: reparacionId, pieza_id: piezaId } },
+  async getByReparacion(reparacionId: number): Promise<DetalleReparacion[]> {
+    const detalles = await this.prisma.detalleReparacion.findMany({
+      where: { reparacionId },
+      include: { pieza: true }
     });
+    
+    return detalles.map(this.mapToEntity);
+  }
+
+  async calcularTotalRepuestos(reparacionId: number): Promise<number> {
+    const detalles = await this.prisma.detalleReparacion.findMany({
+      where: { reparacionId },
+      select: { cantidad: true, precioUnitario: true }
+    });
+    
+    return detalles.reduce((total, detalle) => {
+      return total + (detalle.cantidad * detalle.precioUnitario);
+    }, 0);
   }
 }

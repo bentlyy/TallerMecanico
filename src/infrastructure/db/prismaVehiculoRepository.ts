@@ -1,10 +1,13 @@
-import { VehiculoRepository } from "../../domain/repositories/vehiculoRepository";
-import { Vehiculo } from "../../domain/entities/vehiculo";
-import { prisma } from './prisma';
+import { PrismaClient } from '@prisma/client';
+import { VehiculoRepository } from '../../domain/repositories/vehiculoRepository';
+import { Vehiculo, CreateVehiculo, UpdateVehiculo } from '../../domain/entities/vehiculo';
+import { Reparacion } from '../../domain/entities/reparacion';
 
 export class PrismaVehiculoRepository implements VehiculoRepository {
+  constructor(private prisma: PrismaClient) {}
+
   async getAll(): Promise<Vehiculo[]> {
-    const vehiculos = await prisma.vehiculo.findMany();
+    const vehiculos = await this.prisma.vehiculo.findMany();
     return vehiculos.map(v => new Vehiculo(
       v.id,
       v.marca,
@@ -12,69 +15,91 @@ export class PrismaVehiculoRepository implements VehiculoRepository {
       v.anio,
       v.patente,
       v.kilometraje,
-      v.cliente_id
+      v.clienteId
     ));
   }
 
   async getById(id: number): Promise<Vehiculo | null> {
-    const v = await prisma.vehiculo.findUnique({ where: { id } });
-    return v ? new Vehiculo(
-      v.id,
-      v.marca,
-      v.modelo,
-      v.anio,
-      v.patente,
-      v.kilometraje,
-      v.cliente_id
+    const vehiculo = await this.prisma.vehiculo.findUnique({ where: { id } });
+    return vehiculo ? new Vehiculo(
+      vehiculo.id,
+      vehiculo.marca,
+      vehiculo.modelo,
+      vehiculo.anio,
+      vehiculo.patente,
+      vehiculo.kilometraje,
+      vehiculo.clienteId
     ) : null;
   }
 
-  async create(data: Omit<Vehiculo, "id">): Promise<Vehiculo> {
-    const v = await prisma.vehiculo.create({
-      data: {
-        marca: data.marca,
-        modelo: data.modelo,
-        anio: data.anio ?? undefined,
-        patente: data.patente,
-        kilometraje: data.kilometraje ?? undefined,
-        cliente_id: data.cliente_id,
-      }
-    });
+  async create(data: CreateVehiculo): Promise<Vehiculo> {
+    const vehiculo = await this.prisma.vehiculo.create({ data });
     return new Vehiculo(
-      v.id,
-      v.marca,
-      v.modelo,
-      v.anio,
-      v.patente,
-      v.kilometraje,
-      v.cliente_id
+      vehiculo.id,
+      vehiculo.marca,
+      vehiculo.modelo,
+      vehiculo.anio,
+      vehiculo.patente,
+      vehiculo.kilometraje,
+      vehiculo.clienteId
     );
   }
 
-  async update(id: number, data: Partial<Omit<Vehiculo, "id">>): Promise<Vehiculo | null> {
-    const v = await prisma.vehiculo.update({
+  async update(id: number, data: UpdateVehiculo): Promise<Vehiculo | null> {
+    const vehiculo = await this.prisma.vehiculo.update({
       where: { id },
-      data: {
-        marca: data.marca,
-        modelo: data.modelo,
-        anio: data.anio ?? undefined,
-        patente: data.patente,
-        kilometraje: data.kilometraje ?? undefined,
-        cliente_id: data.cliente_id
-      }
+      data
     });
-    return new Vehiculo(
-      v.id,
-      v.marca,
-      v.modelo,
-      v.anio,
-      v.patente,
-      v.kilometraje,
-      v.cliente_id
-    );
+    return vehiculo ? new Vehiculo(
+      vehiculo.id,
+      vehiculo.marca,
+      vehiculo.modelo,
+      vehiculo.anio,
+      vehiculo.patente,
+      vehiculo.kilometraje,
+      vehiculo.clienteId
+    ) : null;
   }
 
   async delete(id: number): Promise<void> {
-    await prisma.vehiculo.delete({ where: { id } });
+    await this.prisma.vehiculo.delete({ where: { id } });
+  }
+
+  async getByCliente(clienteId: number): Promise<Vehiculo[]> {
+    const vehiculos = await this.prisma.vehiculo.findMany({ 
+      where: { clienteId } 
+    });
+    return vehiculos.map(v => new Vehiculo(
+      v.id,
+      v.marca,
+      v.modelo,
+      v.anio,
+      v.patente,
+      v.kilometraje,
+      v.clienteId
+    ));
+  }
+
+  async getReparaciones(vehiculoId: number): Promise<Reparacion[]> {
+    const reparaciones = await this.prisma.reparacion.findMany({
+      where: { vehiculoId },
+      include: {
+        vehiculo: true,
+        mecanico: { include: { usuario: true } },
+        recepcionista: true
+      }
+    });
+
+    return reparaciones.map(r => new Reparacion(
+      r.id,
+      r.descripcion,
+      r.fechaEntrada,
+      r.fechaSalida,
+      r.estado,
+      r.costoManoObra,
+      r.vehiculoId,
+      r.mecanicoId,
+      r.recepcionistaId
+    ));
   }
 }

@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import clienteRoutes from './presentation/routes/clienteRoutes';
-// import vehiculoRoutes from './presentation/routes/vehiculoRoutes';
-// import usuarioRoutes from "./presentation/routes/usuarioRoutes";
-// import rolRoutes from "./presentation/routes/rolRoutes";
+import vehiculoRoutes from './presentation/routes/vehiculoRoutes';
+import usuarioRoutes from "./presentation/routes/usuarioRoutes";
+import rolRoutes from "./presentation/routes/rolRoutes";
 // import mecanicoRoutes from "./presentation/routes/mecanicoRoutes";
 // import piezaRoutes from "./presentation/routes/piezaRoutes";
 // import detalleReparacionRoutes from "./presentation/routes/detalleReparacionRoutes";
@@ -24,9 +24,9 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/clientes', clienteRoutes);
-// app.use("/vehiculos", vehiculoRoutes);
-// app.use("/api/usuarios", usuarioRoutes);
-// app.use("/api/roles", rolRoutes);
+app.use("/vehiculos", vehiculoRoutes);
+app.use("/api/usuarios", usuarioRoutes);
+app.use("/api/roles", rolRoutes);
 // app.use("/api/mecanicos", mecanicoRoutes);
 // app.use("/api/piezas", piezaRoutes);
 // app.use('/api/reparaciones', reparacionRoutes);

@@ -1,34 +1,65 @@
-import { Request, Response } from "express";
-import { MecanicoService } from "../../application/mecanicoService";
+import { Request, Response } from 'express';
+import { MecanicoService } from '../../application/mecanicoService';
 
 export class MecanicoController {
-  constructor(private mecanicoService: MecanicoService) {}
+  constructor(private readonly mecanicoService: MecanicoService) {}
 
-  getAll = async (_req: Request, res: Response) => {
-    const mecanicos = await this.mecanicoService.listarMecanicos();
-    res.json(mecanicos);
-  };
+  async getAll(req: Request, res: Response) {
+    try {
+      const mecanicos = await this.mecanicoService.getAllMecanicos();
+      res.status(200).json(mecanicos);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al obtener los mecánicos' });
+    }
+  }
 
-  getById = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
-    const mecanico = await this.mecanicoService.obtenerMecanico(id);
-    mecanico ? res.json(mecanico) : res.status(404).json({ error: "Mecánico no encontrado" });
-  };
+  async getById(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+      const mecanico = await this.mecanicoService.getMecanicoById(id);
+      
+      if (mecanico) {
+        res.status(200).json(mecanico);
+      } else {
+        res.status(404).json({ error: 'Mecánico no encontrado' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Error al obtener el mecánico' });
+    }
+  }
 
-  create = async (req: Request, res: Response) => {
-    const nuevo = await this.mecanicoService.crearMecanico(req.body);
-    res.status(201).json(nuevo);
-  };
+  async create(req: Request, res: Response) {
+    try {
+      const { usuarioId, especialidad } = req.body;
+      const mecanico = await this.mecanicoService.createMecanico(usuarioId, especialidad);
+      res.status(201).json(mecanico);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al crear el mecánico' });
+    }
+  }
 
-  update = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
-    const actualizado = await this.mecanicoService.actualizarMecanico(id, req.body);
-    actualizado ? res.json(actualizado) : res.status(404).json({ error: "Mecánico no encontrado" });
-  };
+  async update(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+      const mecanico = await this.mecanicoService.updateMecanico(id, req.body);
+      
+      if (mecanico) {
+        res.status(200).json(mecanico);
+      } else {
+        res.status(404).json({ error: 'Mecánico no encontrado' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Error al actualizar el mecánico' });
+    }
+  }
 
-  delete = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
-    await this.mecanicoService.eliminarMecanico(id);
-    res.status(204).send();
-  };
+  async getReparaciones(req: Request, res: Response) {
+    try {
+      const mecanicoId = parseInt(req.params.mecanicoId);
+      const reparaciones = await this.mecanicoService.getReparacionesAsignadas(mecanicoId);
+      res.status(200).json(reparaciones);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al obtener las reparaciones' });
+    }
+  }
 }

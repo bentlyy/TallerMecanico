@@ -8,3 +8,6 @@ export class Pieza {
     public codigo: string
   ) {}
 }
+
+export type CreatePieza = Omit<Pieza, "id">;
+export type UpdatePieza = Partial<CreatePieza>;

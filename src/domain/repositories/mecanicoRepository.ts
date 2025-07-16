@@ -1,10 +1,10 @@
-import { Mecanico } from "../entities/mecanico";
+import { Mecanico, CreateMecanico, UpdateMecanico } from "../entities/mecanico";
+import { Reparacion } from "../entities/reparacion";
 
 export interface MecanicoRepository {
   getAll(): Promise<Mecanico[]>;
   getById(id: number): Promise<Mecanico | null>;
-  getByUsuarioId(usuarioId: number): Promise<Mecanico | null>;
-  create(data: Omit<Mecanico, "id">): Promise<Mecanico>;
-  update(id: number, data: Partial<Omit<Mecanico, "id">>): Promise<Mecanico | null>;
-  delete(id: number): Promise<void>;
+  create(data: CreateMecanico): Promise<Mecanico>;
+  update(id: number, data: UpdateMecanico): Promise<Mecanico | null>;
+  getReparacionesAsignadas(mecanicoId: number): Promise<Reparacion[]>;
 }

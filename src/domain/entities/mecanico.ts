@@ -5,3 +5,6 @@ export class Mecanico {
     public especialidad: string | null
   ) {}
 }
+
+export type CreateMecanico = Omit<Mecanico, "id">;
+export type UpdateMecanico = Partial<CreateMecanico>;

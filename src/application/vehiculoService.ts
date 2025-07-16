@@ -1,26 +1,35 @@
-import { VehiculoRepository } from "../domain/repositories/vehiculoRepository";
-import { Vehiculo } from "../domain/entities/vehiculo";
+import { VehiculoRepository } from '../domain/repositories/vehiculoRepository';
+import { Vehiculo, CreateVehiculo, UpdateVehiculo } from '../domain/entities/vehiculo';
+import { Reparacion } from '../domain/entities/reparacion';
 
 export class VehiculoService {
-  constructor(private vehiculoRepository: VehiculoRepository) {}
+  constructor(private readonly repository: VehiculoRepository) {}
 
-  async listarVehiculos(): Promise<Vehiculo[]> {
-    return this.vehiculoRepository.getAll();
+  async getAllVehiculos(): Promise<Vehiculo[]> {
+    return this.repository.getAll();
   }
 
-  async obtenerVehiculo(id: number): Promise<Vehiculo | null> {
-    return this.vehiculoRepository.getById(id);
+  async getVehiculoById(id: number): Promise<Vehiculo | null> {
+    return this.repository.getById(id);
   }
 
-  async crearVehiculo(data: Omit<Vehiculo, "id">): Promise<Vehiculo> {
-    return this.vehiculoRepository.create(data);
+  async createVehiculo(data: CreateVehiculo): Promise<Vehiculo> {
+    return this.repository.create(data);
   }
 
-  async actualizarVehiculo(id: number, data: Partial<Omit<Vehiculo, "id">>): Promise<Vehiculo | null> {
-    return this.vehiculoRepository.update(id, data);
+  async updateVehiculo(id: number, data: UpdateVehiculo): Promise<Vehiculo | null> {
+    return this.repository.update(id, data);
   }
 
-  async eliminarVehiculo(id: number): Promise<void> {
-    return this.vehiculoRepository.delete(id);
+  async deleteVehiculo(id: number): Promise<void> {
+    return this.repository.delete(id);
+  }
+
+  async getVehiculosPorCliente(clienteId: number): Promise<Vehiculo[]> {
+    return this.repository.getByCliente(clienteId);
+  }
+
+  async getReparacionesPorVehiculo(vehiculoId: number): Promise<Reparacion[]> {
+    return this.repository.getReparaciones(vehiculoId);
   }
 }

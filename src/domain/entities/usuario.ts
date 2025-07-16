@@ -8,3 +8,10 @@ export class Usuario {
     public rolId: number
   ) {}
 }
+
+export type CreateUsuario = Omit<Usuario, "id">;
+export type UpdateUsuario = Partial<Omit<Usuario, "id">>;
+export type AuthCredentials = {
+  email: string;
+  password: string;
+};

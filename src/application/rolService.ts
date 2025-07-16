@@ -1,30 +1,30 @@
-import { RolRepository } from "../domain/repositories/rolRepository";
-import { Rol } from "../domain/entities/rol";
+import { RolRepository } from '../domain/repositories/rolRepository';
+import { Rol, Permisos } from '../domain/entities/rol';
 
 export class RolService {
-  constructor(private rolRepository: RolRepository) {}
+  constructor(private readonly repository: RolRepository) {}
 
-  async listarRoles(): Promise<Rol[]> {
-    return this.rolRepository.getAll();
+  async getAllRoles(): Promise<Rol[]> {
+    return this.repository.getAll();
   }
 
-  async obtenerRol(id: number): Promise<Rol | null> {
-    return this.rolRepository.getById(id);
+  async getRolById(id: number): Promise<Rol | null> {
+    return this.repository.getById(id);
   }
 
-  async obtenerPorNombre(nombre: string): Promise<Rol | null> {
-    return this.rolRepository.getByNombre(nombre);
+  async createRol(data: Rol): Promise<Rol> {
+    return this.repository.create(data);
   }
 
-  async crearRol(data: Omit<Rol, "id">): Promise<Rol> {
-    return this.rolRepository.create(data);
+  async updateRol(id: number, data: Partial<Rol>): Promise<Rol | null> {
+    return this.repository.update(id, data);
   }
 
-  async actualizarRol(id: number, data: Partial<Omit<Rol, "id">>): Promise<Rol | null> {
-    return this.rolRepository.update(id, data);
+  async deleteRol(id: number): Promise<void> {
+    return this.repository.delete(id);
   }
 
-  async eliminarRol(id: number): Promise<void> {
-    return this.rolRepository.delete(id);
+  async getPermisosDeRol(rolId: number): Promise<Permisos | null> {
+    return this.repository.getPermisos(rolId);
   }
 }

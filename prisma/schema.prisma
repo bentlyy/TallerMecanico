@@ -8,6 +8,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum EstadoReparacion {
+  EN_REVISION
+  EN_REPARACION
+  TERMINADO
+  ENTREGADO
+}
+
 model Cliente {
   id        Int      @id @default(autoincrement())
   nombre    String
@@ -33,19 +40,19 @@ model Vehiculo {
 }
 
 model Reparacion {
-  id              Int       @id @default(autoincrement())
+  id              Int             @id @default(autoincrement())
   descripcion     String
-  fechaEntrada    DateTime  @default(now()) @map("fecha_entrada")
-  fechaSalida     DateTime? @map("fecha_salida")
-  estado          String    @default("en_revision")
-  costoManoObra   Float     @default(0.0) @map("costo_mano_obra")
-  vehiculoId      Int       @map("vehiculo_id")
-  mecanicoId      Int?      @map("mecanico_id")
-  recepcionistaId Int       @map("recepcionista_id")
+  fechaEntrada    DateTime        @default(now()) @map("fecha_entrada")
+  fechaSalida     DateTime?       @map("fecha_salida")
+  estado          EstadoReparacion @default(EN_REVISION)
+  costoManoObra   Float           @default(0.0) @map("costo_mano_obra")
+  vehiculoId      Int             @map("vehiculo_id")
+  mecanicoId      Int?            @map("mecanico_id")
+  recepcionistaId Int             @map("recepcionista_id")
 
-  vehiculo        Vehiculo  @relation(fields: [vehiculoId], references: [id])
-  mecanico        Mecanico? @relation(fields: [mecanicoId], references: [id])
-  recepcionista   Usuario   @relation("reparacion_recepcionista", fields: [recepcionistaId], references: [id])
+  vehiculo        Vehiculo        @relation(fields: [vehiculoId], references: [id])
+  mecanico        Mecanico?       @relation(fields: [mecanicoId], references: [id])
+  recepcionista   Usuario         @relation("reparacion_recepcionista", fields: [recepcionistaId], references: [id])
 
   detalleReparacion DetalleReparacion[]
   facturas          Factura[]

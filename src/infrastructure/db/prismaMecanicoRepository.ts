@@ -1,40 +1,71 @@
-import { MecanicoRepository } from "../../domain/repositories/mecanicoRepository";
-import { Mecanico } from "../../domain/entities/mecanico";
-import { prisma } from './prisma';
+import { PrismaClient } from '@prisma/client';
+import { MecanicoRepository } from '../../domain/repositories/mecanicoRepository';
+import { Mecanico, CreateMecanico, UpdateMecanico } from '../../domain/entities/mecanico';
+import { Reparacion } from '../../domain/entities/reparacion';
 
 export class PrismaMecanicoRepository implements MecanicoRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  private mapToEntity(mecanico: any): Mecanico {
+    return new Mecanico(
+      mecanico.id,
+      mecanico.usuarioId,
+      mecanico.especialidad
+    );
+  }
+
   async getAll(): Promise<Mecanico[]> {
-    const mecanicos = await prisma.mecanico.findMany();
-    return mecanicos.map(m => new Mecanico(m.id, m.usuario_id, m.especialidad ?? null));
+    const mecanicos = await this.prisma.mecanico.findMany({
+      include: { usuario: true }
+    });
+    return mecanicos.map(this.mapToEntity);
   }
 
   async getById(id: number): Promise<Mecanico | null> {
-    const m = await prisma.mecanico.findUnique({ where: { id } });
-    return m ? new Mecanico(m.id, m.usuario_id, m.especialidad ?? null) : null;
+    const mecanico = await this.prisma.mecanico.findUnique({ 
+      where: { id },
+      include: { usuario: true }
+    });
+    return mecanico ? this.mapToEntity(mecanico) : null;
   }
 
-  async getByUsuarioId(usuarioId: number): Promise<Mecanico | null> {
-    const m = await prisma.mecanico.findUnique({ where: { usuario_id: usuarioId } });
-    return m ? new Mecanico(m.id, m.usuario_id, m.especialidad ?? null) : null;
+  async create(data: CreateMecanico): Promise<Mecanico> {
+    const mecanico = await this.prisma.mecanico.create({ 
+      data: {
+        usuario: { connect: { id: data.usuarioId } },
+        especialidad: data.especialidad
+      }
+    });
+    return this.mapToEntity(mecanico);
   }
 
-  async create(data: Omit<Mecanico, "id">): Promise<Mecanico> {
-  const m = await prisma.mecanico.create({
-    data: {
-      usuario: { connect: { id: data.usuario_id } },
-      especialidad: data.especialidad ?? undefined,
-    },
-  });
-
-  return new Mecanico(m.id, m.usuario_id, m.especialidad ?? null);
+  async update(id: number, data: UpdateMecanico): Promise<Mecanico | null> {
+    const mecanico = await this.prisma.mecanico.update({
+      where: { id },
+      data
+    });
+    return this.mapToEntity(mecanico);
   }
 
-  async update(id: number, data: Partial<Omit<Mecanico, "id">>): Promise<Mecanico | null> {
-    const m = await prisma.mecanico.update({ where: { id }, data });
-    return new Mecanico(m.id, m.usuario_id, m.especialidad ?? null);
-  }
+  async getReparacionesAsignadas(mecanicoId: number): Promise<Reparacion[]> {
+    const reparaciones = await this.prisma.reparacion.findMany({
+      where: { mecanicoId },
+      include: {
+        vehiculo: true,
+        recepcionista: true
+      }
+    });
 
-  async delete(id: number): Promise<void> {
-    await prisma.mecanico.delete({ where: { id } });
+    return reparaciones.map(r => new Reparacion(
+      r.id,
+      r.descripcion,
+      r.fechaEntrada,
+      r.fechaSalida,
+      r.estado,
+      r.costoManoObra,
+      r.vehiculoId,
+      r.mecanicoId,
+      r.recepcionistaId
+    ));
   }
 }
