@@ -103,58 +103,147 @@ taller-mecanico/
 │       └── ci.yml
 │
 ├── config/
-│   (archivos o configuraciones varias — no detallaste contenido)
+│   ├── database.ts
+│   └── env.ts
+│
+├── frontend/
+│   ├── .gitignore
+│   ├── Dockerfile
+│   ├── node_modules/
+│   │   └── (módulos instalados por npm)
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public/
+│   │   └── (archivos estáticos públicos, index.html, favicon.ico, etc.)
+│   ├── README.md
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── axios.ts
+│   │   ├── components/
+│   │   │   ├── Cliente/
+│   │   │   │   ├── ClienteForm.tsx
+│   │   │   │   └── ClienteList.tsx
+│   │   │   └── Vehiculo/
+│   │   │       ├── VehiculoForm.tsx
+│   │   │       └── VehiculoList.tsx
+│   │   ├── pages/
+│   │   │   ├── ClientesPage.tsx
+│   │   │   └── VehiculoPage.tsx
+│   │   ├── types/
+│   │   │   └── index.ts
+│   │   ├── App.css
+│   │   ├── App.test.tsx
+│   │   ├── App.tsx
+│   │   ├── index.css
+│   │   ├── index.tsx
+│   │   ├── logo.svg
+│   │   ├── react-app-env.d.ts
+│   │   ├── reportWebVitals.ts
+│   │   └── setupTests.ts
+│   └── tsconfig.json
 │
 ├── node_modules/
-│   (módulos instalados por npm)
+│   └── (módulos instalados por npm)
 │
 ├── prisma/
 │   ├── migrations/
 │   │   └── (archivos de migraciones de base de datos)
 │   ├── schema.prisma
 │   └── seed.ts
-│
+│|
 ├── src/
 │   ├── app.ts
 │   ├── server.ts
 │   ├── application/
 │   │   ├── clienteService.ts
+│   │   ├── detalleReparacionService.ts
+│   │   ├── facturaService.ts
+│   │   ├── mecanicoService.ts
+│   │   ├── piezaService.ts
+│   │   ├── reparacionService.ts
+│   │   ├── rolService.ts
+│   │   ├── usuarioService.ts
 │   │   └── vehiculoService.ts
+│   │
 │   ├── domain/
 │   │   ├── entities/
 │   │   │   ├── cliente.ts
+│   │   │   ├── detalleReparacion.ts
+│   │   │   ├── factura.ts
+│   │   │   ├── mecanico.ts
+│   │   │   ├── pieza.ts
+│   │   │   ├── reparacion.ts
+│   │   │   ├── rol.ts
+│   │   │   ├── usuario.ts
 │   │   │   └── vehiculo.ts
+│   │   │
 │   │   └── repositories/
 │   │       ├── clienteRepository.ts
+│   │       ├── detalleReparacionRepository.ts
+│   │       ├── facturaRepository.ts
+│   │       ├── mecanicoRepository.ts
+│   │       ├── piezaRepository.ts
+│   │       ├── reparacionRepository.ts
+│   │       ├── rolRepository.ts
+│   │       ├── usuarioRepository.ts
 │   │       └── vehiculoRepository.ts
+│   │
 │   ├── infrastructure/
 │   │   ├── db/
-│   │   │   ├── prisma.ts
+│   │   │   ├── prisma.ts                 <-- PrismaClient instancia singleton
 │   │   │   ├── prismaClienteRepository.ts
+│   │   │   ├── prismaDetalleReparacionRepository.ts
+│   │   │   ├── prismaFacturaRepository.ts
+│   │   │   ├── prismaMecanicoRepository.ts
+│   │   │   ├── prismaPiezaRepository.ts
+│   │   │   ├── prismaReparacionRepository.ts
+│   │   │   ├── prismaRolRepository.ts
+│   │   │   ├── prismaUsuarioRepository.ts
 │   │   │   └── prismaVehiculoRepository.ts
+│   │   │
 │   │   ├── di/
 │   │   │   └── container.ts
+│   │   │
 │   │   └── http/
 │   │       └── health.ts
-│   └── presentation/
-│       ├── controllers/
-│       │   ├── clienteController.ts
-│       │   └── vehiculoController.ts
-│       ├── middlewares/
-│       └── routes/
-│           ├── clienteRoutes.ts
-│           └── vehiculoRoutes.ts
+│   │
+│   ├── presentation/
+│   │   ├── controllers/
+│   │   │   ├── clienteController.ts
+│   │   │   ├── detalleReparacionController.ts
+│   │   │   ├── facturaController.ts
+│   │   │   ├── mecanicoController.ts
+│   │   │   ├── piezaController.ts
+│   │   │   ├── reparacionController.ts
+│   │   │   ├── rolController.ts
+│   │   │   ├── usuarioController.ts
+│   │   │   └── vehiculoController.ts
+│   │   │
+│   │   ├── middlewares/
+│   │   │   └── (middlewares varios)
+│   │   │
+│   │   └── routes/
+│   │       ├── clienteRoutes.ts
+│   │       ├── detalleReparacionRoutes.ts
+│   │       ├── facturaRoutes.ts
+│   │       ├── mecanicoRoutes.ts
+│   │       ├── piezaRoutes.ts
+│   │       ├── reparacionRoutes.ts
+│   │       ├── rolRoutes.ts
+│   │       ├── usuarioRoutes.ts
+│   │       └── vehiculoRoutes.ts
 │
 ├── tests/
 │   ├── integration/
-│   │   └── (tests de integración)
+│   │   └── vehiculoRepository.test.ts
 │   └── unit/
-│       └── (tests unitarios)
+│       └── vehiculo.test.ts
 │
 ├── .env
 ├── .gitignore
-├── docker-compose.yml
 ├── Dockerfile
+├── docker-compose.yml
 ├── package-lock.json
 ├── package.json
+├── README.md
 └── tsconfig.json

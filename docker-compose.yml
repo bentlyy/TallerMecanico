@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:15
     ports:
-    - "5432:5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: taller_user
       POSTGRES_PASSWORD: taller_password
@@ -29,6 +29,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+
   frontend:
     build:
       context: ./frontend
@@ -37,5 +38,6 @@ services:
       - "8080:80"
     depends_on:
       - app
+
 volumes:
   postgres_data:

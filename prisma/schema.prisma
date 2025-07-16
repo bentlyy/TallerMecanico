@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -8,108 +9,108 @@ datasource db {
 }
 
 model Cliente {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   nombre    String
-  email     String?   @unique
-  telefono  String?
-  direccion String?
+  email     String?  @unique
+  telefono  String?  @map("telefono")
+  direccion String?  @map("direccion")
 
   vehiculos Vehiculo[]
   facturas  Factura[]
 }
 
 model Vehiculo {
-  id           Int          @id @default(autoincrement())
-  marca        String
-  modelo       String
-  anio         Int?
-  patente      String       @unique
-  kilometraje  Int?
-  cliente_id   Int
+  id          Int     @id @default(autoincrement())
+  marca       String
+  modelo      String
+  anio        Int?    @map("anio")
+  patente     String  @unique
+  kilometraje Int?    @map("kilometraje")
+  clienteId   Int     @map("cliente_id")
 
-  cliente      Cliente      @relation(fields: [cliente_id], references: [id])
+  cliente     Cliente @relation(fields: [clienteId], references: [id])
   reparaciones Reparacion[]
 }
 
 model Reparacion {
-  id               Int       @id @default(autoincrement())
-  descripcion      String
-  fecha_entrada    DateTime  @default(now())
-  fecha_salida     DateTime?
-  estado           String    @default("en_revision")
-  costo_mano_obra  Float     @default(0.0)
-  vehiculo_id      Int
-  mecanico_id      Int?
-  recepcionista_id Int
+  id              Int       @id @default(autoincrement())
+  descripcion     String
+  fechaEntrada    DateTime  @default(now()) @map("fecha_entrada")
+  fechaSalida     DateTime? @map("fecha_salida")
+  estado          String    @default("en_revision")
+  costoManoObra   Float     @default(0.0) @map("costo_mano_obra")
+  vehiculoId      Int       @map("vehiculo_id")
+  mecanicoId      Int?      @map("mecanico_id")
+  recepcionistaId Int       @map("recepcionista_id")
 
-  vehiculo         Vehiculo       @relation(fields: [vehiculo_id], references: [id])
-  mecanico         Mecanico?      @relation(fields: [mecanico_id], references: [id])
-  recepcionista    Usuario        @relation("reparacion_recepcionista", fields: [recepcionista_id], references: [id])
+  vehiculo        Vehiculo  @relation(fields: [vehiculoId], references: [id])
+  mecanico        Mecanico? @relation(fields: [mecanicoId], references: [id])
+  recepcionista   Usuario   @relation("reparacion_recepcionista", fields: [recepcionistaId], references: [id])
 
   detalleReparacion DetalleReparacion[]
   facturas          Factura[]
 }
 
 model DetalleReparacion {
-  reparacion_id   Int
-  pieza_id        Int
-  cantidad        Int     @default(1)
-  precio_unitario Float
+  reparacionId   Int     @map("reparacion_id")
+  piezaId        Int     @map("pieza_id")
+  cantidad       Int     @default(1)
+  precioUnitario Float   @map("precio_unitario")
 
-  reparacion      Reparacion @relation(fields: [reparacion_id], references: [id], onDelete: Cascade)
-  pieza           Pieza      @relation(fields: [pieza_id], references: [id])
+  reparacion     Reparacion @relation(fields: [reparacionId], references: [id], onDelete: Cascade)
+  pieza          Pieza      @relation(fields: [piezaId], references: [id])
 
-  @@id([reparacion_id, pieza_id])
+  @@id([reparacionId, piezaId])
 }
 
 model Pieza {
-  id       Int                @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   nombre   String
   marca    String?
   precio   Float
-  stock    Int                @default(0)
-  codigo   String             @unique
+  stock    Int    @default(0)
+  codigo   String @unique
 
   detalleReparacion DetalleReparacion[]
 }
 
 model Factura {
-  id             Int        @id @default(autoincrement())
-  fecha          DateTime   @default(now())
-  total          Float
-  cliente_id     Int
-  reparacion_id  Int
+  id            Int      @id @default(autoincrement())
+  fecha         DateTime @default(now())
+  total         Float
+  clienteId     Int      @map("cliente_id")
+  reparacionId  Int      @map("reparacion_id")
 
-  cliente        Cliente     @relation(fields: [cliente_id], references: [id])
-  reparacion     Reparacion  @relation(fields: [reparacion_id], references: [id])
+  cliente       Cliente    @relation(fields: [clienteId], references: [id])
+  reparacion    Reparacion @relation(fields: [reparacionId], references: [id])
 }
 
 model Usuario {
-  id            Int         @id @default(autoincrement())
-  email         String      @unique
-  password_hash String
-  nombre        String
-  activo        Boolean     @default(true)
-  rol_id        Int
+  id           Int     @id @default(autoincrement())
+  email        String  @unique
+  passwordHash String  @map("password_hash")
+  nombre       String
+  activo       Boolean @default(true)
+  rolId        Int     @map("rol_id")
 
-  rol           Rol         @relation(fields: [rol_id], references: [id])
-  mecanico      Mecanico?
-  reparaciones_recepcionista Reparacion[] @relation("reparacion_recepcionista")
+  rol          Rol      @relation(fields: [rolId], references: [id])
+  mecanico     Mecanico?
+  reparacionesRecepcionista Reparacion[] @relation("reparacion_recepcionista")
 }
 
 model Rol {
-  id        Int     @id @default(autoincrement())
-  nombre    String  @unique
-  permisos  Json
+  id       Int    @id @default(autoincrement())
+  nombre   String @unique
+  permisos Json
 
-  usuarios  Usuario[]
+  usuarios Usuario[]
 }
 
 model Mecanico {
-  id           Int         @id @default(autoincrement())
-  usuario_id   Int         @unique
+  id           Int     @id @default(autoincrement())
+  usuarioId    Int     @unique @map("usuario_id")
   especialidad String?
 
-  usuario      Usuario     @relation(fields: [usuario_id], references: [id])
+  usuario      Usuario @relation(fields: [usuarioId], references: [id])
   reparaciones Reparacion[]
 }

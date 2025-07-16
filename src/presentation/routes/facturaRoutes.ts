@@ -1,12 +1,12 @@
-import { Router } from "express";
-import { FacturaController } from "../controllers/facturaController";
-import { container } from "../../infrastructure/di/container";
+// import { Router } from "express";
+// import { FacturaController } from "../controllers/facturaController";
+// import { container } from "../../infrastructure/di/container";
 
-const router = Router();
-const controller = new FacturaController(container.facturaService);
+// const router = Router();
+// const controller = new FacturaController(container.facturaService);
 
-router.get("/", controller.getAll);
-router.get("/:id", controller.getById);
-router.post("/", controller.generar);
+// router.get("/", controller.getAll);
+// router.get("/:id", controller.getById);
+// router.post("/", controller.generar);
 
-export default router;
+// export default router;

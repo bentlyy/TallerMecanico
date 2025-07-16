@@ -1,14 +1,21 @@
-import { Router } from "express";
-import { ClienteController } from "../controllers/clienteController";
-import { container } from "../../infrastructure/di/container";
+//clienteRoute.ts
+import { Router } from 'express';
+import { ClienteController } from '../controllers/clienteController';
+import { ClienteService } from '../../application/clienteService';
+import { PrismaClienteRepository } from '../../infrastructure/db/prismaClienteRepository';
+import { prisma } from '../../infrastructure/db/prisma';
 
-const router = Router();
-const controller = new ClienteController(container.clienteService);
+const clienteRepository = new PrismaClienteRepository(prisma);
+const clienteService = new ClienteService(clienteRepository);
+const clienteController = new ClienteController(clienteService);
 
-router.get("/", controller.getAll);
-router.get("/:id", controller.getById);
-router.post("/", controller.create);
-router.put("/:id", controller.update);
-router.delete("/:id", controller.delete);
+const clienteRouter = Router();
 
-export default router;
+clienteRouter.get('/', clienteController.getAll.bind(clienteController));
+clienteRouter.get('/:id', clienteController.getById.bind(clienteController));
+clienteRouter.get('/email', clienteController.getByEmail.bind(clienteController));
+clienteRouter.post('/', clienteController.create.bind(clienteController));
+clienteRouter.put('/:id', clienteController.update.bind(clienteController));
+clienteRouter.delete('/:id', clienteController.delete.bind(clienteController));
+
+export default clienteRouter;
