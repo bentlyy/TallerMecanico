@@ -1,13 +1,14 @@
-import { Router } from 'express';
-import { ClienteController } from '../controllers/clienteController';
-import { ClienteService } from '../../application/clienteService';
-import { clienteRepository } from '../../infrastructure/di/container';
+import { Router } from "express";
+import { ClienteController } from "../controllers/clienteController";
+import { container } from "../../infrastructure/di/container";
 
 const router = Router();
-const clienteService = new ClienteService(clienteRepository);
-const clienteController = new ClienteController(clienteService);
+const controller = new ClienteController(container.clienteService);
 
-router.post('/clientes', clienteController.create);
-// Otras rutas...
+router.get("/", controller.getAll);
+router.get("/:id", controller.getById);
+router.post("/", controller.create);
+router.put("/:id", controller.update);
+router.delete("/:id", controller.delete);
 
 export default router;

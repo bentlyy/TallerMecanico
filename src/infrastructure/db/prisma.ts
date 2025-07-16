@@ -19,32 +19,33 @@ declare global {
   var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
 }
 
-const prisma = globalThis.prisma ?? prismaClientSingleton();
+const prismaInstance = globalThis.prisma ?? prismaClientSingleton();
 
 // 2. Manejador de errores con tipado explícito
-prisma.$on('error' as never, (e: { message: string }) => {
+prismaInstance.$on('error' as never, (e: { message: string }) => {
   console.error('Prisma error:', e.message);
 });
 
 // 3. Conexión con manejo de errores tipado
-prisma.$connect()
+prismaInstance.$connect()
   .then(() => console.log('✅ Connected to database'))
-  .catch((err: PrismaError) => { // Tipado explícito aquí
+  .catch((err: PrismaError) => {
     console.error('❌ Connection error:', err.message);
     if (err.code) console.error('Error code:', err.code);
   });
 
 // 4. Desconexión limpia
 process.on('beforeExit', async () => {
-  await prisma.$disconnect()
-    .catch((err: PrismaError) => { // Tipado explícito
+  await prismaInstance.$disconnect()
+    .catch((err: PrismaError) => {
       console.error('Disconnection error:', err.message);
     });
 });
 
-export default prisma;
+// ✅ Export nombrado
+export const prisma = prismaInstance;
 
 // Solo mantener una instancia en desarrollo
 if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma;
+  globalThis.prisma = prismaInstance;
 }

@@ -7,84 +7,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model clientes {
-  id        Int      @id @default(autoincrement())
+model Cliente {
+  id        Int       @id @default(autoincrement())
   nombre    String
-  email     String?  @unique
+  email     String?   @unique
   telefono  String?
   direccion String?
 
-  vehiculos vehiculos[]
-  facturas  facturas[]
+  vehiculos Vehiculo[]
+  facturas  Factura[]
 }
 
-model piezas {
-  id     Int     @id @default(autoincrement())
-  nombre String
-  marca  String?
-  precio Float
-  stock  Int     @default(0)
-  codigo String  @unique
+model Vehiculo {
+  id           Int          @id @default(autoincrement())
+  marca        String
+  modelo       String
+  anio         Int?
+  patente      String       @unique
+  kilometraje  Int?
+  cliente_id   Int
 
-  detalle_reparacion detalle_reparacion[]
+  cliente      Cliente      @relation(fields: [cliente_id], references: [id])
+  reparaciones Reparacion[]
 }
 
-model detalle_reparacion {
-  reparacion_id Int
-  pieza_id     Int
-  cantidad     Int     @default(1)
-  precio_unitario Float
-
-  reparacion reparaciones @relation(fields: [reparacion_id], references: [id], onDelete: Cascade)
-  pieza      piezas       @relation(fields: [pieza_id], references: [id])
-
-  @@id([reparacion_id, pieza_id])
-}
-
-model roles {
-  id        Int     @id @default(autoincrement())
-  nombre    String  @unique
-  permisos  Json
-
-  usuarios  usuarios[]
-}
-
-model usuarios {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
-  password_hash String
-  nombre        String
-  activo        Boolean  @default(true)
-  rol_id        Int
-
-  rol       roles        @relation(fields: [rol_id], references: [id])
-  mecanico  mecanicos?
-  reparaciones_recepcionista reparaciones[] @relation("reparacion_recepcionista")
-}
-
-model mecanicos {
-  id          Int      @id @default(autoincrement())
-  usuario_id  Int      @unique
-  especialidad String?
-
-  usuario    usuarios @relation(fields: [usuario_id], references: [id])
-  reparaciones reparaciones[]
-}
-
-model vehiculos {
-  id          Int      @id @default(autoincrement())
-  marca       String
-  modelo      String
-  anio        Int?
-  patente     String   @unique
-  kilometraje Int?
-  cliente_id  Int
-
-  cliente     clientes  @relation(fields: [cliente_id], references: [id])
-  reparaciones reparaciones[]
-}
-
-model reparaciones {
+model Reparacion {
   id               Int       @id @default(autoincrement())
   descripcion      String
   fecha_entrada    DateTime  @default(now())
@@ -95,21 +42,74 @@ model reparaciones {
   mecanico_id      Int?
   recepcionista_id Int
 
-  vehiculo         vehiculos   @relation(fields: [vehiculo_id], references: [id])
-  mecanico         mecanicos?  @relation(fields: [mecanico_id], references: [id])
-  recepcionista    usuarios    @relation("reparacion_recepcionista", fields: [recepcionista_id], references: [id])
+  vehiculo         Vehiculo       @relation(fields: [vehiculo_id], references: [id])
+  mecanico         Mecanico?      @relation(fields: [mecanico_id], references: [id])
+  recepcionista    Usuario        @relation("reparacion_recepcionista", fields: [recepcionista_id], references: [id])
 
-  detalle_reparacion detalle_reparacion[]
-  facturas          facturas[]
+  detalleReparacion DetalleReparacion[]
+  facturas          Factura[]
 }
 
-model facturas {
-  id           Int       @id @default(autoincrement())
-  fecha        DateTime  @default(now())
-  total        Float
-  cliente_id   Int
-  reparacion_id Int
+model DetalleReparacion {
+  reparacion_id   Int
+  pieza_id        Int
+  cantidad        Int     @default(1)
+  precio_unitario Float
 
-  cliente     clientes   @relation(fields: [cliente_id], references: [id])
-  reparacion  reparaciones @relation(fields: [reparacion_id], references: [id])
+  reparacion      Reparacion @relation(fields: [reparacion_id], references: [id], onDelete: Cascade)
+  pieza           Pieza      @relation(fields: [pieza_id], references: [id])
+
+  @@id([reparacion_id, pieza_id])
+}
+
+model Pieza {
+  id       Int                @id @default(autoincrement())
+  nombre   String
+  marca    String?
+  precio   Float
+  stock    Int                @default(0)
+  codigo   String             @unique
+
+  detalleReparacion DetalleReparacion[]
+}
+
+model Factura {
+  id             Int        @id @default(autoincrement())
+  fecha          DateTime   @default(now())
+  total          Float
+  cliente_id     Int
+  reparacion_id  Int
+
+  cliente        Cliente     @relation(fields: [cliente_id], references: [id])
+  reparacion     Reparacion  @relation(fields: [reparacion_id], references: [id])
+}
+
+model Usuario {
+  id            Int         @id @default(autoincrement())
+  email         String      @unique
+  password_hash String
+  nombre        String
+  activo        Boolean     @default(true)
+  rol_id        Int
+
+  rol           Rol         @relation(fields: [rol_id], references: [id])
+  mecanico      Mecanico?
+  reparaciones_recepcionista Reparacion[] @relation("reparacion_recepcionista")
+}
+
+model Rol {
+  id        Int     @id @default(autoincrement())
+  nombre    String  @unique
+  permisos  Json
+
+  usuarios  Usuario[]
+}
+
+model Mecanico {
+  id           Int         @id @default(autoincrement())
+  usuario_id   Int         @unique
+  especialidad String?
+
+  usuario      Usuario     @relation(fields: [usuario_id], references: [id])
+  reparaciones Reparacion[]
 }

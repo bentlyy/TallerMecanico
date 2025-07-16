@@ -1,4 +1,6 @@
 import app from './app';
+import config from '../config/env';
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
+app.listen(config.port, () => {
+  console.log(`Servidor corriendo en puerto ${config.port} en modo ${config.nodeEnv}`);
+});

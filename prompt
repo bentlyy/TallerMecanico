@@ -1,0 +1,160 @@
+Qué seguir haciendo después de las entidades
+1. Completar y pulir los repositorios (repositories/)
+Implementa la lógica para CRUD (crear, leer, actualizar, eliminar) usando Prisma en los repositorios.
+
+Asegúrate de manejar errores y excepciones.
+
+Define interfaces claras en los repositorios para facilitar cambios futuros (por ejemplo, para cambiar de Prisma a otro ORM o DB).
+
+2. Implementar los servicios en la capa application/
+Los servicios orquestan la lógica del negocio usando repositorios y entidades.
+
+Por ejemplo, crear vehiculoService.ts que tenga métodos para registrar vehículos, validar datos, aplicar reglas de negocio.
+
+Los servicios no deben conocer detalles de infraestructura, solo usar repositorios.
+
+3. Crear los controladores en presentation/controllers/
+Los controladores reciben las peticiones HTTP y llaman a los servicios.
+
+Controlan respuestas y errores para enviar respuestas HTTP correctas.
+
+Por ejemplo, vehiculoController.ts con métodos para manejar rutas: crear vehículo, listar, actualizar, eliminar.
+
+4. Definir las rutas en presentation/routes/
+Crear rutas REST con Express que apunten a los controladores.
+
+Ejemplo: rutas para /vehiculos, /clientes, etc.
+
+5. Implementar middlewares en presentation/middlewares/
+Middleware para autenticación (JWT o sesiones).
+
+Middleware para validación de datos (puedes usar express-validator).
+
+Middleware para manejo de errores centralizado.
+
+Middleware para logging y seguridad (helmet, cors configurado).
+
+6. Documentar la API
+Usa Swagger/OpenAPI para documentar tus endpoints.
+
+Puedes agregar Swagger UI para que sea visible en /docs o similar.
+
+7. Seguir desarrollando y ampliando tests
+Unit tests para servicios, controladores, validaciones.
+
+Integration tests para rutas y base de datos.
+
+Tests end-to-end (E2E) si quieres ir más allá (con herramientas como Cypress o Playwright).
+
+8. Preparar scripts y configuraciones para producción
+Configuración de variables de entorno para producción.
+
+Optimizar Dockerfile para producción.
+
+Scripts para build, migraciones y seed.
+
+9. Configurar CI/CD
+Configura pipeline para build, test y despliegue automático.
+
+Ejemplo con GitHub Actions, GitLab CI, Jenkins, etc.
+
+10. Crear una interfaz básica para pruebas manuales
+Puede ser un frontend sencillo (React, Vue, o incluso Postman collections).
+
+Sirve para probar funcionalidades manualmente mientras avanzas.
+
+11. Optimizar y refactorizar
+Revisión continua del código.
+
+Documentación de código y arquitectura.
+
+Refactorización para mejorar calidad y mantenibilidad.
+
+Resumen en orden ideal para ti:
+Repositorios
+
+Servicios
+
+Controladores
+
+Rutas
+
+Middlewares
+
+Documentación API
+
+Tests (unitarios, integración, E2E)
+
+Scripts y configuración producción
+
+CI/CD
+
+Interfaz para pruebas manuales
+
+Refactor y optimización
+
+
+Estructura completa 
+
+taller-mecanico/
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
+├── config/
+│   (archivos o configuraciones varias — no detallaste contenido)
+│
+├── node_modules/
+│   (módulos instalados por npm)
+│
+├── prisma/
+│   ├── migrations/
+│   │   └── (archivos de migraciones de base de datos)
+│   ├── schema.prisma
+│   └── seed.ts
+│
+├── src/
+│   ├── app.ts
+│   ├── server.ts
+│   ├── application/
+│   │   ├── clienteService.ts
+│   │   └── vehiculoService.ts
+│   ├── domain/
+│   │   ├── entities/
+│   │   │   ├── cliente.ts
+│   │   │   └── vehiculo.ts
+│   │   └── repositories/
+│   │       ├── clienteRepository.ts
+│   │       └── vehiculoRepository.ts
+│   ├── infrastructure/
+│   │   ├── db/
+│   │   │   ├── prisma.ts
+│   │   │   ├── prismaClienteRepository.ts
+│   │   │   └── prismaVehiculoRepository.ts
+│   │   ├── di/
+│   │   │   └── container.ts
+│   │   └── http/
+│   │       └── health.ts
+│   └── presentation/
+│       ├── controllers/
+│       │   ├── clienteController.ts
+│       │   └── vehiculoController.ts
+│       ├── middlewares/
+│       └── routes/
+│           ├── clienteRoutes.ts
+│           └── vehiculoRoutes.ts
+│
+├── tests/
+│   ├── integration/
+│   │   └── (tests de integración)
+│   └── unit/
+│       └── (tests unitarios)
+│
+├── .env
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
+├── package-lock.json
+├── package.json
+└── tsconfig.json

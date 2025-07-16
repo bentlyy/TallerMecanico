@@ -1,10 +1,9 @@
-export interface Cliente {
-  id: number;
-  nombre: string;
-  email?: string | null;
-  telefono?: string | null;
-  direccion?: string | null;
+export class Cliente {
+  constructor(
+    public readonly id: number,
+    public nombre: string,
+    public email?: string,
+    public telefono?: string,
+    public direccion?: string
+  ) {}
 }
-
-export interface CreateClienteDto
-  extends Omit<Cliente, 'id'> {}

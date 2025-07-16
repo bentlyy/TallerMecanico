@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-  "docker:start": "docker-compose up -d",
-  "docker:stop": "docker-compose down",
-  "prisma:generate": "prisma generate",
-  "prisma:migrate": "prisma migrate dev",
-  "dev": "ts-node-dev src/server.ts"
-},
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "docker:start": "docker-compose up -d",
+    "docker:stop": "docker-compose down",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "dev": "ts-node-dev src/server.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -16,13 +18,16 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
     "@types/supertest": "^6.0.3",
     "eslint": "^9.30.1",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
+    "jest": "^30.0.4",
     "prettier": "^3.6.2",
     "prisma": "^6.11.1",
     "supertest": "^7.1.2",
+    "ts-jest": "^29.4.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
@@ -31,6 +36,9 @@
     "@prisma/client": "^6.11.1",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "joi": "^17.13.3",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.10.0"
   }
 }

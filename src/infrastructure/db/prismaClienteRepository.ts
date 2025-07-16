@@ -1,51 +1,29 @@
-import { PrismaClient } from '@prisma/client';
-import { ClienteRepository } from '../../domain/repositories/clienteRepository';
-import { Cliente, CreateClienteDto } from '../../domain/entities/cliente';
+import { ClienteRepository } from "../../domain/repositories/clienteRepository";
+import { Cliente } from "../../domain/entities/cliente";
+import { prisma } from './prisma'; // ✅ Correcto
 
 export class PrismaClienteRepository implements ClienteRepository {
-  private prisma = new PrismaClient();
-
-  async create(cliente: CreateClienteDto): Promise<Cliente> {
-    const created = await this.prisma.clientes.create({ 
-      data: cliente 
-    });
-    return this.mapToDomain(created);
+  async getAll(): Promise<Cliente[]> {
+    const clientes = await prisma.cliente.findMany();
+    return clientes.map(c => new Cliente(c.id, c.nombre, c.email ?? undefined, c.telefono ?? undefined, c.direccion ?? undefined));
   }
 
-  async findById(id: number): Promise<Cliente | null> {
-    const cliente = await this.prisma.clientes.findUnique({
-      where: { id }
-    });
-    return cliente ? this.mapToDomain(cliente) : null;
+  async getById(id: number): Promise<Cliente | null> {
+    const c = await prisma.cliente.findUnique({ where: { id } });
+    return c ? new Cliente(c.id, c.nombre, c.email ?? undefined, c.telefono ?? undefined, c.direccion ?? undefined) : null;
   }
 
-  async findAll(): Promise<Cliente[]> {
-    const clientes = await this.prisma.clientes.findMany();
-    return clientes.map(this.mapToDomain);
+  async create(data: Omit<Cliente, "id">): Promise<Cliente> {
+    const c = await prisma.cliente.create({ data });
+    return new Cliente(c.id, c.nombre, c.email ?? undefined, c.telefono ?? undefined, c.direccion ?? undefined);
   }
 
-  async update(id: number, changes: Partial<Cliente>): Promise<Cliente> {
-    const updated = await this.prisma.clientes.update({
-      where: { id },
-      data: changes
-    });
-    return this.mapToDomain(updated);
+  async update(id: number, data: Partial<Omit<Cliente, "id">>): Promise<Cliente | null> {
+    const c = await prisma.cliente.update({ where: { id }, data });
+    return new Cliente(c.id, c.nombre, c.email ?? undefined, c.telefono ?? undefined, c.direccion ?? undefined);
   }
 
   async delete(id: number): Promise<void> {
-    await this.prisma.clientes.delete({
-      where: { id }
-    });
-  }
-
-  // Método auxiliar para mapear el modelo de Prisma a tu dominio
-  private mapToDomain(cliente: any): Cliente {
-    return {
-      id: cliente.id,
-      nombre: cliente.nombre,
-      email: cliente.email,
-      telefono: cliente.telefono,
-      direccion: cliente.direccion
-    };
+    await prisma.cliente.delete({ where: { id } });
   }
 }

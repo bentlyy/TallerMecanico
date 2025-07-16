@@ -1,47 +1,80 @@
 import { VehiculoRepository } from "../../domain/repositories/vehiculoRepository";
 import { Vehiculo } from "../../domain/entities/vehiculo";
-import prisma from "./prisma";
+import { prisma } from './prisma';
 
 export class PrismaVehiculoRepository implements VehiculoRepository {
-  private mapToEntity(v: any): Vehiculo {
+  async getAll(): Promise<Vehiculo[]> {
+    const vehiculos = await prisma.vehiculo.findMany();
+    return vehiculos.map(v => new Vehiculo(
+      v.id,
+      v.marca,
+      v.modelo,
+      v.anio,
+      v.patente,
+      v.kilometraje,
+      v.cliente_id
+    ));
+  }
+
+  async getById(id: number): Promise<Vehiculo | null> {
+    const v = await prisma.vehiculo.findUnique({ where: { id } });
+    return v ? new Vehiculo(
+      v.id,
+      v.marca,
+      v.modelo,
+      v.anio,
+      v.patente,
+      v.kilometraje,
+      v.cliente_id
+    ) : null;
+  }
+
+  async create(data: Omit<Vehiculo, "id">): Promise<Vehiculo> {
+    const v = await prisma.vehiculo.create({
+      data: {
+        marca: data.marca,
+        modelo: data.modelo,
+        anio: data.anio ?? undefined,
+        patente: data.patente,
+        kilometraje: data.kilometraje ?? undefined,
+        cliente_id: data.cliente_id,
+      }
+    });
     return new Vehiculo(
       v.id,
       v.marca,
       v.modelo,
-      v.anio ?? undefined,
+      v.anio,
       v.patente,
-      v.kilometraje ?? undefined,
+      v.kilometraje,
       v.cliente_id
     );
   }
 
-  async getAll(): Promise<Vehiculo[]> {
-    const vehiculos = await prisma.vehiculos.findMany();
-    return vehiculos.map(this.mapToEntity);
-  }
-
-  async getById(id: number): Promise<Vehiculo | null> {
-    const v = await prisma.vehiculos.findUnique({ where: { id } });
-    if (!v) return null;
-    return this.mapToEntity(v);
-  }
-
-  async create(data: Omit<Vehiculo, "id">): Promise<Vehiculo> {
-    const created = await prisma.vehiculos.create({
+  async update(id: number, data: Partial<Omit<Vehiculo, "id">>): Promise<Vehiculo | null> {
+    const v = await prisma.vehiculo.update({
+      where: { id },
       data: {
         marca: data.marca,
         modelo: data.modelo,
-        anio: data.anio,
+        anio: data.anio ?? undefined,
         patente: data.patente,
-        kilometraje: data.kilometraje,
-        cliente_id: data.clienteId,  // camelCase -> snake_case
-      },
+        kilometraje: data.kilometraje ?? undefined,
+        cliente_id: data.cliente_id
+      }
     });
-    return this.mapToEntity(created);
+    return new Vehiculo(
+      v.id,
+      v.marca,
+      v.modelo,
+      v.anio,
+      v.patente,
+      v.kilometraje,
+      v.cliente_id
+    );
   }
 
-  async getByCliente(clienteId: number): Promise<Vehiculo[]> {
-    const vehiculos = await prisma.vehiculos.findMany({ where: { cliente_id: clienteId } });
-    return vehiculos.map(this.mapToEntity);
+  async delete(id: number): Promise<void> {
+    await prisma.vehiculo.delete({ where: { id } });
   }
 }
