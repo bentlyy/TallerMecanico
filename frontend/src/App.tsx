@@ -1,6 +1,7 @@
+// src/App.tsx
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ClientesPage } from "./pages/ClientesPage";
-// import { VehiculosPage } from "./pages/VehiculosPage";
+import { VehiculosPage } from "./pages/VehiculoPage";
 
 function App() {
   return (
@@ -11,7 +12,7 @@ function App() {
       </nav>
       <Routes>
         <Route path="/clientes" element={<ClientesPage />} />
-        {/* <Route path="/vehiculos" element={<VehiculosPage />} /> */}
+        <Route path="/vehiculos" element={<VehiculosPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,3 +1,4 @@
+//factura.ts
 export class Factura {
   constructor(
     public id: number,
@@ -8,5 +9,8 @@ export class Factura {
   ) {}
 }
 
-export type CreateFactura = Omit<Factura, "id">;
-export type UpdateFactura = Partial<CreateFactura>;
+export interface CreateFactura {
+  fecha?: Date;           // opcional, se puede generar en el backend
+  clienteId: number;
+  reparacionId: number;
+}

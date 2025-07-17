@@ -1,5 +1,5 @@
 import { FacturaRepository } from '../domain/repositories/facturaRepository';
-import { Factura } from '../domain/entities/factura';
+import { CreateFactura, Factura } from '../domain/entities/factura';
 
 export class FacturaService {
   constructor(private readonly repository: FacturaRepository) {}
@@ -12,7 +12,7 @@ export class FacturaService {
     return this.repository.getById(id);
   }
 
-  async createFactura(data: Factura): Promise<Factura> {
+  async createFactura(data: CreateFactura): Promise<Factura> {
     return this.repository.create(data);
   }
 

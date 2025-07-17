@@ -17,7 +17,7 @@ export class FacturaController {
     try {
       const id = parseInt(req.params.id);
       const factura = await this.facturaService.getFacturaById(id);
-      
+
       if (factura) {
         res.status(200).json(factura);
       } else {
@@ -31,18 +31,17 @@ export class FacturaController {
   async create(req: Request, res: Response) {
     try {
       const { clienteId, reparacionId } = req.body;
-      
+
       if (!clienteId || !reparacionId) {
-        return res.status(400).json({ error: 'ClienteId y reparacionId son requeridos' });
+        return res.status(400).json({ error: 'clienteId y reparacionId son requeridos' });
       }
-      
+
       const factura = await this.facturaService.createFactura({
-        fecha: new Date(),
-        total: 0, // Se calcula automáticamente
         clienteId,
         reparacionId
+        // fecha es opcional y se asigna automáticamente en el repository
       });
-      
+
       res.status(201).json(factura);
     } catch (error: any) {
       res.status(500).json({ error: error.message || 'Error al crear la factura' });
@@ -63,7 +62,7 @@ export class FacturaController {
     try {
       const reparacionId = parseInt(req.params.reparacionId);
       const factura = await this.facturaService.getFacturasPorReparacion(reparacionId);
-      
+
       if (factura) {
         res.status(200).json(factura);
       } else {

@@ -13,9 +13,6 @@ export class UsuarioService {
     return this.repository.getById(id);
   }
 
-  async getUsuarioByEmail(email: string): Promise<Usuario | null> {
-    return this.repository.getByEmail(email);
-  }
 
   async createUsuario(data: Usuario): Promise<Usuario> {
     return this.repository.create(data);

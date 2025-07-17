@@ -10,13 +10,13 @@ const repository = new PrismaFacturaRepository(prisma);
 const service = new FacturaService(repository);
 const controller = new FacturaController(service);
 
-// Rutas CRUD
+// ⚠️ Primero las rutas específicas
+facturaRouter.get('/cliente/:clienteId', controller.getByCliente.bind(controller));
+facturaRouter.get('/reparacion/:reparacionId', controller.getByReparacion.bind(controller));
+
+// Luego las rutas genéricas
 facturaRouter.get('/', controller.getAll.bind(controller));
 facturaRouter.get('/:id', controller.getById.bind(controller));
 facturaRouter.post('/', controller.create.bind(controller));
-
-// Rutas específicas
-facturaRouter.get('/cliente/:clienteId', controller.getByCliente.bind(controller));
-facturaRouter.get('/reparacion/:reparacionId', controller.getByReparacion.bind(controller));
 
 export default facturaRouter;

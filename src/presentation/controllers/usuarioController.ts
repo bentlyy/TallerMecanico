@@ -28,23 +28,7 @@ export class UsuarioController {
     }
   }
 
-  async getByEmail(req: Request, res: Response) {
-    try {
-      const { email } = req.query;
-      if (!email || typeof email !== 'string') {
-        return res.status(400).json({ error: 'Email es requerido' });
-      }
-
-      const usuario = await this.usuarioService.getUsuarioByEmail(email);
-      if (usuario) {
-        res.status(200).json(usuario);
-      } else {
-        res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al buscar usuario por email' });
-    }
-  }
+  
 
   async create(req: Request, res: Response) {
     try {

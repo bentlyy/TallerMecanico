@@ -43,16 +43,22 @@ export class PrismaReparacionRepository implements ReparacionRepository {
     return reparacion ? this.mapToEntity(reparacion) : null;
   }
 
-  async create(data: CreateReparacion): Promise<Reparacion> {
-    const reparacion = await this.prisma.reparacion.create({
-      data: {
-        ...data,
-        vehiculo: { connect: { id: data.vehiculoId } },
-        recepcionista: { connect: { id: data.recepcionistaId } }
-      }
-    });
-    return this.mapToEntity(reparacion);
-  }
+      async create(data: CreateReparacion): Promise<Reparacion> {
+  const reparacion = await this.prisma.reparacion.create({
+    data: {
+      descripcion: data.descripcion,
+      fechaEntrada: data.fechaEntrada,
+      fechaSalida: data.fechaSalida,
+      estado: data.estado,
+      costoManoObra: data.costoManoObra,
+      vehiculoId: data.vehiculoId,
+      mecanicoId: data.mecanicoId,
+      recepcionistaId: data.recepcionistaId
+    }
+  });
+
+  return this.mapToEntity(reparacion);
+}
 
   async update(id: number, data: UpdateReparacion): Promise<Reparacion | null> {
     const updateData: any = { ...data };

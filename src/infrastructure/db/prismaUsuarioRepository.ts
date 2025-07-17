@@ -23,16 +23,21 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
   }
 
   async create(data: CreateUsuario): Promise<Usuario> {
-    const hashedPassword = await bcrypt.hash(data.passwordHash, 10);
-    const usuario = await this.prisma.usuario.create({ 
-      data: {
-        ...data,
-        passwordHash: hashedPassword,
-        rol: { connect: { id: data.rolId } }
-      }
-    });
-    return this.mapToEntity(usuario);
-  }
+  const hashedPassword = await bcrypt.hash(data.passwordHash, 10);
+
+  // Extrae rolId y el resto de los datos
+  const { rolId, ...rest } = data;
+
+  const usuario = await this.prisma.usuario.create({ 
+    data: {
+      ...rest,
+      passwordHash: hashedPassword,
+      rol: { connect: { id: rolId } }
+    }
+  });
+
+  return this.mapToEntity(usuario);
+}
 
   async update(id: number, data: UpdateUsuario): Promise<Usuario | null> {
     const updateData: any = { ...data };

@@ -13,7 +13,7 @@ const controller = new UsuarioController(service);
 // Rutas básicas CRUD
 usuarioRouter.get('/', controller.getAll.bind(controller));
 usuarioRouter.get('/:id', controller.getById.bind(controller));
-usuarioRouter.get('/email', controller.getByEmail.bind(controller));
+
 usuarioRouter.post('/', controller.create.bind(controller));
 usuarioRouter.put('/:id', controller.update.bind(controller));
 usuarioRouter.delete('/:id', controller.delete.bind(controller));
