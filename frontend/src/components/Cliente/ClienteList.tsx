@@ -1,3 +1,4 @@
+//ClienteList.tsx
 import { useEffect, useState } from 'react';
 import { getAllClientes } from '../../api/clienteApi';
 

@@ -2,10 +2,13 @@ import { Router } from 'express';
 import { VehiculoController } from '../controllers/vehiculoController';
 import { VehiculoService } from '../../application/vehiculoService';
 import { PrismaVehiculoRepository } from '../../infrastructure/db/prismaVehiculoRepository';
+import { PrismaClienteRepository } from '../../infrastructure/db/prismaClienteRepository'; // 👈 Asegúrate de tener este archivo
 import { prisma } from '../../infrastructure/db/prisma';
 
-const repository = new PrismaVehiculoRepository(prisma);
-const service = new VehiculoService(repository);
+const vehiculoRepository = new PrismaVehiculoRepository(prisma);
+const clienteRepository = new PrismaClienteRepository(prisma); // 👈 nuevo repositorio
+
+const service = new VehiculoService(vehiculoRepository, clienteRepository); // ✅ pasa ambos
 const controller = new VehiculoController(service);
 
 const vehiculoRouter = Router();

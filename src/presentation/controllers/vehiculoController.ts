@@ -1,3 +1,4 @@
+//vehiculoController.ts
 import { Request, Response } from 'express';
 import { VehiculoService } from '../../application/vehiculoService';
 import { Vehiculo, CreateVehiculo, UpdateVehiculo } from '../../domain/entities/vehiculo';

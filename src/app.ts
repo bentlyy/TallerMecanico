@@ -1,3 +1,4 @@
+//app.ts
 import express from 'express';
 import cors from 'cors';
 import * as client from 'prom-client'; 
@@ -26,7 +27,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/clientes', clienteRoutes);
-app.use("/vehiculos", vehiculoRoutes);
+app.use("/api/vehiculos", vehiculoRoutes);
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/roles", rolRoutes);
 // app.use("/api/mecanicos", mecanicoRoutes);

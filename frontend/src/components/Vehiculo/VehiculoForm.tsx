@@ -1,76 +1,75 @@
-// src/components/Vehiculo/VehiculoList.tsx
-import React, { useEffect, useState } from 'react';
-import { Vehiculo } from '../../types';
+//VehiculoForm.tsx
+import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { getAllClientes } from '../../api/clienteApi';
+import { Vehiculo } from '../../types';
 
-const VehiculoList: React.FC = () => {
-  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+const VehiculoForm: React.FC = () => {
+  const [clientes, setClientes] = useState([]);
+  const [formData, setFormData] = useState({
+    marca: '',
+    modelo: '',
+    anio: '',
+    patente: '',
+    kilometraje: '',
+    clienteId: ''
+  });
 
   useEffect(() => {
-    const fetchVehiculos = async () => {
-      try {
-        const response = await api.get('/vehiculos');
-        setVehiculos(response.data);
-      } catch (err) {
-        setError('Error al obtener los vehículos');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVehiculos();
+    getAllClientes()
+      .then(res => setClientes(res.data))
+      .catch(err => console.error('Error al obtener clientes', err));
   }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await api.delete(`/vehiculos/${id}`);
-      setVehiculos(vehiculos.filter(vehiculo => vehiculo.id !== id));
-    } catch (err) {
-      console.error('Error al eliminar el vehículo:', err);
+      await api.post('/vehiculos', {
+        ...formData,
+        anio: parseInt(formData.anio),
+        kilometraje: parseInt(formData.kilometraje),
+        clienteId: parseInt(formData.clienteId)
+      });
+      alert('Vehículo creado con éxito');
+      setFormData({
+        marca: '',
+        modelo: '',
+        anio: '',
+        patente: '',
+        kilometraje: '',
+        clienteId: ''
+      });
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error al crear el vehículo');
     }
   };
 
-  if (loading) return <div>Cargando...</div>;
-  if (error) return <div>{error}</div>;
-
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>Marca</TableCell>
-            <TableCell>Modelo</TableCell>
-            <TableCell>Patente</TableCell>
-            <TableCell>Acciones</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {vehiculos.map((vehiculo) => (
-            <TableRow key={vehiculo.id}>
-              <TableCell>{vehiculo.id}</TableCell>
-              <TableCell>{vehiculo.marca}</TableCell>
-              <TableCell>{vehiculo.modelo}</TableCell>
-              <TableCell>{vehiculo.patente}</TableCell>
-              <TableCell>
-                <Button 
-                  variant="contained" 
-                  color="secondary"
-                  onClick={() => handleDelete(vehiculo.id)}
-                >
-                  Eliminar
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <form onSubmit={handleSubmit}>
+      <h2>Crear Vehículo</h2>
+      <input name="marca" placeholder="Marca" value={formData.marca} onChange={handleChange} required />
+      <input name="modelo" placeholder="Modelo" value={formData.modelo} onChange={handleChange} required />
+      <input name="anio" type="number" placeholder="Año" value={formData.anio} onChange={handleChange} required />
+      <input name="patente" placeholder="Patente" value={formData.patente} onChange={handleChange} required />
+      <input name="kilometraje" type="number" placeholder="Kilometraje" value={formData.kilometraje} onChange={handleChange} required />
+      <select name="clienteId" value={formData.clienteId} onChange={handleChange} required>
+        <option value="">Selecciona un cliente</option>
+        {clientes.map((cliente: any) => (
+          <option key={cliente.id} value={cliente.id}>
+            {cliente.nombre}
+          </option>
+        ))}
+      </select>
+      <button type="submit">Crear</button>
+    </form>
   );
 };
 
-export default VehiculoList;
+export default VehiculoForm;

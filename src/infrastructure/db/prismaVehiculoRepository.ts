@@ -1,3 +1,4 @@
+//prismaVehiculoRepository.ts
 import { PrismaClient } from '@prisma/client';
 import { VehiculoRepository } from '../../domain/repositories/vehiculoRepository';
 import { Vehiculo, CreateVehiculo, UpdateVehiculo } from '../../domain/entities/vehiculo';

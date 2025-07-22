@@ -113,6 +113,7 @@ taller-mecanico/
 │   │   └── (módulos instalados por npm)
 │   ├── package-lock.json
 │   ├── package.json
+│   ├── nginx.conf
 │   ├── public/
 │   │   └── (archivos estáticos públicos, index.html, favicon.ico, etc.)
 │   ├── README.md
@@ -142,6 +143,9 @@ taller-mecanico/
 │   │   └── setupTests.ts
 │   └── tsconfig.json
 │
+├── monitoring/
+│   ├── prometheus.yml
+
 ├── node_modules/
 │   └── (módulos instalados por npm)
 │
@@ -242,10 +246,12 @@ taller-mecanico/
 ├── .env
 ├── .gitignore
 ├── Dockerfile
+├── jest.config.js
 ├── docker-compose.yml
 ├── package-lock.json
 ├── package.json
 ├── README.md
+├── Prompts
 └── tsconfig.json
 
 

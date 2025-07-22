@@ -1,3 +1,4 @@
+//vehiculoApi.ts
 import api from './axios';
 
 const BASE_URL = '/vehiculos';

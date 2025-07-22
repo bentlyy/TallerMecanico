@@ -1,3 +1,4 @@
+//clienteApi.ts
 import api from './axios';
 
 const BASE_URL = '/clientes';

@@ -13,5 +13,5 @@ export interface Vehiculo {
   anio?: number;
   patente: string;
   kilometraje?: number;
-  cliente_id: number;
+  clienteId: number;
 }
