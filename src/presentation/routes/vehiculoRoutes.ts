@@ -8,7 +8,7 @@ import { prisma } from '../../infrastructure/db/prisma';
 const vehiculoRepository = new PrismaVehiculoRepository(prisma);
 const clienteRepository = new PrismaClienteRepository(prisma); // 👈 nuevo repositorio
 
-const service = new VehiculoService(vehiculoRepository, clienteRepository); // ✅ pasa ambos
+const service = new VehiculoService(vehiculoRepository, clienteRepository);
 const controller = new VehiculoController(service);
 
 const vehiculoRouter = Router();

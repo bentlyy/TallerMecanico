@@ -6,7 +6,8 @@ import { prisma } from '../infrastructure/db/prisma'; // Asegúrate de importar 
 import { ClienteRepository } from '../domain/repositories/clienteRepository';
 
 export class VehiculoService {
-  constructor( private readonly vehiculoRepository: VehiculoRepository,
+  constructor(
+    private readonly vehiculoRepository: VehiculoRepository,
     private readonly clienteRepository: ClienteRepository
   ) {}
 
