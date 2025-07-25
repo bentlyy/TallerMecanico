@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
 import { UsuarioService } from '../../application/usuarioService';
+import { Usuario, CreateUsuario, UpdateUsuario } from '../../domain/entities/usuario';
+import { usuarioService } from '@infrastructure/di/container';
 
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
-  async getAll(req: Request, res: Response) {
+  async getAll(req: Request, res: Response): Promise<void> {
     try {
       const usuarios = await this.usuarioService.getAllUsuarios();
       res.status(200).json(usuarios);
@@ -13,7 +15,7 @@ export class UsuarioController {
     }
   }
 
-  async getById(req: Request, res: Response) {
+  async getById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
       const usuario = await this.usuarioService.getUsuarioById(id);
@@ -28,46 +30,64 @@ export class UsuarioController {
     }
   }
 
-  
-
-  async create(req: Request, res: Response) {
+  async create(req: Request, res: Response): Promise<void> {
     try {
-      const usuario = await this.usuarioService.createUsuario(req.body);
-      res.status(201).json(usuario);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al crear usuario' });
+      const { email, password, nombre, rolId } = req.body;
+      
+      // Validaciones básicas
+      if (!email || !password || !nombre || !rolId) {
+        res.status(400).json({ error: 'Todos los campos son requeridos' });
+        return;
+      }
+
+      // En la práctica, deberías hashear la contraseña aquí antes de crear el usuario
+      const passwordHash = password; // Esto debería ser el hash de la contraseña
+
+      const nuevoUsuario = await this.usuarioService.createUsuario({
+        email,
+        passwordHash,
+        nombre,
+        activo: true,
+        rolId
+      });
+      
+      res.status(201).json(nuevoUsuario);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
     }
   }
 
-  async update(req: Request, res: Response) {
+  async update(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
-      const usuario = await this.usuarioService.updateUsuario(id, req.body);
+      const data: UpdateUsuario = req.body;
       
-      if (usuario) {
-        res.status(200).json(usuario);
+      const usuarioActualizado = await this.usuarioService.updateUsuario(id, data);
+      
+      if (usuarioActualizado) {
+        res.status(200).json(usuarioActualizado);
       } else {
         res.status(404).json({ error: 'Usuario no encontrado' });
       }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al actualizar usuario' });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
     }
   }
 
-  async delete(req: Request, res: Response) {
+  async delete(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
       await this.usuarioService.deleteUsuario(id);
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: 'Error al eliminar usuario' });
+      res.status(500).json({ error: 'Error al eliminar el usuario' });
     }
   }
 
-  async activate(req: Request, res: Response) {
+  async activate(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
-      const usuario = await this.usuarioService.activarUsuario(id);
+      const usuario = await this.usuarioService.activateUsuario(id);
       
       if (usuario) {
         res.status(200).json(usuario);
@@ -75,14 +95,14 @@ export class UsuarioController {
         res.status(404).json({ error: 'Usuario no encontrado' });
       }
     } catch (error) {
-      res.status(500).json({ error: 'Error al activar usuario' });
+      res.status(500).json({ error: 'Error al activar el usuario' });
     }
   }
 
-  async deactivate(req: Request, res: Response) {
+  async deactivate(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
-      const usuario = await this.usuarioService.desactivarUsuario(id);
+      const usuario = await this.usuarioService.deactivateUsuario(id);
       
       if (usuario) {
         res.status(200).json(usuario);
@@ -90,42 +110,10 @@ export class UsuarioController {
         res.status(404).json({ error: 'Usuario no encontrado' });
       }
     } catch (error) {
-      res.status(500).json({ error: 'Error al desactivar usuario' });
-    }
-  }
-
-  async getByRole(req: Request, res: Response) {
-    try {
-      const rolId = parseInt(req.params.rolId);
-      const usuarios = await this.usuarioService.getUsuariosPorRol(rolId);
-      res.status(200).json(usuarios);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener usuarios por rol' });
-    }
-  }
-
-  async getReparacionesAsRecepcionista(req: Request, res: Response) {
-    try {
-      const usuarioId = parseInt(req.params.usuarioId);
-      const reparaciones = await this.usuarioService.verReparacionesAsignadasComoRecepcionista(usuarioId);
-      res.status(200).json(reparaciones);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener reparaciones' });
-    }
-  }
-
-  async authenticate(req: Request, res: Response) {
-    try {
-      const { email, password } = req.body;
-      const usuario = await this.usuarioService.autenticar(email, password);
-      
-      if (usuario) {
-        res.status(200).json(usuario);
-      } else {
-        res.status(401).json({ error: 'Credenciales inválidas' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error en autenticación' });
+      res.status(500).json({ error: 'Error al desactivar el usuario' });
     }
   }
 }
+
+
+export const usuarioController = new UsuarioController(usuarioService);

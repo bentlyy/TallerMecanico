@@ -1,31 +1,49 @@
 import { PrismaClient } from '@prisma/client';
 import { RolRepository } from '../../domain/repositories/rolRepository';
-import { Rol, CreateRol, UpdateRol, Permisos } from '../../domain/entities/rol';
+import { Rol, CreateRol, UpdateRol } from '../../domain/entities/rol';
 
 export class PrismaRolRepository implements RolRepository {
   constructor(private prisma: PrismaClient) {}
 
-  private mapToEntity(rol: any): Rol {
-    return new Rol(
-      rol.id,
-      rol.nombre,
-      rol.permisos as Permisos
-    );
-  }
-
   async getAll(): Promise<Rol[]> {
     const roles = await this.prisma.rol.findMany();
-    return roles.map(this.mapToEntity);
+    return roles.map(rol => new Rol(
+      rol.id,
+      rol.nombre,
+      rol.permisos as Record<string, boolean>
+    ));
   }
 
   async getById(id: number): Promise<Rol | null> {
     const rol = await this.prisma.rol.findUnique({ where: { id } });
-    return rol ? this.mapToEntity(rol) : null;
+    return rol ? new Rol(
+      rol.id,
+      rol.nombre,
+      rol.permisos as Record<string, boolean>
+    ) : null;
+  }
+
+  async getByNombre(nombre: string): Promise<Rol | null> {
+    const rol = await this.prisma.rol.findUnique({ where: { nombre } });
+    return rol ? new Rol(
+      rol.id,
+      rol.nombre,
+      rol.permisos as Record<string, boolean>
+    ) : null;
   }
 
   async create(data: CreateRol): Promise<Rol> {
-    const rol = await this.prisma.rol.create({ data });
-    return this.mapToEntity(rol);
+    const rol = await this.prisma.rol.create({ 
+      data: {
+        nombre: data.nombre,
+        permisos: data.permisos
+      }
+    });
+    return new Rol(
+      rol.id,
+      rol.nombre,
+      rol.permisos as Record<string, boolean>
+    );
   }
 
   async update(id: number, data: UpdateRol): Promise<Rol | null> {
@@ -33,18 +51,14 @@ export class PrismaRolRepository implements RolRepository {
       where: { id },
       data
     });
-    return this.mapToEntity(rol);
+    return rol ? new Rol(
+      rol.id,
+      rol.nombre,
+      rol.permisos as Record<string, boolean>
+    ) : null;
   }
 
   async delete(id: number): Promise<void> {
     await this.prisma.rol.delete({ where: { id } });
-  }
-
-  async getPermisos(id: number): Promise<Permisos | null> {
-    const rol = await this.prisma.rol.findUnique({
-      where: { id },
-      select: { permisos: true }
-    });
-    return rol ? rol.permisos as Permisos : null;
   }
 }

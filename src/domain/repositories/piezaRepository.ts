@@ -7,6 +7,5 @@ export interface PiezaRepository {
   create(data: CreatePieza): Promise<Pieza>;
   update(id: number, data: UpdatePieza): Promise<Pieza | null>;
   delete(id: number): Promise<void>;
-  updateStock(id: number, nuevaCantidad: number): Promise<Pieza | null>;
-  decreaseStock(id: number, cantidad: number): Promise<Pieza | null>;
+  updateStock(id: number, cantidad: number): Promise<Pieza | null>;
 }

@@ -10,8 +10,6 @@ export class Usuario {
 }
 
 export type CreateUsuario = Omit<Usuario, "id">;
-export type UpdateUsuario = Partial<Omit<Usuario, "id">>;
-export type AuthCredentials = {
-  email: string;
-  password: string;
+export type UpdateUsuario = Partial<Omit<Usuario, "id" | "passwordHash">> & {
+  password?: string;
 };

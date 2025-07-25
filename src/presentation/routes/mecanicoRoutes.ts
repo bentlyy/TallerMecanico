@@ -1,19 +1,12 @@
 import { Router } from 'express';
-import { MecanicoController } from '../controllers/mecanicoController';
-import { MecanicoService } from '../../application/mecanicoService';
-import { PrismaMecanicoRepository } from '../../infrastructure/db/prismaMecanicoRepository';
-import { prisma } from '../../infrastructure/db/prisma';
+import { mecanicoController } from '../controllers/mecanicoController';
 
 const mecanicoRouter = Router();
 
-const repository = new PrismaMecanicoRepository(prisma);
-const service = new MecanicoService(repository);
-const controller = new MecanicoController(service);
-
-mecanicoRouter.get('/', controller.getAll.bind(controller));
-mecanicoRouter.get('/:id', controller.getById.bind(controller));
-mecanicoRouter.post('/', controller.create.bind(controller));
-mecanicoRouter.put('/:id', controller.update.bind(controller));
-mecanicoRouter.get('/:mecanicoId/reparaciones', controller.getReparaciones.bind(controller));
+mecanicoRouter.get('/', mecanicoController.getAll.bind(mecanicoController));
+mecanicoRouter.get('/:id', mecanicoController.getById.bind(mecanicoController));
+mecanicoRouter.post('/', mecanicoController.create.bind(mecanicoController));
+mecanicoRouter.put('/:id', mecanicoController.update.bind(mecanicoController));
+mecanicoRouter.delete('/:id', mecanicoController.delete.bind(mecanicoController));
 
 export default mecanicoRouter;

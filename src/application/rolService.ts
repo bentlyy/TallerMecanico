@@ -1,30 +1,40 @@
 import { RolRepository } from '../domain/repositories/rolRepository';
-import { Rol, Permisos } from '../domain/entities/rol';
+import { Rol, CreateRol, UpdateRol } from '../domain/entities/rol';
 
 export class RolService {
-  constructor(private readonly repository: RolRepository) {}
+  constructor(private readonly rolRepository: RolRepository) {}
 
   async getAllRoles(): Promise<Rol[]> {
-    return this.repository.getAll();
+    return this.rolRepository.getAll();
   }
 
   async getRolById(id: number): Promise<Rol | null> {
-    return this.repository.getById(id);
+    return this.rolRepository.getById(id);
   }
 
-  async createRol(data: Rol): Promise<Rol> {
-    return this.repository.create(data);
+  async getRolByNombre(nombre: string): Promise<Rol | null> {
+    return this.rolRepository.getByNombre(nombre);
   }
 
-  async updateRol(id: number, data: Partial<Rol>): Promise<Rol | null> {
-    return this.repository.update(id, data);
+  async createRol(data: CreateRol): Promise<Rol> {
+    const existingRol = await this.rolRepository.getByNombre(data.nombre);
+    if (existingRol) {
+      throw new Error('Ya existe un rol con este nombre');
+    }
+    return this.rolRepository.create(data);
+  }
+
+  async updateRol(id: number, data: UpdateRol): Promise<Rol | null> {
+    if (data.nombre) {
+      const existingRol = await this.rolRepository.getByNombre(data.nombre);
+      if (existingRol && existingRol.id !== id) {
+        throw new Error('Ya existe un rol con este nombre');
+      }
+    }
+    return this.rolRepository.update(id, data);
   }
 
   async deleteRol(id: number): Promise<void> {
-    return this.repository.delete(id);
-  }
-
-  async getPermisosDeRol(rolId: number): Promise<Permisos | null> {
-    return this.repository.getPermisos(rolId);
+    return this.rolRepository.delete(id);
   }
 }
