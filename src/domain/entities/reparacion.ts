@@ -1,4 +1,9 @@
-export type EstadoReparacion = 'EN_REVISION' | 'EN_REPARACION' | 'TERMINADO' | 'ENTREGADO';
+export enum EstadoReparacion {
+  EN_REVISION = 'EN_REVISION',
+  EN_REPARACION = 'EN_REPARACION',
+  TERMINADO = 'TERMINADO',
+  ENTREGADO = 'ENTREGADO'
+}
 
 export class Reparacion {
   constructor(
@@ -14,26 +19,5 @@ export class Reparacion {
   ) {}
 }
 
-// Este es el tipo para crear una nueva reparación
-export interface CreateReparacion {
-  descripcion: string;
-  fechaEntrada?: Date;
-  fechaSalida?: Date | null;
-  estado?: EstadoReparacion;
-  costoManoObra?: number;
-  vehiculoId: number;
-  mecanicoId?: number | null;
-  recepcionistaId: number;
-}
-
-
-// Este es el tipo para actualizar una reparación
-export interface UpdateReparacion {
-  descripcion?: string;
-  fechaSalida?: Date | null;
-  estado?: EstadoReparacion;
-  costoManoObra?: number;
-  vehiculoId?: number;
-  mecanicoId?: number | null;
-  recepcionistaId?: number;
-}
+export type CreateReparacion = Omit<Reparacion, "id">;
+export type UpdateReparacion = Partial<CreateReparacion>;

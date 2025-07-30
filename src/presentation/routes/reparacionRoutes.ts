@@ -1,29 +1,28 @@
 import { Router } from 'express';
-import { ReparacionController } from '../controllers/reparacionController';
-import { ReparacionService } from '../../application/reparacionService';
-import { PrismaReparacionRepository } from '../../infrastructure/db/prismaReparacionRepository';
-import { prisma } from '../../infrastructure/db/prisma';
+import { ReparacionController } from '../controllers/reparacionController'; // Importa la clase
+import { reparacionService } from '../../infrastructure/di/container'; // Importa el servicio
 
-const reparacionRouter = Router();
+// Crea la instancia del controlador aquí
+const reparacionController = new ReparacionController(reparacionService);
 
-const repository = new PrismaReparacionRepository(prisma);
-const service = new ReparacionService(repository);
-const controller = new ReparacionController(service);
+const router = Router();
 
-// Rutas CRUD básicas
-reparacionRouter.get('/', controller.getAll.bind(controller));
-reparacionRouter.get('/:id', controller.getById.bind(controller));
-reparacionRouter.post('/', controller.create.bind(controller));
-reparacionRouter.put('/:id', controller.update.bind(controller));
-reparacionRouter.delete('/:id', controller.delete.bind(controller));
+router.get('/', reparacionController.getAll.bind(reparacionController));
+router.get('/:id', reparacionController.getById.bind(reparacionController));
+router.post('/', reparacionController.create.bind(reparacionController));
+router.put('/:id', reparacionController.update.bind(reparacionController));
+router.delete('/:id', reparacionController.delete.bind(reparacionController));
 
-// Rutas específicas
-reparacionRouter.patch('/:id/estado', controller.cambiarEstado.bind(controller));
-reparacionRouter.patch('/:id/mecanico', controller.asignarMecanico.bind(controller));
-reparacionRouter.patch('/:id/salida', controller.registrarSalida.bind(controller));
-reparacionRouter.get('/:id/detalles', controller.getDetalles.bind(controller));
-reparacionRouter.get('/vehiculo/:vehiculoId', controller.getByVehiculo.bind(controller));
-reparacionRouter.get('/mecanico/:mecanicoId', controller.getByMecanico.bind(controller));
-reparacionRouter.get('/recepcionista/:usuarioId', controller.getByRecepcionista.bind(controller));
+router.post('/:id/estado', reparacionController.cambiarEstado.bind(reparacionController));
+router.post('/:id/mecanico', reparacionController.asignarMecanico.bind(reparacionController));
+router.post('/:id/salida', reparacionController.registrarSalida.bind(reparacionController));
 
-export default reparacionRouter;
+router.get('/:id/detalles', reparacionController.getDetalles.bind(reparacionController));
+router.post('/:id/detalles', reparacionController.addDetalle.bind(reparacionController));
+router.delete('/:id/detalles/:piezaId', reparacionController.removeDetalle.bind(reparacionController));
+
+router.get('/vehiculo/:vehiculoId', reparacionController.getPorVehiculo.bind(reparacionController));
+router.get('/mecanico/:mecanicoId', reparacionController.getPorMecanico.bind(reparacionController));
+router.get('/recepcionista/:usuarioId', reparacionController.getPorRecepcionista.bind(reparacionController));
+
+export default router;

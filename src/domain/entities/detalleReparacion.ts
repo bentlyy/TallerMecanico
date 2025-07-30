@@ -1,15 +1,13 @@
-export interface DetalleReparacion {
-  reparacionId: number;
-  piezaId: number;
-  cantidad: number;
-  precioUnitario: number;
-  pieza?: {
-    id: number;
-    nombre: string;
-    marca: string | null;
-    codigo: string;
-  };
+export class DetalleReparacion {
+  constructor(
+    public id: number,
+    public reparacionId: number,
+    public piezaId: number,
+    public cantidad: number,
+    public precioUnitario: number,
+    public descripcion?: string
+  ) {}
 }
 
-export type CreateDetalle = Omit<DetalleReparacion, "pieza">;
-export type UpdateDetalle = Partial<CreateDetalle>;
+export type CreateDetalleReparacion = Omit<DetalleReparacion, "id">;
+export type UpdateDetalleReparacion = Partial<CreateDetalleReparacion>;

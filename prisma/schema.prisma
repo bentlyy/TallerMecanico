@@ -59,15 +59,17 @@ model Reparacion {
 }
 
 model DetalleReparacion {
-  reparacionId   Int     @map("reparacion_id")
-  piezaId        Int     @map("pieza_id")
-  cantidad       Int     @default(1)
+  id            Int     @id @default(autoincrement())
+  reparacionId  Int     @map("reparacion_id")
+  piezaId       Int     @map("pieza_id")
+  cantidad      Int     @default(1)
   precioUnitario Float   @map("precio_unitario")
+  descripcion   String?
 
-  reparacion     Reparacion @relation(fields: [reparacionId], references: [id], onDelete: Cascade)
-  pieza          Pieza      @relation(fields: [piezaId], references: [id])
+  reparacion    Reparacion @relation(fields: [reparacionId], references: [id], onDelete: Cascade)
+  pieza         Pieza      @relation(fields: [piezaId], references: [id])
 
-  @@id([reparacionId, piezaId])
+  @@unique([reparacionId, piezaId])
 }
 
 model Pieza {

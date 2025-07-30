@@ -51,7 +51,13 @@ const rolService = new RolService(rolRepository);
 const usuarioService = new UsuarioService(usuarioRepository,rolService);
 const mecanicoService = new MecanicoService(mecanicoRepository, usuarioService);
 const piezaService = new PiezaService(piezaRepository);
-const reparacionService = new ReparacionService(reparacionRepository);
+const reparacionService = new ReparacionService(
+  reparacionRepository,
+  vehiculoService,
+  mecanicoService,
+  usuarioService,
+  piezaService
+);
 const detalleReparacionService = new DetalleReparacionService(detalleReparacionRepository);
 const facturaService = new FacturaService(facturaRepository);
 
