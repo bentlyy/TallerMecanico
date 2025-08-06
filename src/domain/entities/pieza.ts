@@ -9,5 +9,5 @@ export class Pieza {
   ) {}
 }
 
-export type CreatePieza = Omit<Pieza, "id">;
+export type CreatePieza = Omit<Pieza, 'id'>;
 export type UpdatePieza = Partial<CreatePieza>;

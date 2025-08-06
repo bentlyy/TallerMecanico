@@ -14,6 +14,8 @@ import { PrismaVehiculoRepository } from '../../infrastructure/db/prismaVehiculo
 import { PrismaMecanicoRepository } from '../../infrastructure/db/prismaMecanicoRepository';
 import { PrismaUsuarioRepository } from '../../infrastructure/db/prismaUsuarioRepository';
 import { PrismaClienteRepository } from '../../infrastructure/db/prismaClienteRepository';
+import { PrismaRolRepository } from '../../infrastructure/db/prismaRolRepository';
+import { RolService } from '../../application/rolService';
 
 // Inicialización de todos los repositorios necesarios
 const detalleReparacionRepository = new PrismaDetalleReparacionRepository(prisma);
@@ -23,12 +25,14 @@ const vehiculoRepository = new PrismaVehiculoRepository(prisma);
 const mecanicoRepository = new PrismaMecanicoRepository(prisma);
 const usuarioRepository = new PrismaUsuarioRepository(prisma);
 const clienteRepository = new PrismaClienteRepository(prisma);
+const rolRepository = new PrismaRolRepository(prisma);
 
-// Inicialización de los servicios necesarios
+// Inicialización de los servicios necesarios en el orden correcto
+const rolService = new RolService(rolRepository);
+const usuarioService = new UsuarioService(usuarioRepository, rolService);
 const piezaService = new PiezaService(piezaRepository);
 const vehiculoService = new VehiculoService(vehiculoRepository, clienteRepository);
-const mecanicoService = new MecanicoService(mecanicoRepository, usuarioRepository);
-const usuarioService = new UsuarioService(usuarioRepository, {} as any); 
+const mecanicoService = new MecanicoService(mecanicoRepository, usuarioService); // Ahora pasa usuarioService en lugar de usuarioRepository
 
 const reparacionService = new ReparacionService(
   reparacionRepository,
@@ -48,7 +52,7 @@ const controller = new DetalleReparacionController(detalleReparacionService);
 
 const detalleReparacionRouter = Router();
 
-// Rutas
+// Rutas (se mantienen igual)
 detalleReparacionRouter.get('/', controller.getAll.bind(controller));
 detalleReparacionRouter.get('/:id', controller.getById.bind(controller));
 detalleReparacionRouter.post('/', controller.create.bind(controller));

@@ -109,6 +109,7 @@ taller-mecanico/
 ├── frontend/
 │   ├── .gitignore
 │   ├── Dockerfile
+│   ├── Dockerfile.dev
 │   ├── node_modules/
 │   │   └── (módulos instalados por npm)
 │   ├── package-lock.json
@@ -248,6 +249,8 @@ taller-mecanico/
 ├── Dockerfile
 ├── jest.config.js
 ├── docker-compose.yml
+├── docker-compose.override.yml
+├── docker-compose.prod.yml
 ├── package-lock.json
 ├── package.json
 ├── README.md
@@ -424,3 +427,701 @@ createMecanico(usuarioId, especialidad)
 updateMecanico(id, data)
 
 getReparacionesAsignadas(mecanicoId)
+
+
+te dare todo el modulo este es //reparacionService.ts import { ReparacionRepository } from '../domain/repositories/reparacionRepository';
+import { Reparacion, CreateReparacion, UpdateReparacion, EstadoReparacion } from '../domain/entities/reparacion';
+import { DetalleReparacion } from '../domain/entities/detalleReparacion';
+import { VehiculoService } from './vehiculoService';
+import { MecanicoService } from './mecanicoService';
+import { UsuarioService } from './usuarioService';
+import { PiezaService } from './piezaService';
+
+export class ReparacionService {
+  constructor(
+    private readonly repository: ReparacionRepository,
+    private readonly vehiculoService: VehiculoService,
+    private readonly mecanicoService: MecanicoService,
+    private readonly usuarioService: UsuarioService,
+    private readonly piezaService: PiezaService
+  ) {}
+
+  async getAllReparaciones(): Promise<Reparacion[]> {
+    return this.repository.getAll();
+  }
+
+  async getReparacionById(id: number): Promise<Reparacion | null> {
+    return this.repository.getById(id);
+  }
+
+  async createReparacion(data: CreateReparacion): Promise<Reparacion> {
+    // Validar que el vehículo existe
+    const vehiculo = await this.vehiculoService.getVehiculoById(data.vehiculoId);
+    if (!vehiculo) throw new Error('Vehículo no encontrado');
+
+    // Validar que el recepcionista (usuario) existe
+    const recepcionista = await this.usuarioService.getUsuarioById(data.recepcionistaId);
+    if (!recepcionista) throw new Error('Recepcionista no encontrado');
+
+    // Validar mecánico si está presente
+    if (data.mecanicoId) {
+      const mecanico = await this.mecanicoService.getMecanicoById(data.mecanicoId);
+      if (!mecanico) throw new Error('Mecánico no encontrado');
+    }
+
+    return this.repository.create(data);
+  }
+
+  async updateReparacion(id: number, data: UpdateReparacion): Promise<Reparacion | null> {
+    // Validaciones similares a create, pero solo si los IDs están en data
+    if (data.vehiculoId) {
+      const vehiculo = await this.vehiculoService.getVehiculoById(data.vehiculoId);
+      if (!vehiculo) throw new Error('Vehículo no encontrado');
+    }
+
+    if (data.recepcionistaId) {
+      const recepcionista = await this.usuarioService.getUsuarioById(data.recepcionistaId);
+      if (!recepcionista) throw new Error('Recepcionista no encontrado');
+    }
+
+    if (data.mecanicoId) {
+      const mecanico = await this.mecanicoService.getMecanicoById(data.mecanicoId);
+      if (!mecanico) throw new Error('Mecánico no encontrado');
+    }
+
+    return this.repository.update(id, data);
+  }
+
+  async deleteReparacion(id: number): Promise<void> {
+    return this.repository.delete(id);
+  }
+
+  async cambiarEstadoReparacion(id: number, estado: EstadoReparacion): Promise<Reparacion | null> {
+    return this.repository.updateEstado(id, estado);
+  }
+
+  async asignarMecanico(id: number, mecanicoId: number | null): Promise<Reparacion | null> {
+    if (mecanicoId) {
+      const mecanico = await this.mecanicoService.getMecanicoById(mecanicoId);
+      if (!mecanico) throw new Error('Mecánico no encontrado');
+    }
+    return this.repository.asignarMecanico(id, mecanicoId);
+  }
+
+  async registrarSalida(id: number, fechaSalida: Date = new Date()): Promise<Reparacion | null> {
+    // Obtener reparación para verificar estado
+    const reparacion = await this.getReparacionById(id);
+    if (!reparacion) throw new Error('Reparación no encontrada');
+    
+    if (reparacion.estado !== EstadoReparacion.TERMINADO) {
+      throw new Error('Solo se puede registrar salida de reparaciones terminadas');
+    }
+
+    return this.repository.registrarSalida(id, fechaSalida);
+  }
+
+  async getDetallesReparacion(reparacionId: number): Promise<DetalleReparacion[]> {
+    return this.repository.getDetallesReparacion(reparacionId);
+  }
+
+  async getReparacionesPorVehiculo(vehiculoId: number): Promise<Reparacion[]> {
+    // Validar que el vehículo existe
+    const vehiculo = await this.vehiculoService.getVehiculoById(vehiculoId);
+    if (!vehiculo) throw new Error('Vehículo no encontrado');
+    return this.repository.getByVehiculo(vehiculoId);
+  }
+
+  async getReparacionesPorMecanico(mecanicoId: number): Promise<Reparacion[]> {
+    // Validar que el mecánico existe
+    const mecanico = await this.mecanicoService.getMecanicoById(mecanicoId);
+    if (!mecanico) throw new Error('Mecánico no encontrado');
+    return this.repository.getByMecanico(mecanicoId);
+  }
+
+  async getReparacionesPorRecepcionista(usuarioId: number): Promise<Reparacion[]> {
+    // Validar que el usuario (recepcionista) existe
+    const usuario = await this.usuarioService.getUsuarioById(usuarioId);
+    if (!usuario) throw new Error('Recepcionista no encontrado');
+    return this.repository.getByRecepcionista(usuarioId);
+  }
+
+  async addDetalleReparacion(reparacionId: number, piezaId: number, cantidad: number): Promise<DetalleReparacion> {
+    // Validar que la reparación existe
+    const reparacion = await this.getReparacionById(reparacionId);
+    if (!reparacion) throw new Error('Reparación no encontrada');
+
+    // Validar que la pieza existe y tiene stock suficiente
+    const pieza = await this.piezaService.getPiezaById(piezaId);
+    if (!pieza) throw new Error('Pieza no encontrada');
+    if (pieza.stock < cantidad) throw new Error('Stock insuficiente');
+
+    // Crear detalle y actualizar stock
+    const detalle = await this.repository.addDetalleReparacion(reparacionId, piezaId, cantidad, pieza.precio);
+    await this.piezaService.updateStock(piezaId, pieza.stock - cantidad);
+
+    return detalle;
+  }
+
+  async removeDetalleReparacion(reparacionId: number, piezaId: number): Promise<void> {
+    // Obtener detalle para restaurar stock
+    const detalles = await this.getDetallesReparacion(reparacionId);
+    const detalle = detalles.find(d => d.piezaId === piezaId);
+    if (!detalle) throw new Error('Detalle no encontrado');
+
+    const pieza = await this.piezaService.getPiezaById(piezaId);
+    if (!pieza) throw new Error('Pieza no encontrada');
+
+    // Restaurar stock
+    await this.piezaService.updateStock(piezaId, pieza.stock + detalle.cantidad);
+
+    // Eliminar detalle
+    await this.repository.removeDetalleReparacion(reparacionId, piezaId);
+  }
+} este es el entiti reparacion.ts export enum EstadoReparacion {
+  EN_REVISION = 'EN_REVISION',
+  EN_REPARACION = 'EN_REPARACION',
+  TERMINADO = 'TERMINADO',
+  ENTREGADO = 'ENTREGADO'
+}
+
+export class Reparacion {
+  constructor(
+    public id: number,
+    public descripcion: string,
+    public fechaEntrada: Date,
+    public fechaSalida: Date | null,
+    public estado: EstadoReparacion,
+    public costoManoObra: number,
+    public vehiculoId: number,
+    public mecanicoId: number | null,
+    public recepcionistaId: number
+  ) {}
+}
+
+export type CreateReparacion = Omit<Reparacion, "id">;
+export type UpdateReparacion = Partial<CreateReparacion>; este es reparacionRepository import { Reparacion, CreateReparacion, UpdateReparacion, EstadoReparacion } from "../entities/reparacion";
+import { DetalleReparacion } from "../entities/detalleReparacion";
+
+export interface ReparacionRepository {
+  getAll(): Promise<Reparacion[]>;
+  getById(id: number): Promise<Reparacion | null>;
+  create(data: CreateReparacion): Promise<Reparacion>;
+  update(id: number, data: UpdateReparacion): Promise<Reparacion | null>;
+  delete(id: number): Promise<void>;
+  updateEstado(id: number, estado: EstadoReparacion): Promise<Reparacion | null>;
+  asignarMecanico(id: number, mecanicoId: number | null): Promise<Reparacion | null>;
+  registrarSalida(id: number, fechaSalida: Date): Promise<Reparacion | null>;
+  getDetallesReparacion(reparacionId: number): Promise<DetalleReparacion[]>;
+  getByVehiculo(vehiculoId: number): Promise<Reparacion[]>;
+  getByMecanico(mecanicoId: number): Promise<Reparacion[]>;
+  getByRecepcionista(recepcionistaId: number): Promise<Reparacion[]>;
+  addDetalleReparacion(reparacionId: number, piezaId: number, cantidad: number, precioUnitario: number): Promise<DetalleReparacion>;
+  removeDetalleReparacion(reparacionId: number, piezaId: number): Promise<void>;
+} y este es el prismaReparacionRepository donde salen algunos errores import { PrismaClient, EstadoReparacion as PrismaEstadoReparacion } from '@prisma/client';
+import { ReparacionRepository } from '../../domain/repositories/reparacionRepository';
+import { Reparacion, CreateReparacion, UpdateReparacion, EstadoReparacion } from '../../domain/entities/reparacion';
+import { DetalleReparacion } from '../../domain/entities/detalleReparacion';
+
+// Mapeo de enums
+const mapEstadoToPrisma = (estado: EstadoReparacion): PrismaEstadoReparacion => {
+  return estado as PrismaEstadoReparacion;
+};
+
+const mapEstadoFromPrisma = (estado: PrismaEstadoReparacion): EstadoReparacion => {
+  return estado as EstadoReparacion;
+};
+
+export class PrismaReparacionRepository implements ReparacionRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  async getAll(): Promise<Reparacion[]> {
+    const reparaciones = await this.prisma.reparacion.findMany();
+    return reparaciones.map(r => this.mapToDomain(r));
+  }
+
+  async getById(id: number): Promise<Reparacion | null> {
+    const reparacion = await this.prisma.reparacion.findUnique({ 
+      where: { id },
+      include: {
+        vehiculo: true,
+        mecanico: true,
+        recepcionista: true
+      }
+    });
+    return reparacion ? this.mapToDomain(reparacion) : null;
+  }
+
+  async create(data: CreateReparacion): Promise<Reparacion> {
+    const reparacion = await this.prisma.reparacion.create({
+      data: {
+        descripcion: data.descripcion,
+        fechaEntrada: data.fechaEntrada,
+        fechaSalida: data.fechaSalida,
+        estado: mapEstadoToPrisma(data.estado),
+        costoManoObra: data.costoManoObra,
+        vehiculoId: data.vehiculoId,
+        mecanicoId: data.mecanicoId,
+        recepcionistaId: data.recepcionistaId
+      }
+    });
+    return this.mapToDomain(reparacion);
+  }
+
+  async update(id: number, data: UpdateReparacion): Promise<Reparacion | null> {
+    const reparacion = await this.prisma.reparacion.update({
+      where: { id },
+      data: {
+        descripcion: data.descripcion,
+        fechaEntrada: data.fechaEntrada,
+        fechaSalida: data.fechaSalida,
+        estado: data.estado ? mapEstadoToPrisma(data.estado) : undefined,
+        costoManoObra: data.costoManoObra,
+        vehiculoId: data.vehiculoId,
+        mecanicoId: data.mecanicoId,
+        recepcionistaId: data.recepcionistaId
+      }
+    });
+    return this.mapToDomain(reparacion);
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.prisma.reparacion.delete({ where: { id } });
+  }
+
+  async updateEstado(id: number, estado: EstadoReparacion): Promise<Reparacion | null> {
+    const reparacion = await this.prisma.reparacion.update({
+      where: { id },
+      data: { estado: mapEstadoToPrisma(estado) }
+    });
+    return this.mapToDomain(reparacion);
+  }
+
+  async asignarMecanico(id: number, mecanicoId: number | null): Promise<Reparacion | null> {
+    const reparacion = await this.prisma.reparacion.update({
+      where: { id },
+      data: { mecanicoId }
+    });
+    return this.mapToDomain(reparacion);
+  }
+
+  async registrarSalida(id: number, fechaSalida: Date): Promise<Reparacion | null> {
+    const reparacion = await this.prisma.reparacion.update({
+      where: { id },
+      data: { 
+        fechaSalida,
+        estado: mapEstadoToPrisma(EstadoReparacion.ENTREGADO)
+      }
+    });
+    return this.mapToDomain(reparacion);
+  }
+
+  async getDetallesReparacion(reparacionId: number): Promise<DetalleReparacion[]> {
+    const detalles = await this.prisma.detalleReparacion.findMany({
+      where: { reparacionId }
+    });
+    return detalles.map(d => new DetalleReparacion(
+      d.reparacionId,
+      d.piezaId,
+      d.cantidad,
+      d.precioUnitario
+    ));
+  }
+
+  async getByVehiculo(vehiculoId: number): Promise<Reparacion[]> {
+    const reparaciones = await this.prisma.reparacion.findMany({
+      where: { vehiculoId }
+    });
+    return reparaciones.map(r => this.mapToDomain(r));
+  }
+
+  async getByMecanico(mecanicoId: number): Promise<Reparacion[]> {
+    const reparaciones = await this.prisma.reparacion.findMany({
+      where: { mecanicoId }
+    });
+    return reparaciones.map(r => this.mapToDomain(r));
+  }
+
+  async getByRecepcionista(recepcionistaId: number): Promise<Reparacion[]> {
+    const reparaciones = await this.prisma.reparacion.findMany({
+      where: { recepcionistaId }
+    });
+    return reparaciones.map(r => this.mapToDomain(r));
+  }
+
+  async addDetalleReparacion(reparacionId: number, piezaId: number, cantidad: number, precioUnitario: number): Promise<DetalleReparacion> {
+    const detalle = await this.prisma.detalleReparacion.create({
+      data: {
+        reparacionId,
+        piezaId,
+        cantidad,
+        precioUnitario
+      }
+    });
+    return new DetalleReparacion(
+      detalle.reparacionId,
+      detalle.piezaId,
+      detalle.cantidad,
+      detalle.precioUnitario
+    );
+  }
+
+  async removeDetalleReparacion(reparacionId: number, piezaId: number): Promise<void> {
+    await this.prisma.detalleReparacion.delete({
+      where: {
+        reparacionId_piezaId: {
+          reparacionId,
+          piezaId
+        }
+      }
+    });
+  }
+
+  private mapToDomain(reparacion: any): Reparacion {
+    return new Reparacion(
+      reparacion.id,
+      reparacion.descripcion,
+      reparacion.fechaEntrada,
+      reparacion.fechaSalida,
+      mapEstadoFromPrisma(reparacion.estado),
+      reparacion.costoManoObra,
+      reparacion.vehiculoId,
+      reparacion.mecanicoId,
+      reparacion.recepcionistaId
+    );
+  }
+} Expected 5-6 arguments, but got 4.ts(255 en esta parte async getDetallesReparacion(reparacionId: number): Promise<DetalleReparacion[]> {
+    const detalles = await this.prisma.detalleReparacion.findMany({
+      where: { reparacionId }
+    });
+    return detalles.map(d => new DetalleReparacion(
+      d.reparacionId,
+      d.piezaId,
+      d.cantidad,
+      d.precioUnitario
+    ));
+  } y en esta igual sale async addDetalleReparacion(reparacionId: number, piezaId: number, cantidad: number, precioUnitario: number): Promise<DetalleReparacion> {
+    const detalle = await this.prisma.detalleReparacion.create({
+      data: {
+        reparacionId,
+        piezaId,
+        cantidad,
+        precioUnitario
+      }
+    });
+    return new DetalleReparacion(
+      detalle.reparacionId,
+      detalle.piezaId,
+      detalle.cantidad,
+      detalle.precioUnitario
+    );
+  } este es su reparacionController import { Request, Response } from 'express';
+import { ReparacionService } from '../../application/reparacionService';
+import { EstadoReparacion } from '../../domain/entities/reparacion';
+
+export class ReparacionController {
+  constructor(private readonly service: ReparacionService) {}
+
+  async getAll(req: Request, res: Response): Promise<void> {
+    try {
+      const reparaciones = await this.service.getAllReparaciones();
+      res.status(200).json(reparaciones);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al obtener reparaciones' });
+    }
+  }
+
+  async getById(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id);
+      const reparacion = await this.service.getReparacionById(id);
+      if (reparacion) {
+        res.status(200).json(reparacion);
+      } else {
+        res.status(404).json({ error: 'Reparación no encontrada' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Error al obtener la reparación' });
+    }
+  }
+
+  async create(req: Request, res: Response): Promise<void> {
+    try {
+      const { descripcion, vehiculoId, mecanicoId, recepcionistaId } = req.body;
+      
+      if (!descripcion || !vehiculoId || !recepcionistaId) {
+        res.status(400).json({ error: 'Descripción, vehículo y recepcionista son requeridos' });
+        return;
+      }
+
+      const nuevaReparacion = await this.service.createReparacion({
+        descripcion,
+        fechaEntrada: new Date(),
+        fechaSalida: null,
+        estado: EstadoReparacion.EN_REVISION,
+        costoManoObra: 0, // Inicialmente 0
+        vehiculoId: parseInt(vehiculoId),
+        mecanicoId: mecanicoId ? parseInt(mecanicoId) : null,
+        recepcionistaId: parseInt(recepcionistaId)
+      });
+
+      res.status(201).json(nuevaReparacion);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async update(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id);
+      const data = req.body;
+      const reparacion = await this.service.updateReparacion(id, data);
+      if (reparacion) {
+        res.status(200).json(reparacion);
+      } else {
+        res.status(404).json({ error: 'Reparación no encontrada' });
+      }
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async delete(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id);
+      await this.service.deleteReparacion(id);
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ error: 'Error al eliminar la reparación' });
+    }
+  }
+
+  async cambiarEstado(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id);
+      const { estado } = req.body;
+      if (!estado || !Object.values(EstadoReparacion).includes(estado)) {
+        res.status(400).json({ error: 'Estado inválido' });
+        return;
+      }
+      const reparacion = await this.service.cambiarEstadoReparacion(id, estado);
+      if (reparacion) {
+        res.status(200).json(reparacion);
+      } else {
+        res.status(404).json({ error: 'Reparación no encontrada' });
+      }
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async asignarMecanico(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id);
+      const { mecanicoId } = req.body;
+      const reparacion = await this.service.asignarMecanico(id, mecanicoId ? parseInt(mecanicoId) : null);
+      if (reparacion) {
+        res.status(200).json(reparacion);
+      } else {
+        res.status(404).json({ error: 'Reparación no encontrada' });
+      }
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async registrarSalida(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id);
+      const { fechaSalida } = req.body;
+      const fecha = fechaSalida ? new Date(fechaSalida) : new Date();
+      const reparacion = await this.service.registrarSalida(id, fecha);
+      if (reparacion) {
+        res.status(200).json(reparacion);
+      } else {
+        res.status(404).json({ error: 'Reparación no encontrada' });
+      }
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getDetalles(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id);
+      const detalles = await this.service.getDetallesReparacion(id);
+      res.status(200).json(detalles);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al obtener detalles' });
+    }
+  }
+
+  async getPorVehiculo(req: Request, res: Response): Promise<void> {
+    try {
+      const vehiculoId = parseInt(req.params.vehiculoId);
+      const reparaciones = await this.service.getReparacionesPorVehiculo(vehiculoId);
+      res.status(200).json(reparaciones);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getPorMecanico(req: Request, res: Response): Promise<void> {
+    try {
+      const mecanicoId = parseInt(req.params.mecanicoId);
+      const reparaciones = await this.service.getReparacionesPorMecanico(mecanicoId);
+      res.status(200).json(reparaciones);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getPorRecepcionista(req: Request, res: Response): Promise<void> {
+    try {
+      const usuarioId = parseInt(req.params.usuarioId);
+      const reparaciones = await this.service.getReparacionesPorRecepcionista(usuarioId);
+      res.status(200).json(reparaciones);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async addDetalle(req: Request, res: Response): Promise<void> {
+    try {
+      const reparacionId = parseInt(req.params.id);
+      const { piezaId, cantidad } = req.body;
+      
+      if (!piezaId || !cantidad) {
+        res.status(400).json({ error: 'Pieza y cantidad son requeridos' });
+        return;
+      }
+      
+      const detalle = await this.service.addDetalleReparacion(reparacionId, piezaId, cantidad);
+      res.status(201).json(detalle);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async removeDetalle(req: Request, res: Response): Promise<void> {
+    try {
+      const reparacionId = parseInt(req.params.id);
+      const piezaId = parseInt(req.params.piezaId);
+      await this.service.removeDetalleReparacion(reparacionId, piezaId);
+      res.status(204).end();
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+} y su reparacion Routes import { Router } from 'express';
+import { ReparacionController } from '../controllers/reparacionController'; // Importa la clase
+import { reparacionService } from '../../infrastructure/di/container'; // Importa el servicio
+
+// Crea la instancia del controlador aquí
+const reparacionController = new ReparacionController(reparacionService);
+
+const router = Router();
+
+router.get('/', reparacionController.getAll.bind(reparacionController));
+router.get('/:id', reparacionController.getById.bind(reparacionController));
+router.post('/', reparacionController.create.bind(reparacionController));
+router.put('/:id', reparacionController.update.bind(reparacionController));
+router.delete('/:id', reparacionController.delete.bind(reparacionController));
+
+router.post('/:id/estado', reparacionController.cambiarEstado.bind(reparacionController));
+router.post('/:id/mecanico', reparacionController.asignarMecanico.bind(reparacionController));
+router.post('/:id/salida', reparacionController.registrarSalida.bind(reparacionController));
+
+router.get('/:id/detalles', reparacionController.getDetalles.bind(reparacionController));
+router.post('/:id/detalles', reparacionController.addDetalle.bind(reparacionController));
+router.delete('/:id/detalles/:piezaId', reparacionController.removeDetalle.bind(reparacionController));
+
+router.get('/vehiculo/:vehiculoId', reparacionController.getPorVehiculo.bind(reparacionController));
+router.get('/mecanico/:mecanicoId', reparacionController.getPorMecanico.bind(reparacionController));
+router.get('/recepcionista/:usuarioId', reparacionController.getPorRecepcionista.bind(reparacionController));
+
+export default router;  sin olvidar el container import { prisma } from '../db/prisma';
+
+// Repositories
+import { PrismaClienteRepository } from '../db/prismaClienteRepository';
+import { PrismaVehiculoRepository } from '../db/prismaVehiculoRepository';
+import { PrismaRolRepository } from '../db/prismaRolRepository';
+import { PrismaUsuarioRepository } from '../db/prismaUsuarioRepository';
+import { PrismaMecanicoRepository } from '../db/prismaMecanicoRepository';
+import { PrismaPiezaRepository } from '../db/prismaPiezaRepository';
+import { PrismaReparacionRepository } from '../db/prismaReparacionRepository';
+import { PrismaDetalleReparacionRepository } from '../db/prismaDetalleReparacionRepository';
+import { PrismaFacturaRepository } from '../db/prismaFacturaRepository';
+
+// Services
+import { ClienteService } from '../../application/clienteService';
+import { VehiculoService } from '../../application/vehiculoService';
+import { RolService } from '../../application/rolService';
+import { UsuarioService } from '../../application/usuarioService';
+import { MecanicoService } from '../../application/mecanicoService';
+import { PiezaService } from '../../application/piezaService';
+import { ReparacionService } from '../../application/reparacionService';
+import { DetalleReparacionService } from '../../application/detalleReparacionService';
+import { FacturaService } from '../../application/facturaService';
+
+// Controllers
+import { ClienteController } from '../../presentation/controllers/clienteController';
+import { VehiculoController } from '../../presentation/controllers/vehiculoController';
+import { RolController } from '../../presentation/controllers/rolController';
+import { UsuarioController } from '../../presentation/controllers/usuarioController';
+import { MecanicoController } from '../../presentation/controllers/mecanicoController';
+import { PiezaController } from '../../presentation/controllers/piezaController';
+import { ReparacionController } from '../../presentation/controllers/reparacionController';
+import { DetalleReparacionController } from '../../presentation/controllers/detalleReparacionController';
+import { FacturaController } from '../../presentation/controllers/facturaController';
+
+// Instancias de Repositorios
+const clienteRepository = new PrismaClienteRepository(prisma);
+const vehiculoRepository = new PrismaVehiculoRepository(prisma);
+const rolRepository = new PrismaRolRepository(prisma);
+const usuarioRepository = new PrismaUsuarioRepository(prisma);
+const mecanicoRepository = new PrismaMecanicoRepository(prisma);
+const piezaRepository = new PrismaPiezaRepository(prisma);
+const reparacionRepository = new PrismaReparacionRepository(prisma);
+const detalleReparacionRepository = new PrismaDetalleReparacionRepository(prisma);
+const facturaRepository = new PrismaFacturaRepository(prisma);
+
+// Instancias de Servicios
+const clienteService = new ClienteService(clienteRepository);
+const vehiculoService = new VehiculoService(vehiculoRepository,clienteRepository);
+const rolService = new RolService(rolRepository);
+const usuarioService = new UsuarioService(usuarioRepository,rolService);
+const mecanicoService = new MecanicoService(mecanicoRepository, usuarioService);
+const piezaService = new PiezaService(piezaRepository);
+const reparacionService = new ReparacionService(
+  reparacionRepository,
+  vehiculoService,
+  mecanicoService,
+  usuarioService,
+  piezaService
+);
+const detalleReparacionService = new DetalleReparacionService(detalleReparacionRepository);
+const facturaService = new FacturaService(facturaRepository);
+
+// Instancias de Controladores
+const clienteController = new ClienteController(clienteService);
+const vehiculoController = new VehiculoController(vehiculoService);
+const usuarioController = new UsuarioController(usuarioService);
+const rolController = new RolController(rolService);
+const mecanicoController = new MecanicoController(mecanicoService);
+const piezaController = new PiezaController(piezaService);
+const reparacionController = new ReparacionController(reparacionService);
+const detalleReparacionController = new DetalleReparacionController(detalleReparacionService);
+const facturaController = new FacturaController(facturaService);
+
+// Exportaciones completas
+export { 
+  clienteRepository, clienteService, clienteController,
+  vehiculoRepository, vehiculoService, vehiculoController,
+  usuarioRepository, usuarioService, usuarioController,
+  rolRepository, rolService, rolController,
+  mecanicoRepository, mecanicoService, mecanicoController,
+  piezaRepository, piezaService, piezaController,
+  reparacionRepository, reparacionService, reparacionController,
+  detalleReparacionRepository, detalleReparacionService, detalleReparacionController,
+  facturaRepository, facturaService, facturaController
+}; 
