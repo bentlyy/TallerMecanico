@@ -1,3 +1,4 @@
+// src/domain/repositories/usuarioRepository.ts
 import { Usuario, CreateUsuario, UpdateUsuario } from "../entities/usuario";
 
 export interface UsuarioRepository {

@@ -1,70 +1,67 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useState } from 'react';
+import { TextField, Button, MenuItem } from '@mui/material';
 import { createMecanico, updateMecanico } from '../../api/mecanicoApi';
-import { getUsuarios } from '../../api/usuarioApi';
+import { getAllUsuarios } from '../../api/usuarioApi';
+import { Mecanico, Usuario } from '../../types';
 
-interface MecanicoFormProps {
-  initialData?: any;
-  onSuccess: () => void;
+interface Props {
+  mecanico: Mecanico | null;
+  onSave: () => void;
 }
 
-export const MecanicoForm = ({ initialData, onSuccess }: MecanicoFormProps) => {
-  const { register, handleSubmit } = useForm({
-    defaultValues: initialData || {}
-  });
-  const [usuarios, setUsuarios] = useState<any[]>([]);
-  const [error, setError] = useState('');
+const MecanicoForm: React.FC<Props> = ({ mecanico, onSave }) => {
+  const [usuarioId, setUsuarioId] = useState(mecanico?.usuarioId || 0);
+  const [especialidad, setEspecialidad] = useState(mecanico?.especialidad || '');
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
   useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        const response = await getUsuarios();
-        setUsuarios(response.data);
-      } catch (err) {
-        console.error('Error fetching usuarios:', err);
-      }
-    };
-    fetchUsuarios();
+    getAllUsuarios().then(res => setUsuarios(res.data));
   }, []);
 
-  const onSubmit = async (data: any) => {
-    try {
-      if (initialData?.id) {
-        await updateMecanico(initialData.id, data);
-      } else {
-        await createMecanico(data.usuarioId, data.especialidad);
-      }
-      onSuccess();
-    } catch (err) {
-      setError('Error al guardar el mecánico');
-      console.error(err);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = { usuarioId, especialidad };
+
+    if (mecanico?.id) {
+      await updateMecanico(mecanico.id, data);
+    } else {
+      await createMecanico(data);
     }
+
+    onSave();
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {error && <div className="text-red-500">{error}</div>}
-      
-      <div>
-        <label>Usuario</label>
-        <select {...register('usuarioId', { required: true })} className="w-full p-2 border rounded">
-          <option value="">Seleccionar usuario</option>
-          {usuarios.map(usuario => (
-            <option key={usuario.id} value={usuario.id}>
-              {usuario.nombre} ({usuario.email})
-            </option>
-          ))}
-        </select>
-      </div>
-      
-      <div>
-        <label>Especialidad</label>
-        <input {...register('especialidad')} className="w-full p-2 border rounded" />
-      </div>
-      
-      <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-        {initialData?.id ? 'Actualizar' : 'Crear'} Mecánico
-      </button>
+    <form onSubmit={handleSubmit}>
+      <TextField
+        select
+        label="Usuario"
+        value={usuarioId}
+        onChange={(e) => setUsuarioId(Number(e.target.value))}
+        fullWidth
+        margin="normal"
+        required
+      >
+        {usuarios.map((usuario) => (
+          <MenuItem key={usuario.id} value={usuario.id}>
+            {usuario.nombre}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      <TextField
+        label="Especialidad"
+        value={especialidad}
+        onChange={(e) => setEspecialidad(e.target.value)}
+        fullWidth
+        margin="normal"
+      />
+
+      <Button type="submit" variant="contained" color="primary">
+        {mecanico ? 'Actualizar' : 'Crear'} Mecánico
+      </Button>
     </form>
   );
 };
+
+export default MecanicoForm;

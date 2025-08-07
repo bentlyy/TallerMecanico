@@ -1,13 +1,12 @@
 export class DetalleReparacion {
   constructor(
-    public id: number,
     public reparacionId: number,
     public piezaId: number,
     public cantidad: number,
     public precioUnitario: number,
-    public descripcion?: string
+    public descripcion?: string | null
   ) {}
 }
 
-export type CreateDetalleReparacion = Omit<DetalleReparacion, "id">;
-export type UpdateDetalleReparacion = Partial<CreateDetalleReparacion>;
+export type CreateDetalleReparacion = Omit<DetalleReparacion, ''>;
+export type UpdateDetalleReparacion = Partial<Omit<DetalleReparacion, 'reparacionId' | 'piezaId'>>;

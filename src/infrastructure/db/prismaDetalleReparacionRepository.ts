@@ -1,181 +1,44 @@
-import { PrismaClient } from '@prisma/client';
 import { DetalleReparacionRepository } from '../../domain/repositories/detalleReparacionRepository';
-import { DetalleReparacion, CreateDetalleReparacion, UpdateDetalleReparacion } from '../../domain/entities/detalleReparacion';
+import { CreateDetalleReparacion, UpdateDetalleReparacion, DetalleReparacion } from '../../domain/entities/detalleReparacion';
+import { PrismaClient } from '@prisma/client';
 
 export class PrismaDetalleReparacionRepository implements DetalleReparacionRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaClient) {}
 
-  async getAll(): Promise<DetalleReparacion[]> {
-    const detalles = await this.prisma.detalleReparacion.findMany({
-      include: {
-        pieza: true,
-        reparacion: true
-      }
-    });
-    
-    return detalles.map(d => new DetalleReparacion(
-      d.id,
-      d.reparacionId,
-      d.piezaId,
-      d.cantidad,
-      d.precioUnitario,
-      d.descripcion ?? undefined
-    ));
-  }
-
-  async getById(id: number): Promise<DetalleReparacion | null> {
-    const detalle = await this.prisma.detalleReparacion.findUnique({
-      where: { id },
-      include: {
-        pieza: true,
-        reparacion: true
-      }
-    });
-    
-    if (!detalle) return null;
-    
+  private toEntity(model: any): DetalleReparacion {
     return new DetalleReparacion(
-      detalle.id,
-      detalle.reparacionId,
-      detalle.piezaId,
-      detalle.cantidad,
-      detalle.precioUnitario,
-      detalle.descripcion ?? undefined
+      model.reparacionId,
+      model.piezaId,
+      model.cantidad,
+      model.precioUnitario,
+      model.descripcion
     );
   }
 
-  async create(data: CreateDetalleReparacion): Promise<DetalleReparacion> {
-    const detalle = await this.prisma.detalleReparacion.create({
-      data: {
-        reparacionId: data.reparacionId,
-        piezaId: data.piezaId,
-        cantidad: data.cantidad,
-        precioUnitario: data.precioUnitario,
-        descripcion: data.descripcion
-      },
-      include: {
-        pieza: true,
-        reparacion: true
-      }
-    });
-    
-    return new DetalleReparacion(
-      detalle.id,
-      detalle.reparacionId,
-      detalle.piezaId,
-      detalle.cantidad,
-      detalle.precioUnitario,
-      detalle.descripcion ?? undefined
-    );
+  async agregarDetalle(data: CreateDetalleReparacion): Promise<DetalleReparacion> {
+    const detalle = await this.prisma.detalleReparacion.create({ data });
+    return this.toEntity(detalle);
   }
 
-  async update(id: number, data: UpdateDetalleReparacion): Promise<DetalleReparacion | null> {
+  async eliminarDetalle(reparacionId: number, piezaId: number): Promise<void> {
+    await this.prisma.detalleReparacion.delete({ where: { reparacionId_piezaId: { reparacionId, piezaId } } });
+  }
+
+  async actualizarDetalle(reparacionId: number, piezaId: number, data: UpdateDetalleReparacion): Promise<DetalleReparacion | null> {
     const detalle = await this.prisma.detalleReparacion.update({
-      where: { id },
-      data: {
-        cantidad: data.cantidad,
-        precioUnitario: data.precioUnitario,
-        descripcion: data.descripcion
-      },
-      include: {
-        pieza: true,
-        reparacion: true
-      }
+      where: { reparacionId_piezaId: { reparacionId, piezaId } },
+      data,
     });
-    
-    return new DetalleReparacion(
-      detalle.id,
-      detalle.reparacionId,
-      detalle.piezaId,
-      detalle.cantidad,
-      detalle.precioUnitario,
-      detalle.descripcion ?? undefined
-    );
+    return this.toEntity(detalle);
   }
 
-  async delete(id: number): Promise<void> {
-    await this.prisma.detalleReparacion.delete({
-      where: { id }
-    });
+  async getDetallesDeReparacion(reparacionId: number): Promise<DetalleReparacion[]> {
+    const detalles = await this.prisma.detalleReparacion.findMany({ where: { reparacionId } });
+    return detalles.map(this.toEntity);
   }
 
-  async getByReparacion(reparacionId: number): Promise<DetalleReparacion[]> {
-    const detalles = await this.prisma.detalleReparacion.findMany({
-      where: { reparacionId },
-      include: {
-        pieza: true
-      }
-    });
-    
-    return detalles.map(d => new DetalleReparacion(
-      d.id,
-      d.reparacionId,
-      d.piezaId,
-      d.cantidad,
-      d.precioUnitario,
-      d.descripcion ?? undefined
-    ));
-  }
-
-  async getByPieza(piezaId: number): Promise<DetalleReparacion[]> {
-    const detalles = await this.prisma.detalleReparacion.findMany({
-      where: { piezaId },
-      include: {
-        reparacion: true
-      }
-    });
-    
-    return detalles.map(d => new DetalleReparacion(
-      d.id,
-      d.reparacionId,
-      d.piezaId,
-      d.cantidad,
-      d.precioUnitario,
-      d.descripcion ?? undefined
-    ));
-  }
-
-  async getByReparacionAndPieza(reparacionId: number, piezaId: number): Promise<DetalleReparacion | null> {
-    const detalle = await this.prisma.detalleReparacion.findFirst({
-      where: {
-        reparacionId,
-        piezaId
-      },
-      include: {
-        pieza: true,
-        reparacion: true
-      }
-    });
-    
-    if (!detalle) return null;
-    
-    return new DetalleReparacion(
-      detalle.id,
-      detalle.reparacionId,
-      detalle.piezaId,
-      detalle.cantidad,
-      detalle.precioUnitario,
-      detalle.descripcion ?? undefined
-    );
-  }
-
-  async updateCantidad(id: number, cantidad: number): Promise<DetalleReparacion | null> {
-    const detalle = await this.prisma.detalleReparacion.update({
-      where: { id },
-      data: { cantidad },
-      include: {
-        pieza: true,
-        reparacion: true
-      }
-    });
-    
-    return new DetalleReparacion(
-      detalle.id,
-      detalle.reparacionId,
-      detalle.piezaId,
-      detalle.cantidad,
-      detalle.precioUnitario,
-      detalle.descripcion ?? undefined
-    );
+  async calcularTotalRepuestos(reparacionId: number): Promise<number> {
+    const detalles = await this.prisma.detalleReparacion.findMany({ where: { reparacionId } });
+    return detalles.reduce((total, item) => total + item.cantidad * item.precioUnitario, 0);
   }
 }

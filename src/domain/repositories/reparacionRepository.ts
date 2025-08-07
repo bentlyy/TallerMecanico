@@ -1,5 +1,4 @@
-import { Reparacion, CreateReparacion, UpdateReparacion, EstadoReparacion } from "../entities/reparacion";
-import { DetalleReparacion } from "../entities/detalleReparacion";
+import { Reparacion, CreateReparacion, UpdateReparacion } from '../entities/reparacion';
 
 export interface ReparacionRepository {
   getAll(): Promise<Reparacion[]>;
@@ -7,13 +6,10 @@ export interface ReparacionRepository {
   create(data: CreateReparacion): Promise<Reparacion>;
   update(id: number, data: UpdateReparacion): Promise<Reparacion | null>;
   delete(id: number): Promise<void>;
-  updateEstado(id: number, estado: EstadoReparacion): Promise<Reparacion | null>;
-  asignarMecanico(id: number, mecanicoId: number | null): Promise<Reparacion | null>;
-  registrarSalida(id: number, fechaSalida: Date): Promise<Reparacion | null>;
-  getDetallesReparacion(reparacionId: number): Promise<DetalleReparacion[]>;
+  cambiarEstado(id: number, estado: string): Promise<Reparacion | null>;
+  asignarMecanico(id: number, mecanicoId: number): Promise<Reparacion | null>;
+  registrarSalida(id: number, fecha: Date): Promise<Reparacion | null>;
   getByVehiculo(vehiculoId: number): Promise<Reparacion[]>;
   getByMecanico(mecanicoId: number): Promise<Reparacion[]>;
-  getByRecepcionista(recepcionistaId: number): Promise<Reparacion[]>;
-  addDetalleReparacion(reparacionId: number, piezaId: number, cantidad: number, precioUnitario: number): Promise<DetalleReparacion>;
-  removeDetalleReparacion(reparacionId: number, piezaId: number): Promise<void>;
+  getByRecepcionista(usuarioId: number): Promise<Reparacion[]>;
 }

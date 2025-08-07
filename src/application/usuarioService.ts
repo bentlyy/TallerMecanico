@@ -1,3 +1,4 @@
+//usuarioService.ts
 import { UsuarioRepository } from '../domain/repositories/usuarioRepository';
 import { Usuario, CreateUsuario, UpdateUsuario } from '../domain/entities/usuario';
 import { RolService } from './rolService';

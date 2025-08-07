@@ -1,16 +1,28 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getAllRoles, deleteRol } from '../../api/rolApi';
+import { Rol } from '../../types';
+import { 
+  Box, Button, CircularProgress, Table, TableBody, TableCell, TableHead, TableRow, Typography, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle 
+} from '@mui/material';
 
-export const RolList = () => {
-  const [roles, setRoles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+interface Props {
+  onEdit: (rol: Rol) => void;
+}
+
+const RolList: React.FC<Props> = ({ onEdit }) => {
+  const [roles, setRoles] = useState<Rol[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const fetchRoles = async () => {
+    setLoading(true);
     try {
-      const response = await getAllRoles();
-      setRoles(response.data);
-    } catch (err) {
-      console.error('Error fetching roles:', err);
+      const res = await getAllRoles();
+      setRoles(res.data);
+      setError(null);
+    } catch {
+      setError('Error al cargar los roles');
     } finally {
       setLoading(false);
     }
@@ -21,43 +33,69 @@ export const RolList = () => {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('¿Estás seguro de eliminar este rol?')) {
+    try {
       await deleteRol(id);
+      setDeleteId(null);
       fetchRoles();
+    } catch {
+      setError('Error al eliminar el rol');
     }
   };
 
-  if (loading) return <div>Cargando roles...</div>;
-
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border">Nombre</th>
-            <th className="py-2 px-4 border">Permisos</th>
-            <th className="py-2 px-4 border">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {roles.map(rol => (
-            <tr key={rol.id}>
-              <td className="py-2 px-4 border">{rol.nombre}</td>
-              <td className="py-2 px-4 border">
-                {Object.keys(rol.permisos).filter(p => rol.permisos[p]).join(', ')}
-              </td>
-              <td className="py-2 px-4 border">
-                <button 
-                  className="bg-red-500 text-white px-2 py-1 rounded" 
-                  onClick={() => handleDelete(rol.id)}
-                >
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Box>
+      <Typography variant="h4" mb={2}>Roles</Typography>
+
+      {loading ? (
+        <CircularProgress />
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Nombre</TableCell>
+              <TableCell>Permisos (JSON)</TableCell>
+              <TableCell>Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {roles.map((rol) => (
+              <TableRow key={rol.id}>
+                <TableCell>{rol.id}</TableCell>
+                <TableCell>{rol.nombre}</TableCell>
+                <TableCell>
+                  <pre style={{ maxHeight: 100, overflow: 'auto' }}>
+                    {JSON.stringify(rol.permisos, null, 2)}
+                  </pre>
+                </TableCell>
+                <TableCell>
+                  <Button onClick={() => onEdit(rol)} variant="outlined" size="small" sx={{ mr: 1 }}>
+                    Editar
+                  </Button>
+                  <Button color="error" variant="outlined" size="small" onClick={() => setDeleteId(rol.id)}>
+                    Eliminar
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      <Dialog open={deleteId !== null} onClose={() => setDeleteId(null)}>
+        <DialogTitle>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>¿Seguro que quieres eliminar este rol?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteId(null)}>Cancelar</Button>
+          <Button color="error" onClick={() => deleteId !== null && handleDelete(deleteId)}>Eliminar</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
+
+export default RolList;

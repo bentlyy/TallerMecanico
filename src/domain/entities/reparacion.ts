@@ -1,9 +1,4 @@
-export enum EstadoReparacion {
-  EN_REVISION = 'EN_REVISION',
-  EN_REPARACION = 'EN_REPARACION',
-  TERMINADO = 'TERMINADO',
-  ENTREGADO = 'ENTREGADO'
-}
+import { EstadoReparacion } from '@prisma/client';
 
 export class Reparacion {
   constructor(
@@ -19,5 +14,6 @@ export class Reparacion {
   ) {}
 }
 
-export type CreateReparacion = Omit<Reparacion, "id">;
+export type CreateReparacion = Omit<Reparacion, 'id' | 'fechaEntrada' | 'fechaSalida' | 'estado'>;
 export type UpdateReparacion = Partial<CreateReparacion>;
+export { EstadoReparacion };

@@ -1,3 +1,4 @@
+// src/infrastructure/db/prismaUsuarioRepository.ts
 import { PrismaClient } from '@prisma/client';
 import { UsuarioRepository } from '../../domain/repositories/usuarioRepository';
 import { Usuario, CreateUsuario, UpdateUsuario } from '../../domain/entities/usuario';

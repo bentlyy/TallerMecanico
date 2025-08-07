@@ -1,78 +1,107 @@
-import { useEffect, useState } from 'react';
-import { getAllUsuarios, deleteUsuario, activarUsuario, desactivarUsuario } from '../../api/usuarioApi';
+import React, { useEffect, useState } from 'react';
+import { getAllUsuarios, deleteUsuario } from '../../api/usuarioApi';
+import { getAllRoles } from '../../api/rolApi';
+import { Usuario, Rol } from '../../types';
+import {
+  Box, Button, CircularProgress, Table, TableBody, TableCell, TableHead, TableRow,
+  Typography, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle
+} from '@mui/material';
 
-export const UsuarioList = () => {
-  const [usuarios, setUsuarios] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+interface Props {
+  onEdit: (usuario: Usuario) => void;
+}
 
-  const fetchUsuarios = async () => {
+const UsuarioList: React.FC<Props> = ({ onEdit }) => {
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [rolesMap, setRolesMap] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const response = await getAllUsuarios();
-      setUsuarios(response.data);
-    } catch (err) {
-      console.error('Error fetching usuarios:', err);
+      const [usuarioRes, rolRes] = await Promise.all([getAllUsuarios(), getAllRoles()]);
+      setUsuarios(usuarioRes.data);
+      const map: Record<number, string> = {};
+      rolRes.data.forEach((rol: Rol) => {
+        map[rol.id] = rol.nombre;
+      });
+      setRolesMap(map);
+      setError(null);
+    } catch {
+      setError('Error al cargar los usuarios');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsuarios();
+    fetchData();
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
+    try {
       await deleteUsuario(id);
-      fetchUsuarios();
+      setDeleteId(null);
+      fetchData();
+    } catch {
+      setError('Error al eliminar el usuario');
     }
   };
-
-  const toggleStatus = async (id: number, activo: boolean) => {
-    if (activo) {
-      await desactivarUsuario(id);
-    } else {
-      await activarUsuario(id);
-    }
-    fetchUsuarios();
-  };
-
-  if (loading) return <div>Cargando usuarios...</div>;
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border">Nombre</th>
-            <th className="py-2 px-4 border">Email</th>
-            <th className="py-2 px-4 border">Rol</th>
-            <th className="py-2 px-4 border">Estado</th>
-            <th className="py-2 px-4 border">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.map(usuario => (
-            <tr key={usuario.id}>
-              <td className="py-2 px-4 border">{usuario.nombre}</td>
-              <td className="py-2 px-4 border">{usuario.email}</td>
-              <td className="py-2 px-4 border">{usuario.rol?.nombre}</td>
-              <td className="py-2 px-4 border">
-                <button 
-                  onClick={() => toggleStatus(usuario.id, usuario.activo)}
-                  className={`px-2 rounded text-white ${usuario.activo ? 'bg-green-500' : 'bg-red-500'}`}
-                >
-                  {usuario.activo ? 'Activo' : 'Inactivo'}
-                </button>
-              </td>
-              <td className="py-2 px-4 border space-x-2">
-                <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={() => handleDelete(usuario.id)}>
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Box>
+      <Typography variant="h4" mb={2}>Usuarios</Typography>
+
+      {loading ? (
+        <CircularProgress />
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Nombre</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Rol</TableCell>
+              <TableCell>Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {usuarios.map((usuario) => (
+              <TableRow key={usuario.id}>
+                <TableCell>{usuario.id}</TableCell>
+                <TableCell>{usuario.nombre}</TableCell>
+                <TableCell>{usuario.email}</TableCell>
+                <TableCell>{rolesMap[usuario.rolId] || 'Sin rol'}</TableCell>
+                <TableCell>
+                  <Button onClick={() => onEdit(usuario)} variant="outlined" size="small" sx={{ mr: 1 }}>
+                    Editar
+                  </Button>
+                  <Button color="error" variant="outlined" size="small" onClick={() => setDeleteId(usuario.id)}>
+                    Eliminar
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      <Dialog open={deleteId !== null} onClose={() => setDeleteId(null)}>
+        <DialogTitle>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>¿Seguro que quieres eliminar este usuario?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteId(null)}>Cancelar</Button>
+          <Button color="error" onClick={() => deleteId !== null && handleDelete(deleteId)}>Eliminar</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
+
+export default UsuarioList;

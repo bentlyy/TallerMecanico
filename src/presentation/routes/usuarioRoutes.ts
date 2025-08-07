@@ -1,5 +1,9 @@
+// src/presentation/routes/usuarioRoutes.ts
 import { Router } from 'express';
-import { usuarioController } from '../controllers/usuarioController';
+import { UsuarioController } from '../controllers/usuarioController';
+import { usuarioService } from '../../infrastructure/di/container';
+
+const usuarioController = new UsuarioController(usuarioService);
 
 const usuarioRouter = Router();
 

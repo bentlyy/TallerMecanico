@@ -121,6 +121,15 @@ taller-mecanico/
 │   ├── src/
 │   │   ├── api/
 │   │   │   └── axios.ts
+│   │   │   └── clienteApi.ts
+│   │   │   └── detalleReparacion.ts
+│   │   │   └── facturaApi.ts
+│   │   │   └── mecanicoApi.ts
+│   │   │   └── piezaApi.ts
+│   │   │   └── reparacionApi.ts
+│   │   │   └── rolApi.ts
+│   │   │   └── usuarioApi.ts
+│   │   │   └── vehiculoApi.ts
 │   │   ├── components/
 │   │   │   ├── Cliente/
 │   │   │   │   ├── ClienteForm.tsx
@@ -128,9 +137,17 @@ taller-mecanico/
 │   │   │   └── Vehiculo/
 │   │   │       ├── VehiculoForm.tsx
 │   │   │       └── VehiculoList.tsx
+│   │   │   └── Rol/
+│   │   │       ├── RolForm.tsx
+│   │   │       └── RolList.tsx
+│   │   │   └── Usuario/
+│   │   │       ├── UsuarioForm.tsx
+│   │   │       └── UsuarioList.tsx
 │   │   ├── pages/
 │   │   │   ├── ClientesPage.tsx
 │   │   │   └── VehiculoPage.tsx
+│   │   │   └── RolPage.tsx
+│   │   │   └── UsuarioPage.tsx
 │   │   ├── types/
 │   │   │   └── index.ts
 │   │   ├── App.css

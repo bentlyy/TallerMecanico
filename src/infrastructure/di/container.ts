@@ -1,3 +1,4 @@
+// src/infrastructure/di/container.ts
 import { prisma } from '../db/prisma';
 
 // Repositories
@@ -52,11 +53,7 @@ const usuarioService = new UsuarioService(usuarioRepository,rolService);
 const mecanicoService = new MecanicoService(mecanicoRepository, usuarioService);
 const piezaService = new PiezaService(piezaRepository);
 const reparacionService = new ReparacionService(
-  reparacionRepository,
-  vehiculoService,
-  mecanicoService,
-  usuarioService,
-  piezaService
+  reparacionRepository
 );
 const detalleReparacionService = new DetalleReparacionService(detalleReparacionRepository);
 const facturaService = new FacturaService(facturaRepository);

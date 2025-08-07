@@ -1,7 +1,8 @@
+// src/presentation/controllers/usuarioController.ts
 import { Request, Response } from 'express';
 import { UsuarioService } from '../../application/usuarioService';
 import { Usuario, CreateUsuario, UpdateUsuario } from '../../domain/entities/usuario';
-import { usuarioService } from '@infrastructure/di/container';
+import { usuarioService } from '../../infrastructure/di/container';
 
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
@@ -116,4 +117,3 @@ export class UsuarioController {
 }
 
 
-export const usuarioController = new UsuarioController(usuarioService);
