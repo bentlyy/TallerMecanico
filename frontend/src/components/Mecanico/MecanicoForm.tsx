@@ -10,13 +10,18 @@ interface Props {
 }
 
 const MecanicoForm: React.FC<Props> = ({ mecanico, onSave }) => {
-  const [usuarioId, setUsuarioId] = useState(mecanico?.usuarioId || 0);
-  const [especialidad, setEspecialidad] = useState(mecanico?.especialidad || '');
+  const [usuarioId, setUsuarioId] = useState<number>(mecanico?.usuarioId || 0);
+  const [especialidad, setEspecialidad] = useState<string>(mecanico?.especialidad || '');
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
   useEffect(() => {
-    getAllUsuarios().then(res => setUsuarios(res.data));
+    getAllUsuarios().then((res) => setUsuarios(res.data));
   }, []);
+
+  useEffect(() => {
+    setUsuarioId(mecanico?.usuarioId || 0);
+    setEspecialidad(mecanico?.especialidad || '');
+  }, [mecanico]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

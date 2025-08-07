@@ -7,6 +7,7 @@ import { Paper } from '@mui/material';
 const MecanicoPage: React.FC = () => {
   const [selected, setSelected] = useState<Mecanico | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [refresh, setRefresh] = useState(false); // para recargar la lista
 
   const handleEdit = (mecanico: Mecanico) => {
     setSelected(mecanico);
@@ -20,6 +21,7 @@ const MecanicoPage: React.FC = () => {
 
   const handleSave = () => {
     setShowForm(false);
+    setRefresh(!refresh); // fuerza actualización de lista
   };
 
   return (

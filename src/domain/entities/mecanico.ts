@@ -1,3 +1,4 @@
+// src/domain/entities/mecanico.ts
 export class Mecanico {
   constructor(
     public id: number,

@@ -33,7 +33,6 @@ export interface Usuario {
 export interface Mecanico {
   id: number;
   usuarioId: number;
-  especialidad?: string;
-  usuario?: Usuario; // Para mostrar nombre del usuario
+  especialidad?: string; // Para mostrar nombre del usuario
 }
 

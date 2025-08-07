@@ -1,3 +1,4 @@
+// src/application/mecanicoService.ts
 import { MecanicoRepository } from '../domain/repositories/mecanicoRepository';
 import { Mecanico, CreateMecanico, UpdateMecanico } from '../domain/entities/mecanico';
 import { UsuarioService } from './usuarioService';
@@ -7,7 +8,9 @@ export class MecanicoService {
     private readonly mecanicoRepository: MecanicoRepository,
     private readonly usuarioService: UsuarioService
   ) {}
-
+  async getAll() {
+    return await this.mecanicoRepository.getAll();
+  }
   async getAllMecanicos(): Promise<Mecanico[]> {
     return this.mecanicoRepository.getAll();
   }

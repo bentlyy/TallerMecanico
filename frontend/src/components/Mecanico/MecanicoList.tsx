@@ -31,7 +31,7 @@ const MecanicoList: React.FC<Props> = ({ onEdit, onCreate }) => {
   return (
     <>
       <Typography variant="h5">Lista de Mecánicos</Typography>
-      <Button variant="contained" color="primary" onClick={onCreate} sx={{ mt: 2 }}>
+      <Button variant="contained" color="primary" onClick={onCreate} sx={{ mt: 2, mb: 2 }}>
         Crear nuevo Mecánico
       </Button>
       <List>

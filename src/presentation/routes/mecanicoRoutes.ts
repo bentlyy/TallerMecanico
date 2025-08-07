@@ -1,5 +1,7 @@
+// src/presentation/routes/mecanicoRoutes.ts
 import { Router } from 'express';
-import { mecanicoController } from '../controllers/mecanicoController';
+import { mecanicoController } from '../../infrastructure/di/container';
+
 
 const mecanicoRouter = Router();
 

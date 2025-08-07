@@ -1,3 +1,4 @@
+// src/domain/repositories/mecanicoRepository.ts
 import { Mecanico, CreateMecanico, UpdateMecanico } from "../entities/mecanico";
 
 export interface MecanicoRepository {
