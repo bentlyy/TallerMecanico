@@ -1,14 +1,29 @@
-import api from './axios';
+// piezaApi.ts
+import axios from './axios';
+import { Pieza } from '../types';
 
-const BASE_URL = '/piezas';
+const API_URL = '/pieza';
 
-export const getAllPiezas = () => api.get(BASE_URL);
-export const getPiezaById = (id: number) => api.get(`${BASE_URL}/${id}`);
-export const createPieza = (data: any) => api.post(BASE_URL, data);
-export const updatePieza = (id: number, data: any) => api.put(`${BASE_URL}/${id}`, data);
-export const deletePieza = (id: number) => api.delete(`${BASE_URL}/${id}`);
-export const getPiezaByCodigo = (codigo: string) => api.get(`${BASE_URL}/codigo/${codigo}`);
-export const actualizarStock = (id: number, nuevaCantidad: number) => 
-  api.patch(`${BASE_URL}/${id}/stock`, { cantidad: nuevaCantidad });
-export const descontarStock = (id: number, cantidad: number) => 
-  api.patch(`${BASE_URL}/${id}/descontar`, { cantidad });
+export const getPiezas = async (): Promise<Pieza[]> => {
+  const res = await axios.get(API_URL);
+  return res.data;
+};
+
+export const getPiezaById = async (id: number): Promise<Pieza> => {
+  const res = await axios.get(`${API_URL}/${id}`);
+  return res.data;
+};
+
+export const createPieza = async (pieza: Omit<Pieza, 'id'>): Promise<Pieza> => {
+  const res = await axios.post(API_URL, pieza);
+  return res.data;
+};
+
+export const updatePieza = async (id: number, pieza: Partial<Pieza>): Promise<Pieza> => {
+  const res = await axios.put(`${API_URL}/${id}`, pieza);
+  return res.data;
+};
+
+export const deletePieza = async (id: number): Promise<void> => {
+  await axios.delete(`${API_URL}/${id}`);
+};

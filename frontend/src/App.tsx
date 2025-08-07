@@ -5,6 +5,7 @@ import { VehiculosPage } from "./pages/VehiculosPage";
 import RolesPage from './pages/RolesPage';
 import UsuariosPage from "./pages/UsuarioPage";
 import MecanicoPage from "./pages/MecanicoPage";
+import PiezaPage from "./pages/PiezaPage";
 
 function App() {
   return (
@@ -14,7 +15,8 @@ function App() {
         <Link to="/vehiculos">Vehículos</Link> |{" "}
         <Link to="/roles">Roles</Link> |{" "}
         <Link to="/mecanicos">Mecanicos</Link> |{" "}
-        <Link to="/usuarios">Usuarios</Link>
+        <Link to="/usuarios">Usuarios</Link> |{" "}
+        <Link to="/piezas">Piezas</Link> |{" "}
       </nav>
       <Routes>
         <Route path="/clientes" element={<ClientesPage />} />
@@ -22,6 +24,7 @@ function App() {
         <Route path="/roles" element={<RolesPage />} />
         <Route path="/usuarios" element={<UsuariosPage />} />
         <Route path="/mecanicos" element={<MecanicoPage />} />
+        <Route path="/piezas" element={<PiezaPage />} />
       </Routes>
     </BrowserRouter>
   );

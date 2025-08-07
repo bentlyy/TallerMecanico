@@ -1,3 +1,4 @@
+// src/domain/entities/pieza.ts
 export class Pieza {
   constructor(
     public id: number,

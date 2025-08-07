@@ -1,3 +1,4 @@
+// src/domain/repositories/piezaRepository.ts
 import { Pieza, CreatePieza, UpdatePieza } from "../entities/pieza";
 
 export interface PiezaRepository {

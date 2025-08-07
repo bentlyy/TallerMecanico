@@ -36,3 +36,11 @@ export interface Mecanico {
   especialidad?: string; // Para mostrar nombre del usuario
 }
 
+export interface Pieza {
+  id: number;
+  nombre: string;
+  marca: string | null;
+  precio: number;
+  stock: number;
+  codigo: string;
+}

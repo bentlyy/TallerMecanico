@@ -1,3 +1,4 @@
+// src/infrastructure/db/prismaPiezaRepository.ts
 import { PrismaClient } from '@prisma/client';
 import { PiezaRepository } from '../../domain/repositories/piezaRepository';
 import { Pieza, CreatePieza, UpdatePieza } from '../../domain/entities/pieza';

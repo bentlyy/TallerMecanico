@@ -143,11 +143,15 @@ taller-mecanico/
 │   │   │   └── Usuario/
 │   │   │       ├── UsuarioForm.tsx
 │   │   │       └── UsuarioList.tsx
+│   │   │   └── Pieza/
+│   │   │       ├── PiezaForm.tsx
+│   │   │       └── PiezaList.tsx
 │   │   ├── pages/
 │   │   │   ├── ClientesPage.tsx
 │   │   │   └── VehiculoPage.tsx
 │   │   │   └── RolPage.tsx
 │   │   │   └── UsuarioPage.tsx
+│   │   │   └── PiezaPage.tsx
 │   │   ├── types/
 │   │   │   └── index.ts
 │   │   ├── App.css
