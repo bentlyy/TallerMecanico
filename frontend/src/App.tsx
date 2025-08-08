@@ -6,6 +6,8 @@ import RolesPage from './pages/RolesPage';
 import UsuariosPage from "./pages/UsuarioPage";
 import MecanicoPage from "./pages/MecanicoPage";
 import PiezaPage from "./pages/PiezaPage";
+import ReparacionForm from "./components/Reparacion/ReparacionForm";
+import ReparacionPage from "./pages/ReparacionPage";
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
         <Link to="/mecanicos">Mecanicos</Link> |{" "}
         <Link to="/usuarios">Usuarios</Link> |{" "}
         <Link to="/piezas">Piezas</Link> |{" "}
+        <Link to="/reparaciones">Reparaciones</Link> |{" "}
       </nav>
       <Routes>
         <Route path="/clientes" element={<ClientesPage />} />
@@ -25,6 +28,7 @@ function App() {
         <Route path="/usuarios" element={<UsuariosPage />} />
         <Route path="/mecanicos" element={<MecanicoPage />} />
         <Route path="/piezas" element={<PiezaPage />} />
+        <Route path="/reparaciones" element={<ReparacionPage />} />
       </Routes>
     </BrowserRouter>
   );

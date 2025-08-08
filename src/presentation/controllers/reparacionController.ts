@@ -1,3 +1,4 @@
+// src/presentation/controllers/reparacionController.ts
 import { Request, Response } from 'express';
 import { ReparacionService } from '../../application/reparacionService';
 import { CreateReparacion, UpdateReparacion, EstadoReparacion } from '../../domain/entities/reparacion';

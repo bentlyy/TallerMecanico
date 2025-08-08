@@ -1,3 +1,4 @@
+// src/presentation/controllers/detalleReparacionController.ts
 import { Request, Response } from 'express';
 import { DetalleReparacionService } from '../../application/detalleReparacionService';
 import { CreateDetalleReparacion, UpdateDetalleReparacion } from '../../domain/entities/detalleReparacion';

@@ -1,10 +1,11 @@
+// src/presentation/controllers/facturaController.ts
 import { Request, Response } from 'express';
 import { FacturaService } from '../../application/facturaService';
 
 export class FacturaController {
   constructor(private readonly facturaService: FacturaService) {}
 
-  async getAll(req: Request, res: Response) {
+  async getAll(req: Request, res: Response): Promise<void> {
     try {
       const facturas = await this.facturaService.getAllFacturas();
       res.status(200).json(facturas);
@@ -13,7 +14,7 @@ export class FacturaController {
     }
   }
 
-  async getById(req: Request, res: Response) {
+  async getById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
       const factura = await this.facturaService.getFacturaById(id);
@@ -28,18 +29,19 @@ export class FacturaController {
     }
   }
 
-  async create(req: Request, res: Response) {
+  async create(req: Request, res: Response): Promise<void> {
     try {
       const { clienteId, reparacionId } = req.body;
 
       if (!clienteId || !reparacionId) {
-        return res.status(400).json({ error: 'clienteId y reparacionId son requeridos' });
+        res.status(400).json({ error: 'clienteId y reparacionId son requeridos' });
+        return;
       }
 
       const factura = await this.facturaService.createFactura({
         clienteId,
         reparacionId
-        // fecha es opcional y se asigna automáticamente en el repository
+        // fecha se asigna automáticamente en el repository
       });
 
       res.status(201).json(factura);
@@ -48,7 +50,7 @@ export class FacturaController {
     }
   }
 
-  async getByCliente(req: Request, res: Response) {
+  async getByCliente(req: Request, res: Response): Promise<void> {
     try {
       const clienteId = parseInt(req.params.clienteId);
       const facturas = await this.facturaService.getFacturasPorCliente(clienteId);
@@ -58,7 +60,7 @@ export class FacturaController {
     }
   }
 
-  async getByReparacion(req: Request, res: Response) {
+  async getByReparacion(req: Request, res: Response): Promise<void> {
     try {
       const reparacionId = parseInt(req.params.reparacionId);
       const factura = await this.facturaService.getFacturasPorReparacion(reparacionId);

@@ -1,3 +1,4 @@
+// src/domain/entities/reparacion.ts
 import { EstadoReparacion } from '@prisma/client';
 
 export class Reparacion {

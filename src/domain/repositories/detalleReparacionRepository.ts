@@ -1,3 +1,4 @@
+// src/domain/repositories/detalleReparacionRepository.ts
 import { DetalleReparacion, CreateDetalleReparacion, UpdateDetalleReparacion } from '../entities/detalleReparacion';
 
 export interface DetalleReparacionRepository {

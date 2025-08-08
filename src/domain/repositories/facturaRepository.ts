@@ -1,4 +1,5 @@
-import { Factura, CreateFactura, UpdateFactura } from "../entities/factura";
+// src/domain/repositories/facturaRepository.ts
+import { Factura, CreateFactura} from "../entities/factura";
 
 export interface FacturaRepository {
   getAll(): Promise<Factura[]>;

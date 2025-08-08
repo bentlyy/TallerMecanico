@@ -2,7 +2,7 @@
 import axios from './axios';
 import { Pieza } from '../types';
 
-const API_URL = '/pieza';
+const API_URL = '/piezas';
 
 export const getPiezas = async (): Promise<Pieza[]> => {
   const res = await axios.get(API_URL);

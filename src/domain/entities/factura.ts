@@ -1,4 +1,4 @@
-//factura.ts
+// src/domain/entities/factura.ts
 export class Factura {
   constructor(
     public id: number,

@@ -1,3 +1,4 @@
+// src/infrastructure/db/prismaDetalleReparacionRepository.ts
 import { DetalleReparacionRepository } from '../../domain/repositories/detalleReparacionRepository';
 import { CreateDetalleReparacion, UpdateDetalleReparacion, DetalleReparacion } from '../../domain/entities/detalleReparacion';
 import { PrismaClient } from '@prisma/client';

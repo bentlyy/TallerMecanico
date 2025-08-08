@@ -1,3 +1,4 @@
+// src/domain/entities/detalleReparacion.ts
 export class DetalleReparacion {
   constructor(
     public reparacionId: number,

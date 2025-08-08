@@ -44,3 +44,38 @@ export interface Pieza {
   stock: number;
   codigo: string;
 }
+
+export type EstadoReparacion = 'EN_REVISION' | 'EN_REPARACION' | 'TERMINADO' | 'ENTREGADO';
+
+export interface Reparacion {
+  id: number;
+  descripcion: string;
+  fechaEntrada: string; // ISO
+  fechaSalida?: string | null;
+  estado: EstadoReparacion;
+  costoManoObra: number;
+  vehiculoId: number;
+  mecanicoId?: number | null;
+  recepcionistaId: number;
+}
+
+export interface DetalleReparacion {
+  reparacionId: number;
+  piezaId: number;
+  cantidad: number;
+  precioUnitario: number;
+  descripcion?: string | null;
+}
+
+export interface Factura {
+  id: number;
+  fecha: string; // viene como ISO string desde backend
+  total: number;
+  clienteId: number;
+  reparacionId: number;
+}
+
+export interface CreateFactura {
+  clienteId: number;
+  reparacionId: number;
+}

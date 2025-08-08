@@ -1,6 +1,6 @@
 // src/presentation/routes/piezaRoutes.ts
 import { Router } from 'express';
-import { piezaController } from '../controllers/piezaController';
+import { piezaController } from '../../infrastructure/di/container';
 
 const piezaRouter = Router();
 

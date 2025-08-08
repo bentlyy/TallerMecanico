@@ -1,3 +1,4 @@
+// src/application/facturaService.ts
 import { FacturaRepository } from '../domain/repositories/facturaRepository';
 import { CreateFactura, Factura } from '../domain/entities/factura';
 

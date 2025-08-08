@@ -1,10 +1,31 @@
-import api from './axios';
+import axios from './axios'; // tu instancia axios con baseURL
 
-const BASE_URL = '/facturas';
+import { Factura, CreateFactura } from '../types';
 
-export const getAllFacturas = () => api.get(BASE_URL);
-export const getFacturaById = (id: number) => api.get(`${BASE_URL}/${id}`);
-export const createFactura = (data: any) => api.post(BASE_URL, data);
-export const getFacturasPorCliente = (clienteId: number) => api.get(`${BASE_URL}/cliente/${clienteId}`);
-export const getFacturasPorReparacion = (reparacionId: number) => api.get(`${BASE_URL}/reparacion/${reparacionId}`);
-export const generarFactura = (reparacionId: number) => api.post(`${BASE_URL}/generar`, { reparacionId });
+const endpoint = '/facturas';
+
+export const getFacturas = async (): Promise<Factura[]> => {
+  const { data } = await axios.get(endpoint);
+  return data;
+};
+
+export const getFacturaById = async (id: number): Promise<Factura> => {
+  const { data } = await axios.get(`${endpoint}/${id}`);
+  return data;
+};
+
+export const createFactura = async (factura: CreateFactura): Promise<Factura> => {
+  const { data } = await axios.post(endpoint, factura);
+  return data;
+};
+
+// Opcional: listar facturas por cliente o reparación si quieres esos filtros:
+export const getFacturasByCliente = async (clienteId: number): Promise<Factura[]> => {
+  const { data } = await axios.get(`${endpoint}/cliente/${clienteId}`);
+  return data;
+};
+
+export const getFacturaByReparacion = async (reparacionId: number): Promise<Factura> => {
+  const { data } = await axios.get(`${endpoint}/reparacion/${reparacionId}`);
+  return data;
+};

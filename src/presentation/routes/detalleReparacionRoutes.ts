@@ -1,3 +1,4 @@
+// src/presentation/routes/detalleReparacionRoutes.ts
 import { Router } from 'express';
 import { DetalleReparacionController } from '../controllers/detalleReparacionController';
 import { detalleReparacionService } from '../../infrastructure/di/container'; // Ajusta el path según tu contenedor DI

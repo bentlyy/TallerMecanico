@@ -1,3 +1,4 @@
+// src/infrastructure/db/prismaFacturaRepository.ts
 import { PrismaClient } from '@prisma/client';
 import { FacturaRepository } from '../../domain/repositories/facturaRepository';
 import { Factura, CreateFactura } from '../../domain/entities/factura';

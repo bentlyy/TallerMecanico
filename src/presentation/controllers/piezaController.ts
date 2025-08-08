@@ -1,7 +1,7 @@
 // src/presentation/controllers/piezaController.ts
 import { Request, Response } from 'express';
 import { PiezaService } from '../../application/piezaService';
-import { piezaService } from '../../infrastructure/di/container';
+
 import { Pieza, CreatePieza, UpdatePieza } from '../../domain/entities/pieza';
 
 export class PiezaController {
@@ -127,4 +127,3 @@ export class PiezaController {
   }
 }
 
-export const piezaController = new PiezaController(piezaService);

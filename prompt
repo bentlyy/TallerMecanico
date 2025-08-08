@@ -146,12 +146,16 @@ taller-mecanico/
 │   │   │   └── Pieza/
 │   │   │       ├── PiezaForm.tsx
 │   │   │       └── PiezaList.tsx
+│   │   │   └── Reparacion/
+│   │   │       ├── ReparacionForm.tsx
+│   │   │       └── ReparacionList.tsx
 │   │   ├── pages/
 │   │   │   ├── ClientesPage.tsx
 │   │   │   └── VehiculoPage.tsx
 │   │   │   └── RolPage.tsx
 │   │   │   └── UsuarioPage.tsx
 │   │   │   └── PiezaPage.tsx
+│   │   │   └── ReparacionPage.tsx
 │   │   ├── types/
 │   │   │   └── index.ts
 │   │   ├── App.css
