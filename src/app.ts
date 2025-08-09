@@ -9,8 +9,9 @@ import rolRoutes from "./presentation/routes/rolRoutes";
 import usuarioRoutes from "./presentation/routes/usuarioRoutes";
 import mecanicoRoutes from "./presentation/routes/mecanicoRoutes";
 import piezaRoutes from "./presentation/routes/piezaRoutes";
-// import detalleReparacionRoutes from "./presentation/routes/detalleReparacionRoutes";
-// import facturaRoutes from "./presentation/routes/facturaRoutes";
+import detalleReparacionRoutes from "./presentation/routes/detalleReparacionRoutes";
+import facturaRoutes from "./presentation/routes/facturaRoutes";
+import reparacionRoutes from "./presentation/routes/reparacionRoutes";
 
 
 
@@ -32,10 +33,10 @@ app.use("/api/roles", rolRoutes);
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/mecanicos", mecanicoRoutes);
 app.use("/api/piezas", piezaRoutes);
-// app.use('/api/reparaciones', reparacionRoutes);
-// app.use("/api/detalle-reparacion", detalleReparacionRoutes);
-// app.use("/api/facturas", facturaRoutes);
-// Agrega más rutas aquí...
+app.use('/api/reparaciones', reparacionRoutes);
+app.use("/api/detalle-reparacion", detalleReparacionRoutes);
+app.use("/api/facturas", facturaRoutes);
+// Agrergar mas rutas .
 
 const collectDefaultMetrics = client.collectDefaultMetrics;
 collectDefaultMetrics();

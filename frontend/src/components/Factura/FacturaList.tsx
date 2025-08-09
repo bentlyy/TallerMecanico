@@ -1,47 +1,52 @@
-import React, { useEffect, useState } from 'react';
-import { Factura } from '../../types';
-import { getFacturas } from '../../api/facturaApi';
-import { Table, TableHead, TableBody, TableRow, TableCell, Paper, Typography } from '@mui/material';
+import {
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  IconButton,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { Factura } from "../../types";
 
-const FacturaList: React.FC = () => {
-  const [facturas, setFacturas] = useState<Factura[]>([]);
-  const [loading, setLoading] = useState(true);
+interface FacturaListProps {
+  facturas: Factura[];
+  onEdit: (factura: Factura) => void;
+  onDelete: (id: number) => void;
+}
 
-  useEffect(() => {
-    getFacturas()
-      .then(setFacturas)
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <Typography>Cargando facturas...</Typography>;
-  if (facturas.length === 0) return <Typography>No hay facturas disponibles</Typography>;
-
+const FacturaList = ({ facturas, onEdit, onDelete }: FacturaListProps) => {
   return (
-    <Paper sx={{ padding: 2 }}>
-      <Typography variant="h6" gutterBottom>Listado de Facturas</Typography>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>Fecha</TableCell>
-            <TableCell>Total</TableCell>
-            <TableCell>Cliente ID</TableCell>
-            <TableCell>Reparacion ID</TableCell>
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell>ID</TableCell>
+          <TableCell>Fecha</TableCell>
+          <TableCell>Cliente ID</TableCell>
+          <TableCell>Total</TableCell>
+          <TableCell>Acciones</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {facturas.map((factura) => (
+          <TableRow key={factura.id}>
+            <TableCell>{factura.id}</TableCell>
+            <TableCell>{factura.fecha}</TableCell>
+            <TableCell>{factura.clienteId}</TableCell>
+            <TableCell>{factura.total}</TableCell>
+            <TableCell>
+              <IconButton onClick={() => onEdit(factura)}>
+                <EditIcon />
+              </IconButton>
+              <IconButton onClick={() => onDelete(factura.id)}>
+                <DeleteIcon />
+              </IconButton>
+            </TableCell>
           </TableRow>
-        </TableHead>
-        <TableBody>
-          {facturas.map(factura => (
-            <TableRow key={factura.id}>
-              <TableCell>{factura.id}</TableCell>
-              <TableCell>{new Date(factura.fecha).toLocaleDateString()}</TableCell>
-              <TableCell>${factura.total.toFixed(2)}</TableCell>
-              <TableCell>{factura.clienteId}</TableCell>
-              <TableCell>{factura.reparacionId}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Paper>
+        ))}
+      </TableBody>
+    </Table>
   );
 };
 

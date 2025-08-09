@@ -1,6 +1,6 @@
-//ClienteForm.tsx
 import { useState } from 'react';
 import { createCliente } from '../../api/clienteApi';
+import styles from  './ClienteForm.module.scss';
 
 export const ClienteForm = () => {
   const [form, setForm] = useState({ nombre: '', email: '', telefono: '', direccion: '' });
@@ -21,12 +21,34 @@ export const ClienteForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input name="nombre" placeholder="Nombre" onChange={handleChange} />
-      <input name="email" placeholder="Email" onChange={handleChange} />
-      <input name="telefono" placeholder="Teléfono" onChange={handleChange} />
-      <input name="direccion" placeholder="Dirección" onChange={handleChange} />
-      <button type="submit">Crear Cliente</button>
+    <form onSubmit={handleSubmit} className={styles.formContainer}>
+      <input
+        name="nombre"
+        placeholder="Nombre"
+        onChange={handleChange}
+        className={styles.inputField}
+      />
+      <input
+        name="email"
+        placeholder="Email"
+        onChange={handleChange}
+        className={styles.inputField}
+      />
+      <input
+        name="telefono"
+        placeholder="Teléfono"
+        onChange={handleChange}
+        className={styles.inputField}
+      />
+      <input
+        name="direccion"
+        placeholder="Dirección"
+        onChange={handleChange}
+        className={styles.inputField}
+      />
+      <button type="submit" className={styles.submitButton}>
+        Crear Cliente
+      </button>
     </form>
   );
 };

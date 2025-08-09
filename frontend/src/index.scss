@@ -1,0 +1,57 @@
+/* index.scss */
+
+/* Asegúrate de que esta ruta existe y que variables.scss está bien escrito */
+@use './styles/variables.scss' as *;
+
+/* Reset CSS simple */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Variables globales (CSS nativo, no Sass) */
+:root {
+  --color-primary: #1976d2;
+  --color-primary-dark: #115293;
+  --color-secondary: #f50057;
+  --color-text: #333;
+  --color-bg: #fefefe;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  --border-radius: 6px;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+}
+
+/* Body y tipografía base */
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enlaces globales */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover,
+a:focus {
+  text-decoration: underline;
+}
+
+/* Contenedor global */
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}

@@ -20,10 +20,16 @@ services:
     ports:
       - "3043:3000"
     volumes:
-      - ./frontend:/app
+      #- ./frontend:/app
       - /app/node_modules
     depends_on:
       - app
+    deploy:
+      resources:
+        limits:
+          memory: 1.5g
+        reservations:
+          memory: 1g
 
   prometheus:
     image: prom/prometheus

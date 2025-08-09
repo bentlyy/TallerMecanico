@@ -10,7 +10,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: node dist/server.js  # o el entrypoint correcto si compilas TypeScript
+    command: node dist/server.js
+    deploy:
+      resources:
+        limits:
+          memory: 1.5g
+        reservations:
+          memory: 1g
 
   frontend:
     build:
@@ -20,3 +26,9 @@ services:
       - "80:80"
     depends_on:
       - app
+    deploy:
+      resources:
+        limits:
+          memory: 1.5g
+        reservations:
+          memory: 1g

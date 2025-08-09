@@ -1,22 +1,69 @@
-import React from 'react';
-import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
-import FacturaList from '../components/Factura/FacturaList';
-import FacturaForm from '../components/Factura/FacturaForm';
+import { useState, useEffect } from "react";
+import { Box, Button, Typography, Paper } from "@mui/material";
+import { Factura } from "../types";
+import { getFacturas, deleteFactura } from "../api/facturaApi";
+import FacturaList from "../components/Factura/FacturaList";
+import FacturaForm from "../components/Factura/FacturaForm";
 
-const FacturaPage: React.FC = () => {
+const FacturaPage = () => {
+  const [facturas, setFacturas] = useState<Factura[]>([]);
+  const [selectedFactura, setSelectedFactura] = useState<Factura | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  const loadFacturas = async () => {
+    const data = await getFacturas();
+    setFacturas(data);
+  };
+
+  useEffect(() => {
+    loadFacturas();
+  }, []);
+
+  const handleCreateClick = () => {
+    setSelectedFactura(null);
+    setShowForm(true);
+  };
+
+  const handleEditClick = (factura: Factura) => {
+    setSelectedFactura(factura);
+    setShowForm(true);
+  };
+
+  const handleDeleteClick = async (id: number) => {
+    await deleteFactura(id);
+    loadFacturas();
+  };
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    loadFacturas();
+  };
+
   return (
-    <Container sx={{ mt: 4 }}>
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={6}>
-          <FacturaForm />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <FacturaList />
-        </Grid>
-      </Grid>
-    </Container>
+    <Box p={3}>
+      <Typography variant="h4" gutterBottom>
+        Facturas
+      </Typography>
+
+      {!showForm && (
+        <>
+          <Button variant="contained" onClick={handleCreateClick} sx={{ mb: 2 }}>
+            Nueva Factura
+          </Button>
+          <Paper>
+            <FacturaList
+              facturas={facturas}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
+            />
+          </Paper>
+        </>
+      )}
+
+      {showForm && (
+        <FacturaForm factura={selectedFactura} onClose={handleFormClose} />
+      )}
+    </Box>
   );
 };
 

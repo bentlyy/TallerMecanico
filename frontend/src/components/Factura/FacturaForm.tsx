@@ -1,83 +1,93 @@
-import React, { useEffect, useState } from 'react';
-import { Cliente, Reparacion, CreateFactura } from '../../types';
-import { getClientes } from '../cliente/clienteApi'; // si tienes este api
-import { getReparaciones } from '../reparacion/reparacionApi'; // idem
-import { createFactura } from '../../api/facturaApi';
-import { TextField, Button, MenuItem, Paper, Typography, Box } from '@mui/material';
+import { useState, useEffect } from "react";
+import { Box, Button, TextField, Typography } from "@mui/material";
+import { Factura, CreateFactura } from "../../types";
+import { createFactura, updateFactura } from "../../api/facturaApi";
 
-const FacturaForm: React.FC = () => {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [reparaciones, setReparaciones] = useState<Reparacion[]>([]);
-  const [clienteId, setClienteId] = useState<number | ''>('');
-  const [reparacionId, setReparacionId] = useState<number | ''>('');
-  const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+interface FacturaFormProps {
+  factura: Factura | null;
+  onClose: () => void;
+}
+
+const FacturaForm = ({ factura, onClose }: FacturaFormProps) => {
+  const [formData, setFormData] = useState<CreateFactura>({
+    fecha: "",
+    clienteId: 0,
+    total: 0,
+  });
 
   useEffect(() => {
-    getClientes().then(setClientes);
-    getReparaciones().then(setReparaciones);
-  }, []);
+    if (factura) {
+      setFormData({
+        fecha: factura.fecha,
+        clienteId: factura.clienteId,
+        total: factura.total,
+      });
+    }
+  }, [factura]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccessMsg(null);
-
-    if (clienteId === '' || reparacionId === '') {
-      setError('Debe seleccionar cliente y reparación');
-      return;
+    if (factura) {
+      await updateFactura(factura.id, formData);
+    } else {
+      await createFactura(formData);
     }
-
-    try {
-      await createFactura({ clienteId: clienteId as number, reparacionId: reparacionId as number });
-      setSuccessMsg('Factura creada correctamente');
-      setClienteId('');
-      setReparacionId('');
-    } catch (err: any) {
-      setError(err.message || 'Error al crear factura');
-    }
+    onClose();
   };
 
   return (
-    <Paper sx={{ padding: 3, maxWidth: 400 }}>
-      <Typography variant="h6" gutterBottom>Crear Factura</Typography>
-      <Box component="form" onSubmit={handleSubmit} noValidate>
-        <TextField
-          select
-          fullWidth
-          label="Cliente"
-          value={clienteId}
-          onChange={(e) => setClienteId(Number(e.target.value))}
-          margin="normal"
-          required
-        >
-          {clientes.map(c => (
-            <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>
-          ))}
-        </TextField>
+    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 400 }}>
+      <Typography variant="h6" gutterBottom>
+        {factura ? "Editar Factura" : "Nueva Factura"}
+      </Typography>
 
-        <TextField
-          select
-          fullWidth
-          label="Reparación"
-          value={reparacionId}
-          onChange={(e) => setReparacionId(Number(e.target.value))}
-          margin="normal"
-          required
-        >
-          {reparaciones.map(r => (
-            <MenuItem key={r.id} value={r.id}>{r.descripcion}</MenuItem>
-          ))}
-        </TextField>
+      <TextField
+        label="Fecha"
+        name="fecha"
+        type="date"
+        value={formData.fecha}
+        onChange={handleChange}
+        fullWidth
+        margin="normal"
+        InputLabelProps={{ shrink: true }}
+        required
+      />
 
-        {error && <Typography color="error">{error}</Typography>}
-        {successMsg && <Typography color="primary">{successMsg}</Typography>}
+      <TextField
+        label="Cliente ID"
+        name="clienteId"
+        type="number"
+        value={formData.clienteId}
+        onChange={handleChange}
+        fullWidth
+        margin="normal"
+        required
+      />
 
-        <Button type="submit" variant="contained" sx={{ mt: 2 }} fullWidth>
-          Crear
+      <TextField
+        label="Total"
+        name="total"
+        type="number"
+        value={formData.total}
+        onChange={handleChange}
+        fullWidth
+        margin="normal"
+        required
+      />
+
+      <Box mt={2}>
+        <Button type="submit" variant="contained" sx={{ mr: 1 }}>
+          Guardar
+        </Button>
+        <Button variant="outlined" onClick={onClose}>
+          Cancelar
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 };
 

@@ -69,13 +69,14 @@ export interface DetalleReparacion {
 
 export interface Factura {
   id: number;
-  fecha: string; // viene como ISO string desde backend
-  total: number;
+  fecha: string;
   clienteId: number;
-  reparacionId: number;
+  total: number;
 }
 
 export interface CreateFactura {
+  fecha: string;
   clienteId: number;
-  reparacionId: number;
+  total: number;
 }
+

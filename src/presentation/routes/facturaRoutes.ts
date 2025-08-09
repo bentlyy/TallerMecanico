@@ -1,23 +1,16 @@
 // src/presentation/routes/facturaRoutes.ts
 import { Router } from 'express';
-import { FacturaController } from '../controllers/facturaController';
-import { FacturaService } from '../../application/facturaService';
-import { PrismaFacturaRepository } from '../../infrastructure/db/prismaFacturaRepository';
-import { prisma } from '../../infrastructure/db/prisma';
+import { facturaController } from '../../infrastructure/di/container';
 
 const facturaRouter = Router();
 
-const repository = new PrismaFacturaRepository(prisma);
-const service = new FacturaService(repository);
-const controller = new FacturaController(service);
-
 // ⚠️ Primero las rutas específicas
-facturaRouter.get('/cliente/:clienteId', controller.getByCliente.bind(controller));
-facturaRouter.get('/reparacion/:reparacionId', controller.getByReparacion.bind(controller));
+facturaRouter.get('/cliente/:clienteId', facturaController.getByCliente.bind(facturaController));
+facturaRouter.get('/reparacion/:reparacionId', facturaController.getByReparacion.bind(facturaController));
 
 // Luego las rutas genéricas
-facturaRouter.get('/', controller.getAll.bind(controller));
-facturaRouter.get('/:id', controller.getById.bind(controller));
-facturaRouter.post('/', controller.create.bind(controller));
+facturaRouter.get('/', facturaController.getAll.bind(facturaController));
+facturaRouter.get('/:id', facturaController.getById.bind(facturaController));
+facturaRouter.post('/', facturaController.create.bind(facturaController));
 
 export default facturaRouter;

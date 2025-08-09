@@ -1,6 +1,7 @@
-//ClienteList.tsx
 import { useEffect, useState } from 'react';
 import { getAllClientes } from '../../api/clienteApi';
+import styles from './ClienteList.module.scss';
+
 
 export const ClienteList = () => {
   const [clientes, setClientes] = useState([]);
@@ -12,11 +13,13 @@ export const ClienteList = () => {
   }, []);
 
   return (
-    <div>
-      <h2>Listado de Clientes</h2>
+    <div className={styles.listContainer}>
+      <h2 className={styles.listTitle}>Listado de Clientes</h2>
       <ul>
         {clientes.map((cliente: any) => (
-          <li key={cliente.id}>{cliente.nombre} - {cliente.email}</li>
+          <li key={cliente.id} className={styles.listItem}>
+            {cliente.nombre} - {cliente.email}
+          </li>
         ))}
       </ul>
     </div>

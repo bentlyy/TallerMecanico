@@ -1,0 +1,27 @@
+/* App.scss */
+@import './styles/variables.scss';
+
+/* App.scss */
+
+nav {
+  background-color: var(--color-primary);
+  padding: var(--spacing-md);
+  text-align: center;
+
+  a {
+    color: white;
+    margin: 0 var(--spacing-sm);
+    font-weight: 600;
+    font-size: 1rem;
+
+    &:hover,
+    &.active {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* Contenedor principal para páginas */
+.main-content {
+  padding: var(--spacing-lg) 0;
+}

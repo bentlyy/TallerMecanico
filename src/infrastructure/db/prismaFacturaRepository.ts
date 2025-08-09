@@ -52,42 +52,49 @@ export class PrismaFacturaRepository implements FacturaRepository {
   }
 
   async create(data: CreateFactura): Promise<Factura> {
-    // Calcular el total basado en la reparación
-    const reparacion = await this.prisma.reparacion.findUnique({
-      where: { id: data.reparacionId },
-      include: {
-        detalleReparacion: true
-      }
-    });
+  console.log(`[PrismaFacturaRepository] Creando factura para clienteId=${data.clienteId}, reparacionId=${data.reparacionId}`);
 
-    if (!reparacion) {
-      throw new Error('Reparación no encontrada');
+  const reparacion = await this.prisma.reparacion.findUnique({
+    where: { id: data.reparacionId },
+    include: {
+      detalleReparacion: true
     }
+  });
 
-    // Calcular total de repuestos
-    const totalRepuestos = reparacion.detalleReparacion.reduce(
-      (sum, detalle) => sum + (detalle.cantidad * detalle.precioUnitario),
-      0
-    );
-
-    // Total = Mano de obra + repuestos
-    const total = reparacion.costoManoObra + totalRepuestos;
-
-    const factura = await this.prisma.factura.create({
-      data: {
-        fecha: new Date(),
-        total,
-        cliente: { connect: { id: data.clienteId } },
-        reparacion: { connect: { id: data.reparacionId } }
-      },
-      include: {
-        cliente: true,
-        reparacion: true
-      }
-    });
-
-    return this.mapToEntity(factura);
+  if (!reparacion) {
+    const errorMsg = `Reparación con id=${data.reparacionId} no encontrada`;
+    console.error("[PrismaFacturaRepository]", errorMsg);
+    throw new Error(errorMsg);
   }
+
+  const detalles = reparacion.detalleReparacion || [];
+  if (detalles.length === 0) {
+    console.warn(`[PrismaFacturaRepository] La reparación id=${data.reparacionId} no tiene detalles de reparación`);
+  }
+
+  const totalRepuestos = detalles.reduce(
+    (sum, detalle) => sum + (detalle.cantidad * detalle.precioUnitario),
+    0
+  );
+
+  const total = reparacion.costoManoObra + totalRepuestos;
+  console.log(`[PrismaFacturaRepository] Total calculado: Mano de obra=${reparacion.costoManoObra}, Repuestos=${totalRepuestos}, Total=${total}`);
+
+  const factura = await this.prisma.factura.create({
+    data: {
+      fecha: new Date(),
+      total,
+      cliente: { connect: { id: data.clienteId } },
+      reparacion: { connect: { id: data.reparacionId } }
+    },
+    include: {
+      cliente: true,
+      reparacion: true
+    }
+  });
+
+  return this.mapToEntity(factura);
+}
 
   async getByCliente(clienteId: number): Promise<Factura[]> {
     const facturas = await this.prisma.factura.findMany({

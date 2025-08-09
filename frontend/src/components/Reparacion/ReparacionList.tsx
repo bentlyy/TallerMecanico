@@ -38,6 +38,7 @@ const ReparacionList: React.FC<Props> = ({ onEdit, onCreate }) => {
   }, [refreshToggle]);
 
   const handleDelete = async (id: number) => {
+    // eslint-disable-next-line no-restricted-globals
     if (!confirm('Eliminar reparación?')) return;
     await deleteReparacion(id);
     setRefreshToggle(t => !t);

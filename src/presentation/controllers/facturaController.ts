@@ -30,25 +30,25 @@ export class FacturaController {
   }
 
   async create(req: Request, res: Response): Promise<void> {
-    try {
-      const { clienteId, reparacionId } = req.body;
+  try {
+    const { clienteId, reparacionId } = req.body;
 
-      if (!clienteId || !reparacionId) {
-        res.status(400).json({ error: 'clienteId y reparacionId son requeridos' });
-        return;
-      }
-
-      const factura = await this.facturaService.createFactura({
-        clienteId,
-        reparacionId
-        // fecha se asigna automáticamente en el repository
-      });
-
-      res.status(201).json(factura);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message || 'Error al crear la factura' });
+    if (!clienteId || !reparacionId) {
+      res.status(400).json({ error: 'clienteId y reparacionId son requeridos' });
+      return;
     }
+
+    const factura = await this.facturaService.createFactura({
+      clienteId,
+      reparacionId
+    });
+
+    res.status(201).json(factura);
+  } catch (error: any) {
+    console.error("[FacturaController] Error al crear factura:", error);
+    res.status(500).json({ error: error.message || 'Error al crear la factura' });
   }
+}
 
   async getByCliente(req: Request, res: Response): Promise<void> {
     try {
