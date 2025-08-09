@@ -149,6 +149,9 @@ taller-mecanico/
 │   │   │   └── Reparacion/
 │   │   │       ├── ReparacionForm.tsx
 │   │   │       └── ReparacionList.tsx
+│   │   │   └── Factura/
+│   │   │       ├── FacturaForm.tsx
+│   │   │       └── FacturaList.tsx
 │   │   ├── pages/
 │   │   │   ├── ClientesPage.tsx
 │   │   │   └── VehiculoPage.tsx
@@ -156,6 +159,7 @@ taller-mecanico/
 │   │   │   └── UsuarioPage.tsx
 │   │   │   └── PiezaPage.tsx
 │   │   │   └── ReparacionPage.tsx
+│   │   │   └── FacturaPage.tsx
 │   │   ├── types/
 │   │   │   └── index.ts
 │   │   ├── App.css
