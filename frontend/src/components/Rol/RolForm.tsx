@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TextField, Button, Box, Typography, Alert, CircularProgress } from '@mui/material';
 import { createRol, updateRol } from '../../api/rolApi';
 import { Rol } from '../../types';

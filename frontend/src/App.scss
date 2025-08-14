@@ -1,16 +1,13 @@
-/* App.scss */
-@import './styles/variables.scss';
-
-/* App.scss */
+@use './styles/variables' as *;
 
 nav {
-  background-color: var(--color-primary);
-  padding: var(--spacing-md);
+  background-color: $color-primary;
+  padding: $spacing-md;
   text-align: center;
 
   a {
     color: white;
-    margin: 0 var(--spacing-sm);
+    margin: 0 $spacing-sm;
     font-weight: 600;
     font-size: 1rem;
 
@@ -23,5 +20,5 @@ nav {
 
 /* Contenedor principal para páginas */
 .main-content {
-  padding: var(--spacing-lg) 0;
+  padding: $spacing-lg 0;
 }

@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 import api from '../../api/axios';
 import { getAllClientes } from '../../api/clienteApi';
-import { Vehiculo } from '../../types';
 
 interface Cliente {
   id: number;
