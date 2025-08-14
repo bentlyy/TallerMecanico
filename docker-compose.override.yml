@@ -1,3 +1,4 @@
+# Docker compose override file for development environment
 services:
   app:
     build: .
@@ -18,16 +19,18 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     ports:
-      - "3043:3000"
+      - "3043:5173"
     volumes:
-      #- ./frontend:/app
+      - ./frontend:/app
       - /app/node_modules
+    environment:
+    - CHOKIDAR_USEPOLLING=true
     depends_on:
       - app
     deploy:
       resources:
         limits:
-          memory: 1.5g
+          memory: 3g
         reservations:
           memory: 1g
 
@@ -46,3 +49,7 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
+
+volumes:
+  postgres_data:
+  grafana_data:

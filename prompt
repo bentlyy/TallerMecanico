@@ -118,6 +118,8 @@ taller-mecanico/
 │   ├── public/
 │   │   └── (archivos estáticos públicos, index.html, favicon.ico, etc.)
 │   ├── README.md
+│   ├── styles/
+│   │   └── variables.scss
 │   ├── src/
 │   │   ├── api/
 │   │   │   └── axios.ts
@@ -162,10 +164,11 @@ taller-mecanico/
 │   │   │   └── FacturaPage.tsx
 │   │   ├── types/
 │   │   │   └── index.ts
-│   │   ├── App.css
+│   │   ├── App.scss
 │   │   ├── App.test.tsx
 │   │   ├── App.tsx
-│   │   ├── index.css
+│   │   ├── declarations.d.ts
+│   │   ├── index.scss
 │   │   ├── index.tsx
 │   │   ├── logo.svg
 │   │   ├── react-app-env.d.ts

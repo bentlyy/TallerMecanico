@@ -1,20 +1,30 @@
-# Imagen base
-FROM node:20-alpine
+# Dockerfile/backend
+FROM node:18
 
-# Directorio de trabajo dentro del contenedor
+# Crear directorio de trabajo
 WORKDIR /app
 
-# Copia archivos de dependencias
+# Copiar package.json y package-lock.json
 COPY package*.json ./
 
-# Instala dependencias
+# Instalar dependencias
 RUN npm install
 
-# Copia el resto del proyecto
+# Copiar el resto del código
 COPY . .
 
-# Expone el puerto de la app
+# Generar Prisma Client
+RUN npx prisma generate
+
+# Exponer el puerto (ajústalo si tu app usa otro)
 EXPOSE 3000
 
-# Comando para iniciar el proyecto en desarrollo
+# Comando por defecto
 CMD ["npm", "run", "dev"]
+
+# Copiar el script al contenedor
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Usar el script como entrypoint
+ENTRYPOINT ["/entrypoint.sh"]

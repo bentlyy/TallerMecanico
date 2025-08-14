@@ -1,3 +1,4 @@
+# Docker Compose file for production environment /docker-compose.prod.yml
 services:
   app:
     build:
@@ -29,6 +30,11 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1.5g
+          memory: 3g
         reservations:
           memory: 1g
+
+volumes:
+  postgres_data:
+  grafana_data:
+    external: true

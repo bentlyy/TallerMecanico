@@ -1,4 +1,4 @@
-
+# Docker Compose base file (DB + volúmenes)
 services:
   db:
     image: postgres:15
