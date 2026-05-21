@@ -6,17 +6,15 @@ import {
   TableBody,
   IconButton,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Factura } from "../../types";
 
 interface FacturaListProps {
   facturas: Factura[];
-  onEdit: (factura: Factura) => void;
   onDelete: (id: number) => void;
 }
 
-const FacturaList = ({ facturas, onEdit, onDelete }: FacturaListProps) => {
+const FacturaList = ({ facturas, onDelete }: FacturaListProps) => {
   return (
     <Table>
       <TableHead>
@@ -36,9 +34,6 @@ const FacturaList = ({ facturas, onEdit, onDelete }: FacturaListProps) => {
             <TableCell>{factura.clienteId}</TableCell>
             <TableCell>{factura.total}</TableCell>
             <TableCell>
-              <IconButton onClick={() => onEdit(factura)}>
-                <EditIcon />
-              </IconButton>
               <IconButton onClick={() => onDelete(factura.id)}>
                 <DeleteIcon />
               </IconButton>

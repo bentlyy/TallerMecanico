@@ -15,7 +15,7 @@ afterAll(async () => {
 
 describe('PrismaVehiculoRepository', () => {
   it('debe listar vehículos', async () => {
-    const vehiculos = await repo.findAll();
+    const vehiculos = await repo.getAll();
     expect(Array.isArray(vehiculos)).toBe(true);
   });
 });

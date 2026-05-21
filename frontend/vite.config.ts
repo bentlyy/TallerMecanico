@@ -1,27 +1,26 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import { fileURLToPath, URL } from 'url';
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173, // Puerto por defecto de Vite
-    host: true, // Para que funcione en Docker
-    strictPort: true
+    port: 5173,
+    host: true,
+    strictPort: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
-    outDir: 'dist', // Directorio de salida para producción
+    outDir: 'dist',
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'), // Para usar @ en imports
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        additionalData: `@import "./styles/variables.scss";`
-      }
-    }
-  }
 });

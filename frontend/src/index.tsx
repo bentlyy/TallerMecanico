@@ -1,8 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.scss'; // <-- aquí importas sass global
+import './index.scss';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,5 +11,3 @@ root.render(
     <App />
   </React.StrictMode>
 );
-
-reportWebVitals();

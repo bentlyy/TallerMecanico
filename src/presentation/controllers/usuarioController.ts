@@ -2,8 +2,7 @@
 import { Request, Response } from 'express';
 import { UsuarioService } from '../../application/usuarioService';
 import { Usuario, CreateUsuario, UpdateUsuario } from '../../domain/entities/usuario';
-import { usuarioService } from '../../infrastructure/di/container';
-
+import { loginService } from '../../infrastructure/di/container';
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
@@ -41,12 +40,9 @@ export class UsuarioController {
         return;
       }
 
-      // En la práctica, deberías hashear la contraseña aquí antes de crear el usuario
-      const passwordHash = password; // Esto debería ser el hash de la contraseña
-
       const nuevoUsuario = await this.usuarioService.createUsuario({
         email,
-        passwordHash,
+        passwordHash: password,
         nombre,
         activo: true,
         rolId
@@ -79,7 +75,7 @@ export class UsuarioController {
     try {
       const id = parseInt(req.params.id);
       await this.usuarioService.deleteUsuario(id);
-      res.status(204).send();
+      res.sendStatus(204);
     } catch (error) {
       res.status(500).json({ error: 'Error al eliminar el usuario' });
     }
@@ -112,6 +108,26 @@ export class UsuarioController {
       }
     } catch (error) {
       res.status(500).json({ error: 'Error al desactivar el usuario' });
+    }
+  }
+
+  async login(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        res.status(400).json({ error: 'Email y password son requeridos' });
+        return;
+      }
+
+      const result = await loginService(email, password);
+      if (!result) {
+        res.status(401).json({ error: 'Credenciales inválidas' });
+        return;
+      }
+
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al iniciar sesión' });
     }
   }
 }

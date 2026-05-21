@@ -1,12 +1,5 @@
 import { Router } from 'express';
-import { RolController } from '../controllers/rolController';
-import { RolService } from '../../application/rolService';
-import { PrismaRolRepository } from '../../infrastructure/db/prismaRolRepository';
-import { prisma } from '../../infrastructure/db/prisma';
-
-const rolRepository = new PrismaRolRepository(prisma);
-const rolService = new RolService(rolRepository);
-const rolController = new RolController(rolService);
+import { rolController } from '../../infrastructure/di/container';
 
 const rolRouter = Router();
 

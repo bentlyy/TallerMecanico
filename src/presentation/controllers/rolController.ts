@@ -71,7 +71,7 @@ export class RolController {
     try {
       const id = parseInt(req.params.id);
       await this.rolService.deleteRol(id);
-      res.status(204).send();
+      res.sendStatus(204);
     } catch (error) {
       res.status(500).json({ error: 'Error al eliminar el rol' });
     }

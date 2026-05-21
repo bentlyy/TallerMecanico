@@ -75,8 +75,7 @@ export interface Factura {
 }
 
 export interface CreateFactura {
-  fecha: string;
   clienteId: number;
-  total: number;
+  reparacionId: number;
 }
 

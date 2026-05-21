@@ -92,7 +92,7 @@ export class MecanicoController {
       }
 
       await this.mecanicoService.deleteMecanico(id);
-      res.status(204).send();
+      res.sendStatus(204);
     } catch (error) {
       res.status(500).json({ error: 'Error al eliminar el mecánico' });
     }

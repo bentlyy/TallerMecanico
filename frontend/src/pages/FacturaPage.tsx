@@ -7,7 +7,6 @@ import FacturaForm from "../components/Factura/FacturaForm";
 
 const FacturaPage = () => {
   const [facturas, setFacturas] = useState<Factura[]>([]);
-  const [selectedFactura, setSelectedFactura] = useState<Factura | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   const loadFacturas = async () => {
@@ -18,16 +17,6 @@ const FacturaPage = () => {
   useEffect(() => {
     loadFacturas();
   }, []);
-
-  const handleCreateClick = () => {
-    setSelectedFactura(null);
-    setShowForm(true);
-  };
-
-  const handleEditClick = (factura: Factura) => {
-    setSelectedFactura(factura);
-    setShowForm(true);
-  };
 
   const handleDeleteClick = async (id: number) => {
     await deleteFactura(id);
@@ -47,13 +36,12 @@ const FacturaPage = () => {
 
       {!showForm && (
         <>
-          <Button variant="contained" onClick={handleCreateClick} sx={{ mb: 2 }}>
+          <Button variant="contained" onClick={() => setShowForm(true)} sx={{ mb: 2 }}>
             Nueva Factura
           </Button>
           <Paper>
             <FacturaList
               facturas={facturas}
-              onEdit={handleEditClick}
               onDelete={handleDeleteClick}
             />
           </Paper>
@@ -61,7 +49,7 @@ const FacturaPage = () => {
       )}
 
       {showForm && (
-        <FacturaForm factura={selectedFactura} onClose={handleFormClose} />
+        <FacturaForm onClose={handleFormClose} />
       )}
     </Box>
   );

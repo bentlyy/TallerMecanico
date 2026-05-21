@@ -33,7 +33,7 @@ export class ReparacionController {
   async delete(req: Request, res: Response) {
     const id = parseInt(req.params.id);
     await this.reparacionService.deleteReparacion(id);
-    res.status(204).send();
+    res.sendStatus(204);
   }
 
   async cambiarEstado(req: Request, res: Response) {

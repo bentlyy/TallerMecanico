@@ -1,31 +1,21 @@
-import axios from "axios";
+import api from "./axios";
 import { Factura, CreateFactura } from "../types";
 
-const API_URL = "/api/facturas";
-
 export const getFacturas = async (): Promise<Factura[]> => {
-  const res = await axios.get(API_URL);
+  const res = await api.get("/facturas");
   return res.data;
 };
 
 export const getFacturaById = async (id: number): Promise<Factura> => {
-  const res = await axios.get(`${API_URL}/${id}`);
+  const res = await api.get(`/facturas/${id}`);
   return res.data;
 };
 
 export const createFactura = async (factura: CreateFactura): Promise<Factura> => {
-  const res = await axios.post(API_URL, factura);
-  return res.data;
-};
-
-export const updateFactura = async (
-  id: number,
-  factura: CreateFactura
-): Promise<Factura> => {
-  const res = await axios.put(`${API_URL}/${id}`, factura);
+  const res = await api.post("/facturas", factura);
   return res.data;
 };
 
 export const deleteFactura = async (id: number): Promise<void> => {
-  await axios.delete(`${API_URL}/${id}`);
+  await api.delete(`/facturas/${id}`);
 };

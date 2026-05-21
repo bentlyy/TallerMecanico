@@ -1,8 +1,7 @@
 //app.ts
 import express from 'express';
 import cors from 'cors';
-import * as client from 'prom-client'; 
-
+import * as client from 'prom-client';
 import clienteRoutes from './presentation/routes/clienteRoutes';
 import vehiculoRoutes from './presentation/routes/vehiculoRoutes';
 import rolRoutes from "./presentation/routes/rolRoutes";
@@ -12,21 +11,16 @@ import piezaRoutes from "./presentation/routes/piezaRoutes";
 import detalleReparacionRoutes from "./presentation/routes/detalleReparacionRoutes";
 import facturaRoutes from "./presentation/routes/facturaRoutes";
 import reparacionRoutes from "./presentation/routes/reparacionRoutes";
-
-
-
-// import reparacionRoutes from './presentation/routes/reparacionRoutes'
+import { healthRouter } from './infrastructure/http/health';
+import { errorHandler } from './infrastructure/http/errorHandler';
 import 'reflect-metadata';
-
 const app = express();
-
 app.use(cors());
 app.use(express.json());
-
 app.get('/', (req, res) => {
-  res.json({ message: 'API Taller Mecánico funcionando' });
+  res.json({ message: 'API Taller Mecanico funcionando' });
 });
-
+app.use('/health', healthRouter);
 app.use('/api/clientes', clienteRoutes);
 app.use("/api/vehiculos", vehiculoRoutes);
 app.use("/api/roles", rolRoutes);
@@ -36,16 +30,11 @@ app.use("/api/piezas", piezaRoutes);
 app.use('/api/reparaciones', reparacionRoutes);
 app.use("/api/detalle-reparacion", detalleReparacionRoutes);
 app.use("/api/facturas", facturaRoutes);
-// Agrergar mas rutas .
-
 const collectDefaultMetrics = client.collectDefaultMetrics;
 collectDefaultMetrics();
-
 app.get('/metrics', async (req, res) => {
   res.set('Content-Type', client.register.contentType);
   res.end(await client.register.metrics());
 });
-
-
-
+app.use(errorHandler);
 export default app;

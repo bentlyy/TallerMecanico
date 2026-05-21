@@ -1,4 +1,5 @@
-// src/infrastructure/di/container.ts
+import bcrypt from 'bcrypt';
+import { generateToken } from '../http/authMiddleware';
 import { prisma } from '../db/prisma';
 
 // Repositories
@@ -69,7 +70,17 @@ const reparacionController = new ReparacionController(reparacionService);
 const detalleReparacionController = new DetalleReparacionController(detalleReparacionService);
 const facturaController = new FacturaController(facturaService);
 
-// Exportaciones completas
+export async function loginService(email: string, password: string): Promise<{ token: string; usuario: { id: number; email: string; nombre: string } } | null> {
+  const user = await prisma.usuario.findUnique({ where: { email } });
+  if (!user) return null;
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) return null;
+
+  const token = generateToken({ id: user.id, email: user.email, rolId: user.rolId });
+  return { token, usuario: { id: user.id, email: user.email, nombre: user.nombre } };
+}
+
 export { 
   clienteRepository, clienteService, clienteController,
   vehiculoRepository, vehiculoService, vehiculoController,

@@ -1,24 +1,14 @@
 import { Router } from 'express';
-import { VehiculoController } from '../controllers/vehiculoController';
-import { VehiculoService } from '../../application/vehiculoService';
-import { PrismaVehiculoRepository } from '../../infrastructure/db/prismaVehiculoRepository';
-import { PrismaClienteRepository } from '../../infrastructure/db/prismaClienteRepository'; // 👈 Asegúrate de tener este archivo
-import { prisma } from '../../infrastructure/db/prisma';
-
-const vehiculoRepository = new PrismaVehiculoRepository(prisma);
-const clienteRepository = new PrismaClienteRepository(prisma); // 👈 nuevo repositorio
-
-const service = new VehiculoService(vehiculoRepository, clienteRepository);
-const controller = new VehiculoController(service);
+import { vehiculoController } from '../../infrastructure/di/container';
 
 const vehiculoRouter = Router();
 
-vehiculoRouter.get('/', controller.getAll.bind(controller));
-vehiculoRouter.get('/:id', controller.getById.bind(controller));
-vehiculoRouter.post('/', controller.create.bind(controller));
-vehiculoRouter.put('/:id', controller.update.bind(controller));
-vehiculoRouter.delete('/:id', controller.delete.bind(controller));
-vehiculoRouter.get('/cliente/:clienteId', controller.getByCliente.bind(controller));
-vehiculoRouter.get('/:vehiculoId/reparaciones', controller.getReparaciones.bind(controller));
+vehiculoRouter.get('/', vehiculoController.getAll.bind(vehiculoController));
+vehiculoRouter.get('/:id', vehiculoController.getById.bind(vehiculoController));
+vehiculoRouter.post('/', vehiculoController.create.bind(vehiculoController));
+vehiculoRouter.put('/:id', vehiculoController.update.bind(vehiculoController));
+vehiculoRouter.delete('/:id', vehiculoController.delete.bind(vehiculoController));
+vehiculoRouter.get('/cliente/:clienteId', vehiculoController.getByCliente.bind(vehiculoController));
+vehiculoRouter.get('/:vehiculoId/reparaciones', vehiculoController.getReparaciones.bind(vehiculoController));
 
 export default vehiculoRouter;

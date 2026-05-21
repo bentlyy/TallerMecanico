@@ -98,7 +98,7 @@ export class PiezaController {
     try {
       const id = parseInt(req.params.id);
       await this.piezaService.deletePieza(id);
-      res.status(204).send();
+      res.sendStatus(204);
     } catch (error) {
       res.status(500).json({ error: 'Error al eliminar la pieza' });
     }

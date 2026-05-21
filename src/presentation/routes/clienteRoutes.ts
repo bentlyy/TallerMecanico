@@ -1,13 +1,5 @@
-//clienteRoute.ts
 import { Router } from 'express';
-import { ClienteController } from '../controllers/clienteController';
-import { ClienteService } from '../../application/clienteService';
-import { PrismaClienteRepository } from '../../infrastructure/db/prismaClienteRepository';
-import { prisma } from '../../infrastructure/db/prisma';
-
-const clienteRepository = new PrismaClienteRepository(prisma);
-const clienteService = new ClienteService(clienteRepository);
-const clienteController = new ClienteController(clienteService);
+import { clienteController } from '../../infrastructure/di/container';
 
 const clienteRouter = Router();
 

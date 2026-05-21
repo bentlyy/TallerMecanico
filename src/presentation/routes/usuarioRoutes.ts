@@ -1,11 +1,10 @@
 // src/presentation/routes/usuarioRoutes.ts
 import { Router } from 'express';
-import { UsuarioController } from '../controllers/usuarioController';
-import { usuarioService } from '../../infrastructure/di/container';
-
-const usuarioController = new UsuarioController(usuarioService);
+import { usuarioController } from '../../infrastructure/di/container';
 
 const usuarioRouter = Router();
+
+usuarioRouter.post('/login', usuarioController.login.bind(usuarioController));
 
 // Obtener todos los usuarios
 usuarioRouter.get('/', usuarioController.getAll.bind(usuarioController));

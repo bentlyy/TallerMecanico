@@ -1,5 +1,5 @@
-// src/infrastructure/db/prismaUsuarioRepository.ts
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 import { UsuarioRepository } from '../../domain/repositories/usuarioRepository';
 import { Usuario, CreateUsuario, UpdateUsuario } from '../../domain/entities/usuario';
 
@@ -43,10 +43,11 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
   }
 
   async create(data: CreateUsuario): Promise<Usuario> {
+    const passwordHash = await bcrypt.hash(data.passwordHash, 10);
     const usuario = await this.prisma.usuario.create({ 
       data: {
         email: data.email,
-        passwordHash: data.passwordHash,
+        passwordHash,
         nombre: data.nombre,
         activo: data.activo,
         rolId: data.rolId
@@ -70,7 +71,7 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     };
 
     if (data.password) {
-      updateData.passwordHash = data.password; // En la práctica, deberías hashear la contraseña aquí
+      updateData.passwordHash = await bcrypt.hash(data.password, 10);
     }
 
     const usuario = await this.prisma.usuario.update({
