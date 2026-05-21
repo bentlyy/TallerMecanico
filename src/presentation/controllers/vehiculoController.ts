@@ -1,88 +1,53 @@
-//vehiculoController.ts
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../../infrastructure/http/authMiddleware';
 import { VehiculoService } from '../../application/vehiculoService';
-import { Vehiculo, CreateVehiculo, UpdateVehiculo } from '../../domain/entities/vehiculo';
+import { asyncHandler } from '../../infrastructure/http/asyncHandler';
+import { NotFoundError } from '../../infrastructure/http/errors';
 
 export class VehiculoController {
   constructor(private readonly vehiculoService: VehiculoService) {}
 
-  async getAll(req: Request, res: Response) {
-    try {
-      const vehiculos = await this.vehiculoService.getAllVehiculos();
-      res.status(200).json(vehiculos);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener los vehículos' });
-    }
-  }
+  getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const result = await this.vehiculoService.getAllVehiculos(page, limit);
+    res.json(result);
+  });
 
-  async getById(req: Request, res: Response) {
-    try {
-      const id = parseInt(req.params.id);
-      const vehiculo = await this.vehiculoService.getVehiculoById(id);
-      
-      if (vehiculo) {
-        res.status(200).json(vehiculo);
-      } else {
-        res.status(404).json({ error: 'Vehículo no encontrado' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener el vehículo' });
-    }
-  }
+  getById = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const vehiculo = await this.vehiculoService.getVehiculoById(id);
+    if (!vehiculo) throw new NotFoundError('Vehículo');
+    res.json(vehiculo);
+  });
 
-  async create(req: Request, res: Response) {
-    try {
-      const vehiculoData: CreateVehiculo = req.body;
-      const nuevoVehiculo = await this.vehiculoService.createVehiculo(vehiculoData);
-      res.status(201).json(nuevoVehiculo);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al crear el vehículo' });
-    }
-  }
+  create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const nuevoVehiculo = await this.vehiculoService.createVehiculo(req.body);
+    res.status(201).json(nuevoVehiculo);
+  });
 
-  async update(req: Request, res: Response) {
-    try {
-      const id = parseInt(req.params.id);
-      const vehiculoData: UpdateVehiculo = req.body;
-      const vehiculoActualizado = await this.vehiculoService.updateVehiculo(id, vehiculoData);
-      
-      if (vehiculoActualizado) {
-        res.status(200).json(vehiculoActualizado);
-      } else {
-        res.status(404).json({ error: 'Vehículo no encontrado' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al actualizar el vehículo' });
-    }
-  }
+  update = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const vehiculoActualizado = await this.vehiculoService.updateVehiculo(id, req.body);
+    if (!vehiculoActualizado) throw new NotFoundError('Vehículo');
+    res.json(vehiculoActualizado);
+  });
 
-  async delete(req: Request, res: Response) {
-    try {
-      const id = parseInt(req.params.id);
-      await this.vehiculoService.deleteVehiculo(id);
-      res.sendStatus(204);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al eliminar el vehículo' });
-    }
-  }
+  delete = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    await this.vehiculoService.deleteVehiculo(id);
+    res.sendStatus(204);
+  });
 
-  async getByCliente(req: Request, res: Response) {
-    try {
-      const clienteId = parseInt(req.params.clienteId);
-      const vehiculos = await this.vehiculoService.getVehiculosPorCliente(clienteId);
-      res.status(200).json(vehiculos);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener los vehículos del cliente' });
-    }
-  }
+  getByCliente = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const clienteId = parseInt(req.params.clienteId);
+    const vehiculos = await this.vehiculoService.getVehiculosPorCliente(clienteId);
+    res.json(vehiculos);
+  });
 
-  async getReparaciones(req: Request, res: Response) {
-    try {
-      const vehiculoId = parseInt(req.params.vehiculoId);
-      const reparaciones = await this.vehiculoService.getReparacionesPorVehiculo(vehiculoId);
-      res.status(200).json(reparaciones);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener las reparaciones del vehículo' });
-    }
-  }
+  getReparaciones = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const vehiculoId = parseInt(req.params.vehiculoId);
+    const reparaciones = await this.vehiculoService.getReparacionesPorVehiculo(vehiculoId);
+    res.json(reparaciones);
+  });
 }

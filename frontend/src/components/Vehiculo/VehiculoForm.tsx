@@ -1,328 +1,191 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  TextField, 
-  MenuItem, 
-  Button, 
-  Box, 
-  Typography, 
-  CircularProgress, 
-  Alert, 
-  Snackbar,
-  Select,
-  FormControl,
-  InputLabel,
-  FormHelperText
+import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  CircularProgress,
+  MenuItem,
+  Box,
 } from '@mui/material';
-import api from '../../api/axios';
-import { getAllClientes } from '../../api/clienteApi';
+import { createVehiculo, updateVehiculo } from '../../api/vehiculoApi';
+import { getClientes } from '../../api/clienteApi';
+import { Vehiculo, Cliente } from '../../types';
 
-interface Cliente {
-  id: number;
-  nombre: string;
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  initialData?: Vehiculo | null;
 }
 
-const VehiculoForm: React.FC = () => {
-  const navigate = useNavigate();
+const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
+  const [marca, setMarca] = useState('');
+  const [modelo, setModelo] = useState('');
+  const [anio, setAnio] = useState<number | ''>('');
+  const [patente, setPatente] = useState('');
+  const [kilometraje, setKilometraje] = useState<number | ''>('');
+  const [clienteId, setClienteId] = useState<number | ''>('');
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(false);
-  const [clientesLoading, setClientesLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    marca: '',
-    modelo: '',
-    anio: '',
-    patente: '',
-    kilometraje: '',
-    clienteId: ''
-  });
-
-  const [errors, setErrors] = useState({
-    marca: '',
-    modelo: '',
-    anio: '',
-    patente: '',
-    kilometraje: '',
-    clienteId: ''
-  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const fetchClientes = async () => {
-      try {
-        setClientesLoading(true);
-        const response = await getAllClientes();
-        setClientes(response.data);
-      } catch (err) {
-        setError('Error al cargar la lista de clientes');
-        console.error('Error fetching clientes:', err);
-      } finally {
-        setClientesLoading(false);
-      }
-    };
-
-    fetchClientes();
+    getClientes()
+      .then((res) => setClientes(res.data))
+      .catch(() => setClientes([]));
   }, []);
 
-  const validateForm = () => {
-    let valid = true;
-    const newErrors = {
-      marca: '',
-      modelo: '',
-      anio: '',
-      patente: '',
-      kilometraje: '',
-      clienteId: ''
-    };
-
-    if (!formData.marca.trim()) {
-      newErrors.marca = 'La marca es requerida';
-      valid = false;
+  useEffect(() => {
+    if (initialData) {
+      setMarca(initialData.marca || '');
+      setModelo(initialData.modelo || '');
+      setAnio(initialData.anio ?? '');
+      setPatente(initialData.patente || '');
+      setKilometraje(initialData.kilometraje ?? '');
+      setClienteId(initialData.clienteId || '');
+    } else {
+      setMarca('');
+      setModelo('');
+      setAnio('');
+      setPatente('');
+      setKilometraje('');
+      setClienteId('');
     }
+    setErrors({});
+  }, [initialData, open]);
 
-    if (!formData.modelo.trim()) {
-      newErrors.modelo = 'El modelo es requerido';
-      valid = false;
-    }
-
-    if (!formData.anio || isNaN(parseInt(formData.anio))) {
-      newErrors.anio = 'Año inválido';
-      valid = false;
-    } else if (parseInt(formData.anio) < 1900 || parseInt(formData.anio) > new Date().getFullYear() + 1) {
-      newErrors.anio = 'Año fuera de rango';
-      valid = false;
-    }
-
-    if (!formData.patente.trim()) {
-      newErrors.patente = 'La patente es requerida';
-      valid = false;
-    }
-
-    if (!formData.kilometraje || isNaN(parseInt(formData.kilometraje))) {
-      newErrors.kilometraje = 'Kilometraje inválido';
-      valid = false;
-    } else if (parseInt(formData.kilometraje) < 0) {
-      newErrors.kilometraje = 'Kilometraje no puede ser negativo';
-      valid = false;
-    }
-
-    if (!formData.clienteId) {
-      newErrors.clienteId = 'Debe seleccionar un cliente';
-      valid = false;
-    }
-
-    setErrors(newErrors);
-    return valid;
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    if (errors[name as keyof typeof errors]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
-
-  const handleSelectChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    if (errors.clienteId) {
-      setErrors(prev => ({
-        ...prev,
-        clienteId: ''
-      }));
-    }
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!marca.trim()) errs.marca = 'La marca es requerida';
+    if (!modelo.trim()) errs.modelo = 'El modelo es requerido';
+    if (!patente.trim()) errs.patente = 'La patente es requerida';
+    if (anio !== '' && (Number(anio) < 1900 || Number(anio) > new Date().getFullYear() + 1))
+      errs.anio = 'Año fuera de rango';
+    if (kilometraje !== '' && Number(kilometraje) < 0) errs.kilometraje = 'Kilometraje no puede ser negativo';
+    if (!clienteId) errs.clienteId = 'Debe seleccionar un cliente';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validate()) return;
+
+    const payload = {
+      marca: marca.trim(),
+      modelo: modelo.trim(),
+      anio: anio === '' ? undefined : Number(anio),
+      patente: patente.trim(),
+      kilometraje: kilometraje === '' ? undefined : Number(kilometraje),
+      clienteId: Number(clienteId),
+    };
 
     try {
       setLoading(true);
-      setError(null);
-      
-      const payload = {
-        marca: formData.marca.trim(),
-        modelo: formData.modelo.trim(),
-        anio: parseInt(formData.anio),
-        patente: formData.patente.trim(),
-        kilometraje: parseInt(formData.kilometraje),
-        clienteId: parseInt(formData.clienteId)
-      };
-
-      await api.post('/vehiculos', payload);
-      
-      setSuccess(true);
-      setFormData({
-        marca: '',
-        modelo: '',
-        anio: '',
-        patente: '',
-        kilometraje: '',
-        clienteId: ''
-      });
-      
-      setTimeout(() => navigate('/vehiculos'), 1500);
-    } catch (err: any) {
-      console.error('Error creating vehiculo:', err);
-      const errorMessage = err.response?.data?.error || 
-                          err.response?.data?.message || 
-                          'Error al crear el vehículo';
-      setError(errorMessage);
+      if (initialData) {
+        await updateVehiculo(initialData.id, payload);
+      } else {
+        await createVehiculo(payload);
+      }
+      onSave();
+      onClose();
+    } catch {
+      // handled by caller
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setError(null);
-    setSuccess(false);
-  };
-
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        Crear Nuevo Vehículo
-      </Typography>
-      
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      
-      <TextField
-        name="marca"
-        label="Marca"
-        value={formData.marca}
-        onChange={handleInputChange}
-        fullWidth
-        margin="normal"
-        required
-        error={!!errors.marca}
-        helperText={errors.marca}
-      />
-      
-      <TextField
-        name="modelo"
-        label="Modelo"
-        value={formData.modelo}
-        onChange={handleInputChange}
-        fullWidth
-        margin="normal"
-        required
-        error={!!errors.modelo}
-        helperText={errors.modelo}
-      />
-      
-      <TextField
-        name="anio"
-        label="Año"
-        type="number"
-        value={formData.anio}
-        onChange={handleInputChange}
-        fullWidth
-        margin="normal"
-        required
-        error={!!errors.anio}
-        helperText={errors.anio}
-        inputProps={{
-          min: 1900,
-          max: new Date().getFullYear() + 1
-        }}
-      />
-      
-      <TextField
-        name="patente"
-        label="Patente"
-        value={formData.patente}
-        onChange={handleInputChange}
-        fullWidth
-        margin="normal"
-        required
-        error={!!errors.patente}
-        helperText={errors.patente}
-      />
-      
-      <TextField
-        name="kilometraje"
-        label="Kilometraje"
-        type="number"
-        value={formData.kilometraje}
-        onChange={handleInputChange}
-        fullWidth
-        margin="normal"
-        required
-        error={!!errors.kilometraje}
-        helperText={errors.kilometraje}
-        inputProps={{
-          min: 0
-        }}
-      />
-      
-      {/* Solución para el Select */}
-      <FormControl fullWidth margin="normal" error={!!errors.clienteId} required>
-        <InputLabel>Cliente</InputLabel>
-        <Select
-          name="clienteId"
-          value={formData.clienteId}
-          onChange={handleSelectChange}
-          disabled={clientesLoading}
-          label="Cliente"
-        >
-          <MenuItem value="">
-            <em>Seleccione un cliente</em>
-          </MenuItem>
-          {clientes.map((cliente) => (
-            <MenuItem key={cliente.id} value={cliente.id}>
-              {cliente.nombre}
-            </MenuItem>
-          ))}
-        </Select>
-        {errors.clienteId && <FormHelperText>{errors.clienteId}</FormHelperText>}
-      </FormControl>
-      
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-        <Button 
-          variant="outlined" 
-          onClick={() => navigate('/vehiculos')}
-        >
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          disabled={loading || clientesLoading}
-          startIcon={loading ? <CircularProgress size={20} /> : null}
-        >
-          {loading ? 'Creando...' : 'Crear Vehículo'}
-        </Button>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>{initialData ? 'Editar Vehículo' : 'Nuevo Vehículo'}</DialogTitle>
+      <Box component="form" onSubmit={handleSubmit}>
+        <DialogContent>
+          <TextField
+            label="Marca"
+            value={marca}
+            onChange={(e) => setMarca(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+            error={!!errors.marca}
+            helperText={errors.marca}
+            autoFocus
+          />
+          <TextField
+            label="Modelo"
+            value={modelo}
+            onChange={(e) => setModelo(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+            error={!!errors.modelo}
+            helperText={errors.modelo}
+          />
+          <TextField
+            label="Patente"
+            value={patente}
+            onChange={(e) => setPatente(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+            error={!!errors.patente}
+            helperText={errors.patente}
+          />
+          <TextField
+            label="Año"
+            type="number"
+            value={anio}
+            onChange={(e) => setAnio(e.target.value === '' ? '' : Number(e.target.value))}
+            fullWidth
+            margin="normal"
+            error={!!errors.anio}
+            helperText={errors.anio}
+            slotProps={{ htmlInput: { min: 1900, max: new Date().getFullYear() + 1 } }}
+          />
+          <TextField
+            label="Kilometraje"
+            type="number"
+            value={kilometraje}
+            onChange={(e) => setKilometraje(e.target.value === '' ? '' : Number(e.target.value))}
+            fullWidth
+            margin="normal"
+            error={!!errors.kilometraje}
+            helperText={errors.kilometraje}
+            slotProps={{ htmlInput: { min: 0 } }}
+          />
+          <TextField
+            select
+            label="Cliente"
+            value={clienteId}
+            onChange={(e) => setClienteId(e.target.value === '' ? '' : Number(e.target.value))}
+            fullWidth
+            required
+            margin="normal"
+            error={!!errors.clienteId}
+            helperText={errors.clienteId}
+          >
+            <MenuItem value="">-- Seleccione --</MenuItem>
+            {clientes.map((c) => (
+              <MenuItem key={c.id} value={c.id}>
+                {c.nombre}
+              </MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button type="submit" variant="contained" disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : initialData ? 'Actualizar' : 'Crear'}
+          </Button>
+        </DialogActions>
       </Box>
-      
-      <Snackbar
-        open={success}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        message="Vehículo creado exitosamente"
-      />
-    </Box>
+    </Dialog>
   );
 };
 

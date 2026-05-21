@@ -1,8 +1,8 @@
-// src/domain/repositories/mecanicoRepository.ts
-import { Mecanico, CreateMecanico, UpdateMecanico } from "../entities/mecanico";
+import { Mecanico, CreateMecanico, UpdateMecanico } from '../entities/mecanico';
 
 export interface MecanicoRepository {
-  getAll(): Promise<Mecanico[]>;
+  getAll(skip?: number, limit?: number): Promise<Mecanico[]>;
+  count(): Promise<number>;
   getById(id: number): Promise<Mecanico | null>;
   getByUsuarioId(usuarioId: number): Promise<Mecanico | null>;
   create(data: CreateMecanico): Promise<Mecanico>;

@@ -1,129 +1,163 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  TextField, Button, Box, Typography, Alert, CircularProgress, MenuItem
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Box,
+  CircularProgress,
+  MenuItem,
 } from '@mui/material';
 import { createUsuario, updateUsuario } from '../../api/usuarioApi';
-import { getAllRoles } from '../../api/rolApi';
+import { getRoles } from '../../api/rolApi';
 import { Usuario, Rol } from '../../types';
 
 interface Props {
-  usuario?: Usuario;
-  onSuccess: () => void;
-  onCancel: () => void;
+  open: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  initialData?: Usuario | null;
 }
 
-const UsuarioForm: React.FC<Props> = ({ usuario, onSuccess, onCancel }) => {
-  const [nombre, setNombre] = useState(usuario?.nombre || '');
-  const [email, setEmail] = useState(usuario?.email || '');
-  const [rolId, setRolId] = useState(usuario?.rolId || 0);
+export default function UsuarioForm({ open, onClose, onSave, initialData }: Props) {
+  const [nombre, setNombre] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rolId, setRolId] = useState<number | ''>('');
   const [roles, setRoles] = useState<Rol[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const res = await getAllRoles();
-        setRoles(res.data);
-      } catch (err) {
-        setError('Error al cargar los roles');
-      }
-    };
-    fetchRoles();
+    getRoles()
+      .then((res) => setRoles(res.data))
+      .catch(() => setRoles([]));
   }, []);
+
+  useEffect(() => {
+    if (initialData) {
+      setNombre(initialData.nombre || '');
+      setEmail(initialData.email || '');
+      setRolId(initialData.rolId || '');
+      setPassword('');
+    } else {
+      setNombre('');
+      setEmail('');
+      setPassword('');
+      setRolId('');
+    }
+    setErrors({});
+  }, [initialData, open]);
+
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!nombre.trim()) errs.nombre = 'El nombre es requerido';
+    if (!email.trim()) errs.email = 'El email es requerido';
+    if (!rolId) errs.rolId = 'Debe seleccionar un rol';
+    if (!initialData && !password.trim()) errs.password = 'La contraseña es requerida';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    if (!validate()) return;
 
-    if (!nombre.trim() || !email.trim() || !rolId || (!usuario && !password.trim())) {
-      setError('Todos los campos son obligatorios');
-      return;
-    }
-
-    setLoading(true);
     try {
-      if (usuario) {
-        await updateUsuario(usuario.id, { nombre, email, rolId });
+      setLoading(true);
+      if (initialData) {
+        await updateUsuario(initialData.id, {
+          nombre: nombre.trim(),
+          email: email.trim(),
+          rolId: Number(rolId),
+        });
       } else {
-        await createUsuario({ nombre, email, rolId, password });
+        await createUsuario({
+          nombre: nombre.trim(),
+          email: email.trim(),
+          rolId: Number(rolId),
+          password,
+        });
       }
-      onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Error al guardar el usuario');
+      onSave();
+      onClose();
+    } catch {
+      // handled by caller
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
-      <Typography variant="h5" mb={2}>
-        {usuario ? 'Editar Usuario' : 'Crear Usuario'}
-      </Typography>
-
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-      <TextField
-        label="Nombre"
-        value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
-        fullWidth
-        required
-        disabled={loading}
-        margin="normal"
-      />
-
-      <TextField
-        label="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        type="email"
-        fullWidth
-        required
-        disabled={loading}
-        margin="normal"
-      />
-
-      {!usuario && (
-        <TextField
-          label="Contraseña"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          fullWidth
-          required
-          disabled={loading}
-          margin="normal"
-        />
-      )}
-
-      <TextField
-        select
-        label="Rol"
-        value={rolId}
-        onChange={(e) => setRolId(Number(e.target.value))}
-        fullWidth
-        required
-        disabled={loading || roles.length === 0}
-        margin="normal"
-      >
-        {roles.map((rol) => (
-          <MenuItem key={rol.id} value={rol.id}>
-            {rol.nombre}
-          </MenuItem>
-        ))}
-      </TextField>
-
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-        <Button onClick={onCancel} disabled={loading}>Cancelar</Button>
-        <Button type="submit" variant="contained" disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : usuario ? 'Actualizar' : 'Crear'}
-        </Button>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>{initialData ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
+      <Box component="form" onSubmit={handleSubmit}>
+        <DialogContent>
+          <TextField
+            label="Nombre"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+            error={!!errors.nombre}
+            helperText={errors.nombre}
+            autoFocus
+          />
+          <TextField
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+            error={!!errors.email}
+            helperText={errors.email}
+          />
+          {!initialData && (
+            <TextField
+              label="Contraseña"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              fullWidth
+              required
+              margin="normal"
+              error={!!errors.password}
+              helperText={errors.password}
+            />
+          )}
+          <TextField
+            select
+            label="Rol"
+            value={rolId}
+            onChange={(e) => setRolId(e.target.value === '' ? '' : Number(e.target.value))}
+            fullWidth
+            required
+            margin="normal"
+            error={!!errors.rolId}
+            helperText={errors.rolId}
+          >
+            <MenuItem value="">-- Seleccione --</MenuItem>
+            {roles.map((r) => (
+              <MenuItem key={r.id} value={r.id}>
+                {r.nombre}
+              </MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button type="submit" variant="contained" disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : initialData ? 'Actualizar' : 'Crear'}
+          </Button>
+        </DialogActions>
       </Box>
-    </Box>
+    </Dialog>
   );
-};
-
-export default UsuarioForm;
+}

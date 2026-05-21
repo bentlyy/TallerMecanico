@@ -3,3 +3,6 @@ node_modules
 dist/
 frontend/dist/
 /generated/prisma
+coverage/
+backups/
+*.log

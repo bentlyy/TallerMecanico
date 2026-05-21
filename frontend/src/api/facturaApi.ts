@@ -1,21 +1,7 @@
-import api from "./axios";
-import { Factura, CreateFactura } from "../types";
+import api from './axios';
+import type { Factura, CreateFactura } from '../types';
 
-export const getFacturas = async (): Promise<Factura[]> => {
-  const res = await api.get("/facturas");
-  return res.data;
-};
-
-export const getFacturaById = async (id: number): Promise<Factura> => {
-  const res = await api.get(`/facturas/${id}`);
-  return res.data;
-};
-
-export const createFactura = async (factura: CreateFactura): Promise<Factura> => {
-  const res = await api.post("/facturas", factura);
-  return res.data;
-};
-
-export const deleteFactura = async (id: number): Promise<void> => {
-  await api.delete(`/facturas/${id}`);
-};
+export const getFacturas = () => api.get<Factura[]>('/facturas');
+export const getFactura = (id: number) => api.get<Factura>(`/facturas/${id}`);
+export const createFactura = (data: CreateFactura) => api.post<Factura>('/facturas', data);
+export const deleteFactura = (id: number) => api.delete(`/facturas/${id}`);

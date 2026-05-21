@@ -1,16 +1,24 @@
-// src/presentation/routes/facturaRoutes.ts
 import { Router } from 'express';
 import { facturaController } from '../../infrastructure/di/container';
+import { authMiddleware } from '../../infrastructure/http/authMiddleware';
+import { validate, schemas } from '../../infrastructure/http/validationMiddleware';
 
 const facturaRouter = Router();
 
-// ⚠️ Primero las rutas específicas
-facturaRouter.get('/cliente/:clienteId', facturaController.getByCliente.bind(facturaController));
-facturaRouter.get('/reparacion/:reparacionId', facturaController.getByReparacion.bind(facturaController));
+facturaRouter.get('/cliente/:clienteId', authMiddleware, facturaController.getByCliente.bind(facturaController));
+facturaRouter.get(
+  '/reparacion/:reparacionId',
+  authMiddleware,
+  facturaController.getByReparacion.bind(facturaController),
+);
 
-// Luego las rutas genéricas
-facturaRouter.get('/', facturaController.getAll.bind(facturaController));
-facturaRouter.get('/:id', facturaController.getById.bind(facturaController));
-facturaRouter.post('/', facturaController.create.bind(facturaController));
+facturaRouter.get('/', authMiddleware, facturaController.getAll.bind(facturaController));
+facturaRouter.get('/:id', authMiddleware, facturaController.getById.bind(facturaController));
+facturaRouter.post(
+  '/',
+  authMiddleware,
+  validate({ body: schemas.factura.create }),
+  facturaController.create.bind(facturaController),
+);
 
 export default facturaRouter;

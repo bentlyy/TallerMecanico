@@ -1,129 +1,64 @@
-// src/presentation/controllers/piezaController.ts
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../../infrastructure/http/authMiddleware';
 import { PiezaService } from '../../application/piezaService';
-
-import { Pieza, CreatePieza, UpdatePieza } from '../../domain/entities/pieza';
+import { asyncHandler } from '../../infrastructure/http/asyncHandler';
+import { NotFoundError } from '../../infrastructure/http/errors';
 
 export class PiezaController {
   constructor(private readonly piezaService: PiezaService) {}
 
-  async getAll(req: Request, res: Response): Promise<void> {
-    try {
-      const piezas = await this.piezaService.getAllPiezas();
-      res.status(200).json(piezas);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener las piezas' });
+  getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const empresaId = req.usuario!.empresaId;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const result = await this.piezaService.getAllPiezas(empresaId, page, limit);
+    res.json(result);
+  });
+
+  getById = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const pieza = await this.piezaService.getPiezaById(id);
+    if (!pieza) throw new NotFoundError('Pieza');
+    res.json(pieza);
+  });
+
+  getByCodigo = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { codigo } = req.params;
+    const empresaId = req.usuario!.empresaId;
+    const pieza = await this.piezaService.getPiezaByCodigo(codigo, empresaId);
+    if (!pieza) throw new NotFoundError('Pieza');
+    res.json(pieza);
+  });
+
+  create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const empresaId = req.usuario!.empresaId;
+    const nuevaPieza = await this.piezaService.createPieza({ ...req.body, empresaId });
+    res.status(201).json(nuevaPieza);
+  });
+
+  update = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const empresaId = req.usuario!.empresaId;
+    const piezaActualizada = await this.piezaService.updatePieza(id, req.body, empresaId);
+    if (!piezaActualizada) throw new NotFoundError('Pieza');
+    res.json(piezaActualizada);
+  });
+
+  delete = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    await this.piezaService.deletePieza(id);
+    res.sendStatus(204);
+  });
+
+  updateStock = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const { cantidad } = req.body;
+    if (typeof cantidad !== 'number') {
+      res.status(400).json({ error: 'Cantidad debe ser un número' });
+      return;
     }
-  }
-
-  async getById(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      const pieza = await this.piezaService.getPiezaById(id);
-      
-      if (pieza) {
-        res.status(200).json(pieza);
-      } else {
-        res.status(404).json({ error: 'Pieza no encontrada' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener la pieza' });
-    }
-  }
-
-  async getByCodigo(req: Request, res: Response): Promise<void> {
-    try {
-      const { codigo } = req.params;
-      const pieza = await this.piezaService.getPiezaByCodigo(codigo);
-      
-      if (pieza) {
-        res.status(200).json(pieza);
-      } else {
-        res.status(404).json({ error: 'Pieza no encontrada' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener la pieza' });
-    }
-  }
-
-  async create(req: Request, res: Response): Promise<void> {
-    try {
-      const { nombre, marca, precio, stock, codigo } = req.body;
-      
-      if (!nombre || !precio || !codigo) {
-        res.status(400).json({ error: 'Nombre, precio y código son requeridos' });
-        return;
-      }
-
-      const nuevaPieza = await this.piezaService.createPieza({
-        nombre,
-        marca: marca || null,
-        precio: parseFloat(precio),
-        stock: stock ? parseInt(stock) : 0,
-        codigo
-      });
-      
-      res.status(201).json(nuevaPieza);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
-
-  async update(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      const data: UpdatePieza = req.body;
-      
-      if (data.precio) {
-        data.precio = parseFloat(data.precio.toString());
-      }
-      
-      if (data.stock) {
-        data.stock = parseInt(data.stock.toString());
-      }
-
-      const piezaActualizada = await this.piezaService.updatePieza(id, data);
-      
-      if (piezaActualizada) {
-        res.status(200).json(piezaActualizada);
-      } else {
-        res.status(404).json({ error: 'Pieza no encontrada' });
-      }
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
-
-  async delete(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      await this.piezaService.deletePieza(id);
-      res.sendStatus(204);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al eliminar la pieza' });
-    }
-  }
-
-  async updateStock(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      const { cantidad } = req.body;
-      
-      if (typeof cantidad !== 'number') {
-        res.status(400).json({ error: 'Cantidad debe ser un número' });
-        return;
-      }
-
-      const pieza = await this.piezaService.updateStock(id, cantidad);
-      
-      if (pieza) {
-        res.status(200).json(pieza);
-      } else {
-        res.status(404).json({ error: 'Pieza no encontrada' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al actualizar stock' });
-    }
-  }
+    const pieza = await this.piezaService.updateStock(id, cantidad);
+    if (!pieza) throw new NotFoundError('Pieza');
+    res.json(pieza);
+  });
 }
-

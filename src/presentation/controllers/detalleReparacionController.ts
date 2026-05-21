@@ -1,59 +1,37 @@
-// src/presentation/controllers/detalleReparacionController.ts
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../../infrastructure/http/authMiddleware';
 import { DetalleReparacionService } from '../../application/detalleReparacionService';
-import { CreateDetalleReparacion, UpdateDetalleReparacion } from '../../domain/entities/detalleReparacion';
+import { asyncHandler } from '../../infrastructure/http/asyncHandler';
 
 export class DetalleReparacionController {
   constructor(private readonly detalleService: DetalleReparacionService) {}
 
-  async agregarDetalle(req: Request, res: Response) {
-    try {
-      const { reparacionId, piezaId, cantidad, precioUnitario } = req.body;
-      const detalle = await this.detalleService.agregarDetalle({ reparacionId, piezaId, cantidad, precioUnitario });
-      res.status(201).json(detalle);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+  agregarDetalle = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const detalle = await this.detalleService.agregarDetalle(req.body);
+    res.status(201).json(detalle);
+  });
 
-  async eliminarDetalle(req: Request, res: Response) {
-    try {
-      const { reparacionId, piezaId } = req.params;
-      const result = await this.detalleService.eliminarDetalle(Number(reparacionId), Number(piezaId));
-      res.status(200).json({ success: result });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+  eliminarDetalle = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { reparacionId, piezaId } = req.params;
+    const result = await this.detalleService.eliminarDetalle(Number(reparacionId), Number(piezaId));
+    res.json({ success: result });
+  });
 
-  async actualizarDetalle(req: Request, res: Response) {
-    try {
-      const { reparacionId, piezaId } = req.params;
-      const data: UpdateDetalleReparacion = req.body;
-      const detalle = await this.detalleService.actualizarDetalle(Number(reparacionId), Number(piezaId), data);
-      res.status(200).json(detalle);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+  actualizarDetalle = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { reparacionId, piezaId } = req.params;
+    const detalle = await this.detalleService.actualizarDetalle(Number(reparacionId), Number(piezaId), req.body);
+    res.json(detalle);
+  });
 
-  async getDetallesDeReparacion(req: Request, res: Response) {
-    try {
-      const { reparacionId } = req.params;
-      const detalles = await this.detalleService.getDetallesDeReparacion(Number(reparacionId));
-      res.status(200).json(detalles);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+  getDetallesDeReparacion = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { reparacionId } = req.params;
+    const detalles = await this.detalleService.getDetallesDeReparacion(Number(reparacionId));
+    res.json(detalles);
+  });
 
-  async calcularTotalRepuestos(req: Request, res: Response) {
-    try {
-      const { reparacionId } = req.params;
-      const total = await this.detalleService.calcularTotalRepuestos(Number(reparacionId));
-      res.status(200).json({ total });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+  calcularTotalRepuestos = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { reparacionId } = req.params;
+    const total = await this.detalleService.calcularTotalRepuestos(Number(reparacionId));
+    res.json({ total });
+  });
 }

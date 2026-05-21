@@ -1,18 +1,22 @@
-//vehiculoService.ts
 import { VehiculoRepository } from '../domain/repositories/vehiculoRepository';
 import { Vehiculo, CreateVehiculo, UpdateVehiculo } from '../domain/entities/vehiculo';
 import { Reparacion } from '../domain/entities/reparacion';
-import { prisma } from '../infrastructure/db/prisma'; // Asegúrate de importar Prisma
 import { ClienteRepository } from '../domain/repositories/clienteRepository';
+import { PaginatedResult } from '../domain/types/pagination';
 
 export class VehiculoService {
   constructor(
     private readonly vehiculoRepository: VehiculoRepository,
-    private readonly clienteRepository: ClienteRepository
+    private readonly clienteRepository: ClienteRepository,
   ) {}
 
-  async getAllVehiculos(): Promise<Vehiculo[]> {
-    return this.vehiculoRepository.getAll();
+  async getAllVehiculos(page = 1, limit = 20): Promise<PaginatedResult<Vehiculo>> {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.vehiculoRepository.getAll(skip, limit),
+      this.vehiculoRepository.count(),
+    ]);
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async getVehiculoById(id: number): Promise<Vehiculo | null> {

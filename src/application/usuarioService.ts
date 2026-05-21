@@ -1,39 +1,40 @@
-//usuarioService.ts
 import { UsuarioRepository } from '../domain/repositories/usuarioRepository';
 import { Usuario, CreateUsuario, UpdateUsuario } from '../domain/entities/usuario';
 import { RolService } from './rolService';
+import { PaginatedResult } from '../domain/types/pagination';
 
 export class UsuarioService {
   constructor(
     private readonly usuarioRepository: UsuarioRepository,
-    private readonly rolService: RolService
+    private readonly rolService: RolService,
   ) {}
 
-  async getAllUsuarios(): Promise<Usuario[]> {
-    return this.usuarioRepository.getAll();
+  async getAllUsuarios(empresaId: number, page = 1, limit = 20): Promise<PaginatedResult<Usuario>> {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.usuarioRepository.getAll(empresaId, skip, limit),
+      this.usuarioRepository.count(empresaId),
+    ]);
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async getUsuarioById(id: number): Promise<Usuario | null> {
     return this.usuarioRepository.getById(id);
   }
 
-  async getUsuarioByEmail(email: string): Promise<Usuario | null> {
-    return this.usuarioRepository.getByEmail(email);
+  async getUsuarioByEmail(email: string, empresaId: number): Promise<Usuario | null> {
+    return this.usuarioRepository.getByEmail(email, empresaId);
   }
 
   async createUsuario(data: CreateUsuario): Promise<Usuario> {
-    // Validar que el rol exista
     const rol = await this.rolService.getRolById(data.rolId);
     if (!rol) {
       throw new Error('El rol especificado no existe');
     }
-
-    // Validar email único
-    const existingUser = await this.usuarioRepository.getByEmail(data.email);
+    const existingUser = await this.usuarioRepository.getByEmail(data.email, data.empresaId);
     if (existingUser) {
       throw new Error('Ya existe un usuario con este email');
     }
-
     return this.usuarioRepository.create(data);
   }
 
@@ -44,7 +45,6 @@ export class UsuarioService {
         throw new Error('El rol especificado no existe');
       }
     }
-
     return this.usuarioRepository.update(id, data);
   }
 

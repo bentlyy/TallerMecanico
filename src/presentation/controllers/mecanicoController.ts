@@ -1,100 +1,41 @@
-// src/presentation/controllers/mecanicoController.ts
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../../infrastructure/http/authMiddleware';
 import { MecanicoService } from '../../application/mecanicoService';
-import { UpdateMecanico } from '../../domain/entities/mecanico';
+import { asyncHandler } from '../../infrastructure/http/asyncHandler';
+import { NotFoundError } from '../../infrastructure/http/errors';
 
 export class MecanicoController {
   constructor(private readonly mecanicoService: MecanicoService) {}
 
-  async getAll(req: Request, res: Response): Promise<void> {
-    try {
-      const mecanicos = await this.mecanicoService.getAll();
-      res.json(mecanicos);
-    } catch (error) {
-      console.error('Error en MecanicoController.getAll:', error);
-      res.status(500).json({ error: 'Error al obtener los mecánicos' });
-    }
-  }
+  getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const result = await this.mecanicoService.getAll(page, limit);
+    res.json(result);
+  });
 
-  async getById(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        res.status(400).json({ error: 'ID inválido' });
-        return;
-      }
+  getById = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const mecanico = await this.mecanicoService.getMecanicoById(id);
+    if (!mecanico) throw new NotFoundError('Mecánico');
+    res.json(mecanico);
+  });
 
-      const mecanico = await this.mecanicoService.getMecanicoById(id);
+  create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const nuevoMecanico = await this.mecanicoService.createMecanico(req.body);
+    res.status(201).json(nuevoMecanico);
+  });
 
-      if (mecanico) {
-        res.status(200).json(mecanico);
-      } else {
-        res.status(404).json({ error: 'Mecánico no encontrado' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener el mecánico' });
-    }
-  }
+  update = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const mecanicoActualizado = await this.mecanicoService.updateMecanico(id, req.body);
+    if (!mecanicoActualizado) throw new NotFoundError('Mecánico');
+    res.json(mecanicoActualizado);
+  });
 
-  async create(req: Request, res: Response): Promise<void> {
-    try {
-      const { usuarioId, especialidad } = req.body;
-
-      if (typeof usuarioId !== 'number' || isNaN(usuarioId)) {
-        res.status(400).json({ error: 'El ID de usuario es inválido o no fue proporcionado' });
-        return;
-      }
-
-      const nuevoMecanico = await this.mecanicoService.createMecanico({
-        usuarioId,
-        especialidad: typeof especialidad === 'string' ? especialidad : null
-      });
-
-      res.status(201).json(nuevoMecanico);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message || 'Error al crear el mecánico' });
-    }
-  }
-
-  async update(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        res.status(400).json({ error: 'ID inválido' });
-        return;
-      }
-
-      const data: UpdateMecanico = req.body;
-
-      if (data.usuarioId && typeof data.usuarioId !== 'number') {
-        res.status(400).json({ error: 'usuarioId debe ser un número' });
-        return;
-      }
-
-      const mecanicoActualizado = await this.mecanicoService.updateMecanico(id, data);
-
-      if (mecanicoActualizado) {
-        res.status(200).json(mecanicoActualizado);
-      } else {
-        res.status(404).json({ error: 'Mecánico no encontrado' });
-      }
-    } catch (error: any) {
-      res.status(400).json({ error: error.message || 'Error al actualizar el mecánico' });
-    }
-  }
-
-  async delete(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        res.status(400).json({ error: 'ID inválido' });
-        return;
-      }
-
-      await this.mecanicoService.deleteMecanico(id);
-      res.sendStatus(204);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al eliminar el mecánico' });
-    }
-  }
+  delete = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    await this.mecanicoService.deleteMecanico(id);
+    res.sendStatus(204);
+  });
 }

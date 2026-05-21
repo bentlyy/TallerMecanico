@@ -1,72 +1,133 @@
-import React, { useEffect, useState } from 'react';
-import { TextField, Button, MenuItem } from '@mui/material';
+import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Box,
+  CircularProgress,
+  MenuItem,
+} from '@mui/material';
 import { createMecanico, updateMecanico } from '../../api/mecanicoApi';
-import { getAllUsuarios } from '../../api/usuarioApi';
-import { Mecanico, Usuario } from '../../types';
+import api from '../../api/axios';
+import { Mecanico } from '../../types';
 
-interface Props {
-  mecanico: Mecanico | null;
-  onSave: () => void;
+interface IUsuario {
+  id: number;
+  nombre: string;
+  email: string;
 }
 
-const MecanicoForm: React.FC<Props> = ({ mecanico, onSave }) => {
-  const [usuarioId, setUsuarioId] = useState<number>(mecanico?.usuarioId || 0);
-  const [especialidad, setEspecialidad] = useState<string>(mecanico?.especialidad || '');
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  initialData?: Mecanico | null;
+}
+
+export default function MecanicoForm({ open, onClose, onSave, initialData }: Props) {
+  const [usuarioId, setUsuarioId] = useState<number | ''>('');
+  const [especialidad, setEspecialidad] = useState('');
+  const [usuarios, setUsuarios] = useState<IUsuario[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    getAllUsuarios().then((res) => setUsuarios(res.data));
+    api
+      .get('/usuarios')
+      .then((res) => {
+        const data = res.data.data || res.data;
+        if (Array.isArray(data)) setUsuarios(data);
+      })
+      .catch(() => setUsuarios([]));
   }, []);
 
   useEffect(() => {
-    setUsuarioId(mecanico?.usuarioId || 0);
-    setEspecialidad(mecanico?.especialidad || '');
-  }, [mecanico]);
+    if (initialData) {
+      setUsuarioId(initialData.usuarioId || '');
+      setEspecialidad(initialData.especialidad || '');
+    } else {
+      setUsuarioId('');
+      setEspecialidad('');
+    }
+    setErrors({});
+  }, [initialData, open]);
+
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!usuarioId) errs.usuarioId = 'Debe seleccionar un usuario';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const data = { usuarioId, especialidad };
+    if (!validate()) return;
 
-    if (mecanico?.id) {
-      await updateMecanico(mecanico.id, data);
-    } else {
-      await createMecanico(data);
+    const payload = {
+      usuarioId: Number(usuarioId),
+      especialidad: especialidad.trim() || undefined,
+    };
+
+    try {
+      setLoading(true);
+      if (initialData) {
+        await updateMecanico(initialData.id, payload);
+      } else {
+        await createMecanico(payload);
+      }
+      onSave();
+      onClose();
+    } catch {
+      // handled by caller
+    } finally {
+      setLoading(false);
     }
-
-    onSave();
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <TextField
-        select
-        label="Usuario"
-        value={usuarioId}
-        onChange={(e) => setUsuarioId(Number(e.target.value))}
-        fullWidth
-        margin="normal"
-        required
-      >
-        {usuarios.map((usuario) => (
-          <MenuItem key={usuario.id} value={usuario.id}>
-            {usuario.nombre}
-          </MenuItem>
-        ))}
-      </TextField>
-
-      <TextField
-        label="Especialidad"
-        value={especialidad}
-        onChange={(e) => setEspecialidad(e.target.value)}
-        fullWidth
-        margin="normal"
-      />
-
-      <Button type="submit" variant="contained" color="primary">
-        {mecanico ? 'Actualizar' : 'Crear'} Mecánico
-      </Button>
-    </form>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>{initialData ? 'Editar Mecánico' : 'Nuevo Mecánico'}</DialogTitle>
+      <Box component="form" onSubmit={handleSubmit}>
+        <DialogContent>
+          <TextField
+            select
+            label="Usuario"
+            value={usuarioId}
+            onChange={(e) => setUsuarioId(e.target.value === '' ? '' : Number(e.target.value))}
+            fullWidth
+            required
+            margin="normal"
+            error={!!errors.usuarioId}
+            helperText={errors.usuarioId}
+            autoFocus
+          >
+            <MenuItem value="">-- Seleccione --</MenuItem>
+            {usuarios.map((u) => (
+              <MenuItem key={u.id} value={u.id}>
+                {u.nombre} ({u.email})
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            label="Especialidad"
+            value={especialidad}
+            onChange={(e) => setEspecialidad(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button type="submit" variant="contained" disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : initialData ? 'Actualizar' : 'Crear'}
+          </Button>
+        </DialogActions>
+      </Box>
+    </Dialog>
   );
-};
-
-export default MecanicoForm;
+}

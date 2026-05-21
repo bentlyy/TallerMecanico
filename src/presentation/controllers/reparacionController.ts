@@ -1,77 +1,84 @@
-// src/presentation/controllers/reparacionController.ts
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../../infrastructure/http/authMiddleware';
 import { ReparacionService } from '../../application/reparacionService';
-import { CreateReparacion, UpdateReparacion, EstadoReparacion } from '../../domain/entities/reparacion';
+import { asyncHandler } from '../../infrastructure/http/asyncHandler';
+import { NotFoundError } from '../../infrastructure/http/errors';
+import { EstadoReparacion } from '../../domain/entities/reparacion';
 
 export class ReparacionController {
   constructor(private readonly reparacionService: ReparacionService) {}
 
-  async getAll(req: Request, res: Response) {
-    const data = await this.reparacionService.getAllReparaciones();
-    res.json(data);
-  }
+  getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const result = await this.reparacionService.getAllReparaciones(page, limit);
+    res.json(result);
+  });
 
-  async getById(req: Request, res: Response) {
+  getById = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
     const data = await this.reparacionService.getReparacionById(id);
-    data ? res.json(data) : res.status(404).json({ error: 'No encontrada' });
-  }
+    if (!data) throw new NotFoundError('Reparación');
+    res.json(data);
+  });
 
-  async create(req: Request, res: Response) {
-    const data: CreateReparacion = req.body;
-    const nueva = await this.reparacionService.createReparacion(data);
+  create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const nueva = await this.reparacionService.createReparacion(req.body);
     res.status(201).json(nueva);
-  }
+  });
 
-  async update(req: Request, res: Response) {
+  update = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
-    const data: UpdateReparacion = req.body;
-    const updated = await this.reparacionService.updateReparacion(id, data);
-    updated ? res.json(updated) : res.status(404).json({ error: 'No encontrada' });
-  }
+    const updated = await this.reparacionService.updateReparacion(id, req.body);
+    if (!updated) throw new NotFoundError('Reparación');
+    res.json(updated);
+  });
 
-  async delete(req: Request, res: Response) {
+  delete = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
     await this.reparacionService.deleteReparacion(id);
     res.sendStatus(204);
-  }
+  });
 
-  async cambiarEstado(req: Request, res: Response) {
+  cambiarEstado = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
     const { estado } = req.body;
     const result = await this.reparacionService.cambiarEstadoReparacion(id, estado as EstadoReparacion);
-    result ? res.json(result) : res.status(404).json({ error: 'No encontrada' });
-  }
+    if (!result) throw new NotFoundError('Reparación');
+    res.json(result);
+  });
 
-  async asignarMecanico(req: Request, res: Response) {
+  asignarMecanico = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
     const { mecanicoId } = req.body;
     const result = await this.reparacionService.asignarMecanico(id, mecanicoId);
-    result ? res.json(result) : res.status(404).json({ error: 'No encontrada' });
-  }
+    if (!result) throw new NotFoundError('Reparación');
+    res.json(result);
+  });
 
-  async registrarSalida(req: Request, res: Response) {
+  registrarSalida = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
     const { fechaSalida } = req.body;
     const result = await this.reparacionService.registrarSalida(id, new Date(fechaSalida));
-    result ? res.json(result) : res.status(404).json({ error: 'No encontrada' });
-  }
+    if (!result) throw new NotFoundError('Reparación');
+    res.json(result);
+  });
 
-  async getPorVehiculo(req: Request, res: Response) {
-    const vehiculoId = parseInt(req.params.vehiculoId);
-    const rs = await this.reparacionService.getReparacionesPorVehiculo(vehiculoId);
+  getPorVehiculo = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const vehId = parseInt(req.params.vehiculoId);
+    const rs = await this.reparacionService.getReparacionesPorVehiculo(vehId);
     res.json(rs);
-  }
+  });
 
-  async getPorMecanico(req: Request, res: Response) {
-    const mecanicoId = parseInt(req.params.mecanicoId);
-    const rs = await this.reparacionService.getReparacionesPorMecanico(mecanicoId);
+  getPorMecanico = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const mecId = parseInt(req.params.mecanicoId);
+    const rs = await this.reparacionService.getReparacionesPorMecanico(mecId);
     res.json(rs);
-  }
+  });
 
-  async getPorRecepcionista(req: Request, res: Response) {
-    const usuarioId = parseInt(req.params.usuarioId);
-    const rs = await this.reparacionService.getReparacionesPorRecepcionista(usuarioId);
+  getPorRecepcionista = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const usrId = parseInt(req.params.usuarioId);
+    const rs = await this.reparacionService.getReparacionesPorRecepcionista(usrId);
     res.json(rs);
-  }
+  });
 }

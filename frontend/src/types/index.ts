@@ -4,6 +4,8 @@ export interface Cliente {
   email?: string;
   telefono?: string;
   direccion?: string;
+  empresaId: number;
+  vehiculos?: Vehiculo[];
 }
 
 export interface Vehiculo {
@@ -19,7 +21,7 @@ export interface Vehiculo {
 export interface Rol {
   id: number;
   nombre: string;
-  permisos: any; // JSON, puedes definir un tipo más específico si quieres
+  permisos: Record<string, boolean>;
 }
 
 export interface Usuario {
@@ -27,13 +29,16 @@ export interface Usuario {
   nombre: string;
   email: string;
   rolId: number;
-  // otros campos
+  rolNombre?: string;
+  activo?: boolean;
+  empresaId?: number;
 }
 
 export interface Mecanico {
   id: number;
   usuarioId: number;
-  especialidad?: string; // Para mostrar nombre del usuario
+  especialidad?: string;
+  usuario?: Usuario;
 }
 
 export interface Pieza {
@@ -43,6 +48,7 @@ export interface Pieza {
   precio: number;
   stock: number;
   codigo: string;
+  empresaId: number;
 }
 
 export type EstadoReparacion = 'EN_REVISION' | 'EN_REPARACION' | 'TERMINADO' | 'ENTREGADO';
@@ -50,32 +56,65 @@ export type EstadoReparacion = 'EN_REVISION' | 'EN_REPARACION' | 'TERMINADO' | '
 export interface Reparacion {
   id: number;
   descripcion: string;
-  fechaEntrada: string; // ISO
+  fechaEntrada: string;
   fechaSalida?: string | null;
   estado: EstadoReparacion;
   costoManoObra: number;
   vehiculoId: number;
   mecanicoId?: number | null;
   recepcionistaId: number;
+  vehiculo?: Vehiculo;
+  mecanico?: Mecanico;
 }
 
 export interface DetalleReparacion {
+  id?: number;
   reparacionId: number;
   piezaId: number;
   cantidad: number;
   precioUnitario: number;
   descripcion?: string | null;
+  pieza?: Pieza;
 }
 
 export interface Factura {
   id: number;
   fecha: string;
   clienteId: number;
+  reparacionId: number;
   total: number;
+  cliente?: Cliente;
+  reparacion?: Reparacion;
 }
 
 export interface CreateFactura {
   clienteId: number;
   reparacionId: number;
+  total: number;
 }
 
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  usuario: {
+    id: number;
+    email: string;
+    nombre: string;
+    rolId: number;
+    rolNombre: string;
+    empresaId: number;
+  };
+}
+
+export interface DashboardStats {
+  totalClientes: number;
+  totalVehiculos: number;
+  reparacionesPendientes: number;
+  reparacionesEnProceso: number;
+  totalFacturas: number;
+  facturasMes: number;
+}

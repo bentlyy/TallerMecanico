@@ -1,18 +1,21 @@
-// src/application/mecanicoService.ts
 import { MecanicoRepository } from '../domain/repositories/mecanicoRepository';
 import { Mecanico, CreateMecanico, UpdateMecanico } from '../domain/entities/mecanico';
 import { UsuarioService } from './usuarioService';
+import { PaginatedResult } from '../domain/types/pagination';
 
 export class MecanicoService {
   constructor(
     private readonly mecanicoRepository: MecanicoRepository,
-    private readonly usuarioService: UsuarioService
+    private readonly usuarioService: UsuarioService,
   ) {}
-  async getAll() {
-    return await this.mecanicoRepository.getAll();
-  }
-  async getAllMecanicos(): Promise<Mecanico[]> {
-    return this.mecanicoRepository.getAll();
+
+  async getAll(page = 1, limit = 20): Promise<PaginatedResult<Mecanico>> {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.mecanicoRepository.getAll(skip, limit),
+      this.mecanicoRepository.count(),
+    ]);
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async getMecanicoById(id: number): Promise<Mecanico | null> {
@@ -24,18 +27,14 @@ export class MecanicoService {
   }
 
   async createMecanico(data: CreateMecanico): Promise<Mecanico> {
-    // Validar que el usuario exista
     const usuario = await this.usuarioService.getUsuarioById(data.usuarioId);
     if (!usuario) {
       throw new Error('El usuario especificado no existe');
     }
-
-    // Validar que el usuario no sea ya un mecánico
     const existingMecanico = await this.mecanicoRepository.getByUsuarioId(data.usuarioId);
     if (existingMecanico) {
       throw new Error('Este usuario ya está registrado como mecánico');
     }
-
     return this.mecanicoRepository.create(data);
   }
 

@@ -1,59 +1,43 @@
-// src/App.tsx
-import './App.scss';
-
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
-import { ClientesPage } from "./pages/ClientesPage";
-import { VehiculosPage } from "./pages/VehiculosPage";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import { AuthProvider } from './contexts/AuthContext';
+import theme from './theme';
+import Layout from './components/Layout/Layout';
+import LoginPage from './components/Login/LoginPage';
+import Dashboard from './components/Dashboard/Dashboard';
+import ClientesPage from './pages/ClientesPage';
+import VehiculosPage from './pages/VehiculosPage';
+import ReparacionesPage from './pages/ReparacionesPage';
+import PiezasPage from './pages/PiezasPage';
+import MecanicosPage from './pages/MecanicosPage';
+import FacturasPage from './pages/FacturasPage';
+import UsuariosPage from './pages/UsuariosPage';
 import RolesPage from './pages/RolesPage';
-import UsuariosPage from "./pages/UsuarioPage";
-import MecanicoPage from "./pages/MecanicoPage";
-import PiezaPage from "./pages/PiezaPage";
-import ReparacionPage from "./pages/ReparacionPage";
-import FacturaPage from "./pages/FacturaPage";
 
 function App() {
   return (
-    <BrowserRouter>
-      <nav>
-        <NavLink to="/clientes" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Clientes
-        </NavLink>{" | "}
-        <NavLink to="/vehiculos" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Vehículos
-        </NavLink>{" | "}
-        <NavLink to="/roles" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Roles
-        </NavLink>{" | "}
-        <NavLink to="/mecanicos" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Mecanicos
-        </NavLink>{" | "}
-        <NavLink to="/usuarios" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Usuarios
-        </NavLink>{" | "}
-        <NavLink to="/piezas" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Piezas
-        </NavLink>{" | "}
-        <NavLink to="/reparaciones" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Reparaciones
-        </NavLink>{" | "}
-        <NavLink to="/facturas" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Facturas
-        </NavLink>{" | "}
-      </nav>
-
-      <div className="main-content">
-        <Routes>
-          <Route path="/clientes" element={<ClientesPage />} />
-          <Route path="/vehiculos" element={<VehiculosPage />} />
-          <Route path="/roles" element={<RolesPage />} />
-          <Route path="/usuarios" element={<UsuariosPage />} />
-          <Route path="/mecanicos" element={<MecanicoPage />} />
-          <Route path="/piezas" element={<PiezaPage />} />
-          <Route path="/reparaciones" element={<ReparacionPage />} />
-          <Route path="/facturas" element={<FacturaPage />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/clientes" element={<ClientesPage />} />
+              <Route path="/vehiculos" element={<VehiculosPage />} />
+              <Route path="/reparaciones" element={<ReparacionesPage />} />
+              <Route path="/piezas" element={<PiezasPage />} />
+              <Route path="/mecanicos" element={<MecanicosPage />} />
+              <Route path="/facturas" element={<FacturasPage />} />
+              <Route path="/usuarios" element={<UsuariosPage />} />
+              <Route path="/roles" element={<RolesPage />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

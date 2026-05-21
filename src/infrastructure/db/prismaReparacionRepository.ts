@@ -1,4 +1,3 @@
-// src/infrastructure/db/prismaReparacionRepository.ts
 import { ReparacionRepository } from '../../domain/repositories/reparacionRepository';
 import { Reparacion, CreateReparacion, UpdateReparacion } from '../../domain/entities/reparacion';
 import { PrismaClient, EstadoReparacion } from '@prisma/client';
@@ -16,13 +15,17 @@ export class PrismaReparacionRepository implements ReparacionRepository {
       model.costoManoObra,
       model.vehiculoId,
       model.mecanicoId,
-      model.recepcionistaId
+      model.recepcionistaId,
     );
   }
 
-  async getAll(): Promise<Reparacion[]> {
-    const reps = await this.prisma.reparacion.findMany();
+  async getAll(skip?: number, limit?: number): Promise<Reparacion[]> {
+    const reps = await this.prisma.reparacion.findMany({ skip, take: limit });
     return reps.map(this.toEntity);
+  }
+
+  async count(): Promise<number> {
+    return this.prisma.reparacion.count();
   }
 
   async getById(id: number): Promise<Reparacion | null> {
@@ -32,20 +35,13 @@ export class PrismaReparacionRepository implements ReparacionRepository {
 
   async create(data: CreateReparacion): Promise<Reparacion> {
     const rep = await this.prisma.reparacion.create({
-      data: {
-        ...data,
-        estado: EstadoReparacion.EN_REVISION,
-        fechaEntrada: new Date(),
-      },
+      data: { ...data, estado: EstadoReparacion.EN_REVISION, fechaEntrada: new Date() },
     });
     return this.toEntity(rep);
   }
 
   async update(id: number, data: UpdateReparacion): Promise<Reparacion | null> {
-    const rep = await this.prisma.reparacion.update({
-      where: { id },
-      data,
-    });
+    const rep = await this.prisma.reparacion.update({ where: { id }, data });
     return this.toEntity(rep);
   }
 
@@ -62,18 +58,12 @@ export class PrismaReparacionRepository implements ReparacionRepository {
   }
 
   async asignarMecanico(id: number, mecanicoId: number): Promise<Reparacion | null> {
-    const rep = await this.prisma.reparacion.update({
-      where: { id },
-      data: { mecanicoId },
-    });
+    const rep = await this.prisma.reparacion.update({ where: { id }, data: { mecanicoId } });
     return this.toEntity(rep);
   }
 
   async registrarSalida(id: number, fecha: Date): Promise<Reparacion | null> {
-    const rep = await this.prisma.reparacion.update({
-      where: { id },
-      data: { fechaSalida: fecha },
-    });
+    const rep = await this.prisma.reparacion.update({ where: { id }, data: { fechaSalida: fecha } });
     return this.toEntity(rep);
   }
 

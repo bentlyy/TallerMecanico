@@ -1,73 +1,45 @@
-//prismaClienteRepository.ts
 import { PrismaClient } from '@prisma/client';
 import { ClienteRepository } from '../../domain/repositories/clienteRepository';
 import { Cliente, CreateCliente, UpdateCliente } from '../../domain/entities/cliente';
 
-export class PrismaClienteRepository implements ClienteRepository {
-  private prisma: PrismaClient;
+function mapCliente(c: any): Cliente {
+  return new Cliente(c.id, c.nombre, c.email, c.telefono, c.direccion, c.empresaId);
+}
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
+export class PrismaClienteRepository implements ClienteRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  async getAll(empresaId?: number, skip?: number, limit?: number): Promise<Cliente[]> {
+    const where = empresaId !== undefined ? { empresaId } : {};
+    const clientes = await this.prisma.cliente.findMany({ where, skip, take: limit });
+    return clientes.map(mapCliente);
   }
 
-  async getAll(): Promise<Cliente[]> {
-    const clientes = await this.prisma.cliente.findMany();
-    return clientes.map((cliente: any) => 
-      new Cliente(
-        cliente.id,
-        cliente.nombre,
-        cliente.email,
-        cliente.telefono,
-        cliente.direccion
-      )
-    );
+  async count(empresaId?: number): Promise<number> {
+    const where = empresaId !== undefined ? { empresaId } : {};
+    return this.prisma.cliente.count({ where });
   }
 
   async getById(id: number): Promise<Cliente | null> {
     const cliente = await this.prisma.cliente.findUnique({ where: { id } });
-    return cliente ? new Cliente(
-      cliente.id,
-      cliente.nombre,
-      cliente.email,
-      cliente.telefono,
-      cliente.direccion
-    ) : null;
+    return cliente ? mapCliente(cliente) : null;
   }
 
-  async getByEmail(email: string): Promise<Cliente | null> {
-    const cliente = await this.prisma.cliente.findUnique({ where: { email } });
-    return cliente ? new Cliente(
-      cliente.id,
-      cliente.nombre,
-      cliente.email,
-      cliente.telefono,
-      cliente.direccion
-    ) : null;
+  async getByEmail(email: string, empresaId: number): Promise<Cliente | null> {
+    const cliente = await this.prisma.cliente.findUnique({
+      where: { email_empresaId: { email, empresaId } },
+    });
+    return cliente ? mapCliente(cliente) : null;
   }
 
   async create(data: CreateCliente): Promise<Cliente> {
     const cliente = await this.prisma.cliente.create({ data });
-    return new Cliente(
-      cliente.id,
-      cliente.nombre,
-      cliente.email,
-      cliente.telefono,
-      cliente.direccion
-    );
+    return mapCliente(cliente);
   }
 
   async update(id: number, data: UpdateCliente): Promise<Cliente | null> {
-    const cliente = await this.prisma.cliente.update({
-      where: { id },
-      data
-    });
-    return cliente ? new Cliente(
-      cliente.id,
-      cliente.nombre,
-      cliente.email,
-      cliente.telefono,
-      cliente.direccion
-    ) : null;
+    const cliente = await this.prisma.cliente.update({ where: { id }, data });
+    return cliente ? mapCliente(cliente) : null;
   }
 
   async delete(id: number): Promise<void> {

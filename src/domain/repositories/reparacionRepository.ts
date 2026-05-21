@@ -1,8 +1,8 @@
-// src/domain/repositories/reparacionRepository.ts
 import { Reparacion, CreateReparacion, UpdateReparacion } from '../entities/reparacion';
 
 export interface ReparacionRepository {
-  getAll(): Promise<Reparacion[]>;
+  getAll(skip?: number, limit?: number): Promise<Reparacion[]>;
+  count(): Promise<number>;
   getById(id: number): Promise<Reparacion | null>;
   create(data: CreateReparacion): Promise<Reparacion>;
   update(id: number, data: UpdateReparacion): Promise<Reparacion | null>;

@@ -1,29 +1,9 @@
-// piezaApi.ts
-import axios from './axios';
-import { Pieza } from '../types';
+import api from './axios';
+import type { Pieza } from '../types';
 
-const API_URL = '/piezas';
-
-export const getPiezas = async (): Promise<Pieza[]> => {
-  const res = await axios.get(API_URL);
-  return res.data;
-};
-
-export const getPiezaById = async (id: number): Promise<Pieza> => {
-  const res = await axios.get(`${API_URL}/${id}`);
-  return res.data;
-};
-
-export const createPieza = async (pieza: Omit<Pieza, 'id'>): Promise<Pieza> => {
-  const res = await axios.post(API_URL, pieza);
-  return res.data;
-};
-
-export const updatePieza = async (id: number, pieza: Partial<Pieza>): Promise<Pieza> => {
-  const res = await axios.put(`${API_URL}/${id}`, pieza);
-  return res.data;
-};
-
-export const deletePieza = async (id: number): Promise<void> => {
-  await axios.delete(`${API_URL}/${id}`);
-};
+export const getPiezas = () => api.get<Pieza[]>('/piezas');
+export const getPieza = (id: number) => api.get<Pieza>(`/piezas/${id}`);
+export const createPieza = (data: Partial<Pieza>) => api.post<Pieza>('/piezas', data);
+export const updatePieza = (id: number, data: Partial<Pieza>) => api.put<Pieza>(`/piezas/${id}`, data);
+export const deletePieza = (id: number) => api.delete(`/piezas/${id}`);
+export const updateStock = (id: number, stock: number) => api.patch(`/piezas/${id}/stock`, { stock });

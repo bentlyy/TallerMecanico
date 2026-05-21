@@ -1,146 +1,309 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, Fragment } from 'react';
 import {
-  List, ListItem, ListItemText, IconButton, Typography, Divider, Button, Box, MenuItem, TextField
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Box,
+  Typography,
+  Chip,
+  Snackbar,
+  Alert,
+  Tooltip,
+  TextField,
+  MenuItem,
+  Button,
+  Collapse,
+  Stack,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
-import { getAllReparaciones, deleteReparacion, cambiarEstado, asignarMecanico } from '../../api/reparacionApi';
-import { getAllMecanicos } from '../../api/mecanicoApi';
-import { Reparacion } from '../../types';
+import { getReparaciones, deleteReparacion, cambiarEstado, asignarMecanico } from '../../api/reparacionApi';
+import { getMecanicos } from '../../api/mecanicoApi';
+import { Reparacion, Mecanico, EstadoReparacion } from '../../types';
+import ConfirmDialog from '../common/ConfirmDialog';
+import Loading from '../common/Loading';
+
+const estadoColors: Record<EstadoReparacion, 'warning' | 'info' | 'success' | 'default'> = {
+  EN_REVISION: 'warning',
+  EN_REPARACION: 'info',
+  TERMINADO: 'success',
+  ENTREGADO: 'default',
+};
+
+const estadoLabels: Record<EstadoReparacion, string> = {
+  EN_REVISION: 'En Revisión',
+  EN_REPARACION: 'En Reparación',
+  TERMINADO: 'Terminado',
+  ENTREGADO: 'Entregado',
+};
 
 interface Props {
-  onEdit: (r: Reparacion) => void;
-  onCreate: () => void;
+  onEdit: (reparacion: Reparacion) => void;
+  refreshToggle: boolean;
+  onViewDetails: (reparacion: Reparacion) => void;
 }
 
-type AssignMap = Record<number, number | ''>;
-
-const ReparacionList: React.FC<Props> = ({ onEdit, onCreate }) => {
+const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
   const [reparaciones, setReparaciones] = useState<Reparacion[]>([]);
-  const [mecanicos, setMecanicos] = useState<any[]>([]);
-  const [refreshToggle, setRefreshToggle] = useState(false);
-  const [assigningTo, setAssigningTo] = useState<AssignMap>({});
+  const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<Reparacion | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [assignValues, setAssignValues] = useState<Record<number, number | ''>>({});
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
-  const fetch = () => {
-    getAllReparaciones()
-      .then(res => setReparaciones(res.data))
-      .catch(err => {
-        console.error(err);
-        setReparaciones([]);
-      });
-  };
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [rRes, mRes] = await Promise.all([getReparaciones(), getMecanicos()]);
+      setReparaciones(rRes.data);
+      setMecanicos(mRes.data);
+    } catch {
+      setSnackbar({ open: true, message: 'Error al cargar reparaciones', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetch();
-    getAllMecanicos().then(res => setMecanicos(res.data)).catch(() => setMecanicos([]));
-  }, [refreshToggle]);
+    fetchData();
+  }, [fetchData, refreshToggle]);
 
-  const handleDelete = async (id: number) => {
-    // eslint-disable-next-line no-restricted-globals
-    if (!confirm('Eliminar reparación?')) return;
-    await deleteReparacion(id);
-    setRefreshToggle(t => !t);
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setDeleting(true);
+      await deleteReparacion(deleteTarget.id);
+      setSnackbar({ open: true, message: 'Reparación eliminada con éxito', severity: 'success' });
+      setDeleteTarget(null);
+      fetchData();
+    } catch {
+      setSnackbar({ open: true, message: 'Error al eliminar reparación', severity: 'error' });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleChangeEstado = async (id: number, nuevo: string) => {
-    await cambiarEstado(id, nuevo);
-    setRefreshToggle(t => !t);
+    try {
+      await cambiarEstado(id, nuevo);
+      setSnackbar({
+        open: true,
+        message: 'Estado actualizado a ' + estadoLabels[nuevo as EstadoReparacion],
+        severity: 'success',
+      });
+      fetchData();
+    } catch {
+      setSnackbar({ open: true, message: 'Error al cambiar estado', severity: 'error' });
+    }
   };
 
   const handleAssign = async (id: number) => {
-    const mech = assigningTo[id];
-    if (mech === '' || mech == null) {
-      alert('Seleccione un mecánico');
-      return;
+    const mech = assignValues[id];
+    if (mech === '' || mech == null) return;
+    try {
+      await asignarMecanico(id, Number(mech));
+      setAssignValues((prev) => ({ ...prev, [id]: '' }));
+      setSnackbar({ open: true, message: 'Mecánico asignado con éxito', severity: 'success' });
+      fetchData();
+    } catch {
+      setSnackbar({ open: true, message: 'Error al asignar mecánico', severity: 'error' });
     }
-    await asignarMecanico(id, Number(mech));
-    setAssigningTo(prev => ({ ...prev, [id]: '' }));
-    setRefreshToggle(t => !t);
   };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('es-AR');
+    } catch {
+      return dateStr;
+    }
+  };
+
+  if (loading) return <Loading message="Cargando reparaciones..." />;
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5">Reparaciones</Typography>
-        <Button variant="contained" onClick={onCreate}>Crear Reparación</Button>
-      </Box>
+      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell width={40} />
+              <TableCell>ID</TableCell>
+              <TableCell>Vehículo</TableCell>
+              <TableCell>Estado</TableCell>
+              <TableCell>Mecánico</TableCell>
+              <TableCell>Fecha Entrada</TableCell>
+              <TableCell align="center">Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {reparaciones.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <Typography variant="body2" color="text.secondary" sx={{ py: 4 }}>
+                    No se encontraron reparaciones
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              reparaciones.map((r) => (
+                <Fragment key={r.id}>
+                  <TableRow hover sx={{ transition: 'background-color 0.2s' }}>
+                    <TableCell>
+                      <IconButton size="small" onClick={() => setExpandedRow(expandedRow === r.id ? null : r.id)}>
+                        {expandedRow === r.id ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                      </IconButton>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight={600}>
+                        #{r.id}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {r.vehiculo
+                        ? `${r.vehiculo.marca} ${r.vehiculo.modelo} (${r.vehiculo.patente})`
+                        : `ID: ${r.vehiculoId}`}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={estadoLabels[r.estado]}
+                        color={estadoColors[r.estado]}
+                        size="small"
+                        variant="filled"
+                      />
+                    </TableCell>
+                    <TableCell>{r.mecanico?.usuario?.nombre || (r.mecanicoId ? `ID: ${r.mecanicoId}` : '—')}</TableCell>
+                    <TableCell>{formatDate(r.fechaEntrada)}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.5} justifyContent="center">
+                        <Tooltip title="Ver detalles">
+                          <IconButton size="small" color="info" onClick={() => onViewDetails(r)}>
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Editar">
+                          <IconButton size="small" color="primary" onClick={() => onEdit(r)}>
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton size="small" color="error" onClick={() => setDeleteTarget(r)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell colSpan={7} sx={{ py: 0 }}>
+                      <Collapse in={expandedRow === r.id} timeout="auto" unmountOnExit>
+                        <Box
+                          sx={{
+                            py: 2,
+                            px: 2,
+                            display: 'flex',
+                            gap: 2,
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            bgcolor: 'grey.50',
+                          }}
+                        >
+                          <TextField
+                            select
+                            size="small"
+                            label="Cambiar estado"
+                            value=""
+                            onChange={(e) => handleChangeEstado(r.id, e.target.value)}
+                            sx={{ width: 200 }}
+                          >
+                            <MenuItem value="EN_REVISION">En Revisión</MenuItem>
+                            <MenuItem value="EN_REPARACION">En Reparación</MenuItem>
+                            <MenuItem value="TERMINADO">Terminado</MenuItem>
+                            <MenuItem value="ENTREGADO">Entregado</MenuItem>
+                          </TextField>
 
-      <List>
-        {reparaciones.map(r => (
-          <React.Fragment key={r.id}>
-            <ListItem
-              secondaryAction={
-                <>
-                  <IconButton edge="end" onClick={() => onEdit(r)} title="Editar">
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton edge="end" onClick={() => handleDelete(r.id)} title="Eliminar">
-                    <DeleteIcon />
-                  </IconButton>
-                </>
-              }
-            >
-              <ListItemText
-                primary={`${r.descripcion}`}
-                secondary={
-                  <>
-                    <div>Estado: {r.estado} — Vehículo: {r.vehiculoId} — Mecánico: {r.mecanicoId ?? 'N/A'}</div>
-                    <div>Entrada: {new Date(r.fechaEntrada).toLocaleString()}</div>
-                    <div>Costo mano obra: {Number(r.costoManoObra ?? 0).toFixed(2)}</div>
-                  </>
-                }
-              />
-            </ListItem>
+                          <TextField
+                            select
+                            size="small"
+                            label="Asignar mecánico"
+                            value={assignValues[r.id] ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? '' : Number(e.target.value);
+                              setAssignValues((prev) => ({ ...prev, [r.id]: val }));
+                            }}
+                            sx={{ width: 220 }}
+                          >
+                            <MenuItem value="">-- Ninguno --</MenuItem>
+                            {mecanicos.map((m) => (
+                              <MenuItem key={m.id} value={m.id}>
+                                {m.usuario?.nombre ?? `Mecánico ${m.id}`}
+                              </MenuItem>
+                            ))}
+                          </TextField>
 
-            <Box sx={{ px: 2, pb: 1, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-              <TextField
-                select
-                size="small"
-                label="Cambiar estado"
-                value=""
-                onChange={(e) => handleChangeEstado(r.id, e.target.value)}
-                sx={{ width: 200 }}
-              >
-                <MenuItem value="EN_REVISION">EN_REVISION</MenuItem>
-                <MenuItem value="EN_REPARACION">EN_REPARACION</MenuItem>
-                <MenuItem value="TERMINADO">TERMINADO</MenuItem>
-                <MenuItem value="ENTREGADO">ENTREGADO</MenuItem>
-              </TextField>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleAssign(r.id)}
+                            startIcon={<PlayArrowIcon />}
+                          >
+                            Asignar
+                          </Button>
 
-              <TextField
-                select
-                size="small"
-                label="Asignar mecánico"
-                value={assigningTo[r.id] ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value === '' ? '' : Number(e.target.value);
-                  setAssigningTo(prev => ({ ...prev, [r.id]: val }));
-                }}
-                sx={{ width: 220 }}
-              >
-                <MenuItem value="">-- Ninguno --</MenuItem>
-                {mecanicos.map(m => (
-                  <MenuItem key={m.id} value={m.id}>
-                    {m.usuario?.nombre ?? `Mecánico ${m.id}`}
-                  </MenuItem>
-                ))}
-              </TextField>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="success"
+                            onClick={() => handleChangeEstado(r.id, 'TERMINADO')}
+                            startIcon={<DoneAllIcon />}
+                          >
+                            Marc. terminado
+                          </Button>
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </Fragment>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-              <Button size="small" variant="outlined" onClick={() => handleAssign(r.id)} startIcon={<PlayArrowIcon />}>
-                Asignar
-              </Button>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Eliminar reparación"
+        message={`¿Está seguro de eliminar la reparación #${deleteTarget?.id}?`}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        loading={deleting}
+      />
 
-              <Button size="small" variant="outlined" onClick={() => handleChangeEstado(r.id, 'TERMINADO')} startIcon={<DoneAllIcon />}>
-                Marcar terminado
-              </Button>
-            </Box>
-
-            <Divider />
-          </React.Fragment>
-        ))}
-      </List>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snackbar.severity} variant="filled" sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

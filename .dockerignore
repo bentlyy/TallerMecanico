@@ -1,0 +1,14 @@
+# Docker ignore file for backend
+node_modules
+dist
+.git
+.env
+*.md
+prompt
+coverage/
+*.log
+tests/
+*.test.ts
+*.spec.ts
+frontend/node_modules
+frontend/dist

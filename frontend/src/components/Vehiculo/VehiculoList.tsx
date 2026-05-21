@@ -1,75 +1,153 @@
-// src/components/Vehiculo/VehiculoList.tsx
-import React, { useEffect, useState } from 'react';
-import { Vehiculo } from '../../types';
-import api from '../../api/axios';
-import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Box,
+  Typography,
+  Snackbar,
+  Alert,
+  Tooltip,
+  Chip,
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { getVehiculos, deleteVehiculo } from '../../api/vehiculoApi';
+import { getClientes } from '../../api/clienteApi';
+import { Vehiculo, Cliente } from '../../types';
+import ConfirmDialog from '../common/ConfirmDialog';
+import Loading from '../common/Loading';
 
-const VehiculoList: React.FC = () => {
+interface Props {
+  onEdit: (vehiculo: Vehiculo) => void;
+  refreshToggle: boolean;
+}
+
+const VehiculoList = ({ onEdit, refreshToggle }: Props) => {
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Vehiculo | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
-  useEffect(() => {
-    const fetchVehiculos = async () => {
-      try {
-        const response = await api.get('/vehiculos');
-        setVehiculos(response.data);
-      } catch (err) {
-        setError('Error al obtener los vehículos');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVehiculos();
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [vRes, cRes] = await Promise.all([getVehiculos(), getClientes()]);
+      setVehiculos(vRes.data);
+      setClientes(cRes.data);
+    } catch {
+      setSnackbar({ open: true, message: 'Error al cargar vehículos', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleDelete = async (id: number) => {
+  useEffect(() => {
+    fetchData();
+  }, [fetchData, refreshToggle]);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await api.delete(`/vehiculos/${id}`);
-      setVehiculos(vehiculos.filter(vehiculo => vehiculo.id !== id));
-    } catch (err) {
-      console.error('Error al eliminar el vehículo:', err);
+      setDeleting(true);
+      await deleteVehiculo(deleteTarget.id);
+      setSnackbar({ open: true, message: 'Vehículo eliminado con éxito', severity: 'success' });
+      setDeleteTarget(null);
+      fetchData();
+    } catch {
+      setSnackbar({ open: true, message: 'Error al eliminar vehículo', severity: 'error' });
+    } finally {
+      setDeleting(false);
     }
   };
 
-  if (loading) return <div>Cargando...</div>;
-  if (error) return <div>{error}</div>;
+  const clienteMap = new Map(clientes.map((c) => [c.id, c.nombre]));
+
+  if (loading) return <Loading message="Cargando vehículos..." />;
 
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>Marca</TableCell>
-            <TableCell>Modelo</TableCell>
-            <TableCell>Patente</TableCell>
-            <TableCell>Acciones</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {vehiculos.map((vehiculo) => (
-            <TableRow key={vehiculo.id}>
-              <TableCell>{vehiculo.id}</TableCell>
-              <TableCell>{vehiculo.marca}</TableCell>
-              <TableCell>{vehiculo.modelo}</TableCell>
-              <TableCell>{vehiculo.patente}</TableCell>
-              <TableCell>
-                <Button 
-                  variant="contained" 
-                  color="secondary"
-                  onClick={() => handleDelete(vehiculo.id)}
-                >
-                  Eliminar
-                </Button>
-              </TableCell>
+    <Box>
+      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Patente</TableCell>
+              <TableCell>Marca</TableCell>
+              <TableCell>Modelo</TableCell>
+              <TableCell>Año</TableCell>
+              <TableCell>Cliente</TableCell>
+              <TableCell align="center">Acciones</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {vehiculos.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  <Typography variant="body2" color="text.secondary" sx={{ py: 4 }}>
+                    No se encontraron vehículos
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              vehiculos.map((vehiculo) => (
+                <TableRow key={vehiculo.id} hover sx={{ transition: 'background-color 0.2s' }}>
+                  <TableCell>
+                    <Chip label={vehiculo.patente} size="small" variant="outlined" color="primary" />
+                  </TableCell>
+                  <TableCell>{vehiculo.marca}</TableCell>
+                  <TableCell>{vehiculo.modelo}</TableCell>
+                  <TableCell>{vehiculo.anio || '-'}</TableCell>
+                  <TableCell>{clienteMap.get(vehiculo.clienteId) || '—'}</TableCell>
+                  <TableCell align="center">
+                    <Tooltip title="Editar">
+                      <IconButton size="small" color="primary" onClick={() => onEdit(vehiculo)}>
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Eliminar">
+                      <IconButton size="small" color="error" onClick={() => setDeleteTarget(vehiculo)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Eliminar vehículo"
+        message={`¿Está seguro de eliminar el vehículo "${deleteTarget?.patente}"?`}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        loading={deleting}
+      />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snackbar.severity} variant="filled" sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

@@ -1,50 +1,56 @@
 import { ReparacionRepository } from '../domain/repositories/reparacionRepository';
 import { Reparacion, CreateReparacion, UpdateReparacion } from '../domain/entities/reparacion';
+import { PaginatedResult } from '../domain/types/pagination';
 
 export class ReparacionService {
   constructor(private readonly reparacionRepository: ReparacionRepository) {}
 
-  getAllReparaciones(): Promise<Reparacion[]> {
-    return this.reparacionRepository.getAll();
+  async getAllReparaciones(page = 1, limit = 20): Promise<PaginatedResult<Reparacion>> {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.reparacionRepository.getAll(skip, limit),
+      this.reparacionRepository.count(),
+    ]);
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  getReparacionById(id: number): Promise<Reparacion | null> {
+  async getReparacionById(id: number): Promise<Reparacion | null> {
     return this.reparacionRepository.getById(id);
   }
 
-  createReparacion(data: CreateReparacion): Promise<Reparacion> {
+  async createReparacion(data: CreateReparacion): Promise<Reparacion> {
     return this.reparacionRepository.create(data);
   }
 
-  updateReparacion(id: number, data: UpdateReparacion): Promise<Reparacion | null> {
+  async updateReparacion(id: number, data: UpdateReparacion): Promise<Reparacion | null> {
     return this.reparacionRepository.update(id, data);
   }
 
-  deleteReparacion(id: number): Promise<void> {
+  async deleteReparacion(id: number): Promise<void> {
     return this.reparacionRepository.delete(id);
   }
 
-  cambiarEstadoReparacion(id: number, nuevoEstado: string): Promise<Reparacion | null> {
+  async cambiarEstadoReparacion(id: number, nuevoEstado: string): Promise<Reparacion | null> {
     return this.reparacionRepository.cambiarEstado(id, nuevoEstado);
   }
 
-  asignarMecanico(id: number, mecanicoId: number): Promise<Reparacion | null> {
+  async asignarMecanico(id: number, mecanicoId: number): Promise<Reparacion | null> {
     return this.reparacionRepository.asignarMecanico(id, mecanicoId);
   }
 
-  registrarSalida(id: number, fecha: Date): Promise<Reparacion | null> {
+  async registrarSalida(id: number, fecha: Date): Promise<Reparacion | null> {
     return this.reparacionRepository.registrarSalida(id, fecha);
   }
 
-  getReparacionesPorVehiculo(vehiculoId: number): Promise<Reparacion[]> {
+  async getReparacionesPorVehiculo(vehiculoId: number): Promise<Reparacion[]> {
     return this.reparacionRepository.getByVehiculo(vehiculoId);
   }
 
-  getReparacionesPorMecanico(mecanicoId: number): Promise<Reparacion[]> {
+  async getReparacionesPorMecanico(mecanicoId: number): Promise<Reparacion[]> {
     return this.reparacionRepository.getByMecanico(mecanicoId);
   }
 
-  getReparacionesPorRecepcionista(usuarioId: number): Promise<Reparacion[]> {
+  async getReparacionesPorRecepcionista(usuarioId: number): Promise<Reparacion[]> {
     return this.reparacionRepository.getByRecepcionista(usuarioId);
   }
 }

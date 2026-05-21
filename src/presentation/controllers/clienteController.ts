@@ -1,98 +1,55 @@
-//clienteController.ts
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../../infrastructure/http/authMiddleware';
 import { ClienteService } from '../../application/clienteService';
-import { Cliente, CreateCliente, UpdateCliente } from '../../domain/entities/cliente';
+import { asyncHandler } from '../../infrastructure/http/asyncHandler';
+import { NotFoundError } from '../../infrastructure/http/errors';
 
 export class ClienteController {
   constructor(private readonly clienteService: ClienteService) {}
 
-  async getAll(req: Request, res: Response): Promise<void> {
-    try {
-      const clientes = await this.clienteService.getAllClientes();
-      res.status(200).json(clientes);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener los clientes' });
-    }
-  }
+  getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const empresaId = req.usuario!.empresaId;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const result = await this.clienteService.getAllClientes(empresaId, page, limit);
+    res.json(result);
+  });
 
-  async getById(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      const cliente = await this.clienteService.getClienteById(id);
-      if (cliente) {
-        res.status(200).json(cliente);
-      } else {
-        res.status(404).json({ error: 'Cliente no encontrado' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener el cliente' });
-    }
-  }
+  getById = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const cliente = await this.clienteService.getClienteById(id);
+    if (!cliente) throw new NotFoundError('Cliente');
+    res.json(cliente);
+  });
 
-  async getByEmail(req: Request, res: Response): Promise<void> {
-    try {
-      const { email } = req.query;
-      if (!email || typeof email !== 'string') {
-        res.status(400).json({ error: 'Email es requerido' });
-        return;
-      }
-      const cliente = await this.clienteService.getClienteByEmail(email);
-      if (cliente) {
-        res.status(200).json(cliente);
-      } else {
-        res.status(404).json({ error: 'Cliente no encontrado' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener el cliente por email' });
-    }
-  }
-
-  async create(req: Request, res: Response): Promise<void> {
-  try {
-    const { nombre, email, telefono, direccion } = req.body;
-
-    // Validar campos requeridos
-    if (!nombre || typeof nombre !== 'string') {
-      res.status(400).json({ error: 'El nombre es obligatorio y debe ser un string.' });
-      return;
-    }
-
-    // Email puede ser opcional, pero si se requiere:
+  getByEmail = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { email } = req.query;
     if (!email || typeof email !== 'string') {
-      res.status(400).json({ error: 'El email es obligatorio y debe ser un string.' });
+      res.status(400).json({ error: 'Email es requerido' });
       return;
     }
+    const empresaId = req.usuario!.empresaId;
+    const cliente = await this.clienteService.getClienteByEmail(email, empresaId);
+    if (!cliente) throw new NotFoundError('Cliente');
+    res.json(cliente);
+  });
 
-    const clienteData: CreateCliente = { nombre, email, telefono, direccion };
-    const nuevoCliente = await this.clienteService.createCliente(clienteData);
+  create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const empresaId = req.usuario!.empresaId;
+    const nuevoCliente = await this.clienteService.createCliente({ ...req.body, empresaId });
     res.status(201).json(nuevoCliente);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al crear el cliente' });
-  }
-}
+  });
 
-  async update(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      const clienteData: UpdateCliente = req.body;
-      const clienteActualizado = await this.clienteService.updateCliente(id, clienteData);
-      if (clienteActualizado) {
-        res.status(200).json(clienteActualizado);
-      } else {
-        res.status(404).json({ error: 'Cliente no encontrado' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al actualizar el cliente' });
-    }
-  }
+  update = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const clienteActualizado = await this.clienteService.updateCliente(id, req.body);
+    if (!clienteActualizado) throw new NotFoundError('Cliente');
+    res.json(clienteActualizado);
+  });
 
-  async delete(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      await this.clienteService.deleteCliente(id);
-      res.sendStatus(204);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al eliminar el cliente' });
-    }
-  }
+  delete = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    await this.clienteService.deleteCliente(id);
+    res.sendStatus(204);
+  });
 }

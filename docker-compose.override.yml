@@ -1,9 +1,8 @@
-# Docker compose override file for development environment
 services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       db:
         condition: service_healthy
@@ -11,44 +10,54 @@ services:
       - .:/app
       - /app/node_modules
     environment:
-      DATABASE_URL: "postgresql://taller_user:taller_password@db:5432/taller_db?schema=public"
+      DATABASE_URL: 'postgresql://${DB_USER:-taller_user}:${DB_PASSWORD:-taller_password}@db:5432/${DB_NAME:-taller_db}?schema=public'
+      NODE_ENV: development
+      JWT_SECRET: dev-jwt-secret-16-chars!!
+      CORS_ORIGIN: http://localhost:3043
+      LOG_LEVEL: debug
     command: npm run dev
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
     ports:
-      - "3043:5173"
+      - '3043:5173'
     volumes:
       - ./frontend:/app
       - /app/node_modules
     environment:
-    - CHOKIDAR_USEPOLLING=true
+      CHOKIDAR_USEPOLLING: 'true'
+      VITE_API_URL: 'http://app:3000'
     depends_on:
       - app
+    restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 3g
-        reservations:
           memory: 1g
+        reservations:
+          memory: 512m
 
   prometheus:
     image: prom/prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "9090:9090"
+      - '9090:9090'
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana
     ports:
-      - "3001:3000"
+      - '3001:3000'
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
+    restart: unless-stopped
 
 volumes:
   postgres_data:

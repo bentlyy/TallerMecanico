@@ -1,40 +1,42 @@
-# Docker Compose file for production environment /docker-compose.prod.yml
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: "postgresql://taller_user:taller_password@db:5432/taller_db?schema=public"
+      DATABASE_URL: 'postgresql://${DB_USER:-taller_user}:${DB_PASSWORD:-taller_password}@db:5432/${DB_NAME:-taller_db}?schema=public'
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:80}
+      LOG_LEVEL: info
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       db:
         condition: service_healthy
-    command: node dist/server.js
-    deploy:
-      resources:
-        limits:
-          memory: 1.5g
-        reservations:
-          memory: 1g
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - '80:80'
     depends_on:
       - app
+    restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 3g
+          memory: 128m
         reservations:
-          memory: 1g
+          memory: 64m
 
 volumes:
   postgres_data:
   grafana_data:
-    external: true

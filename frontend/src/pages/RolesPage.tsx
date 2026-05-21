@@ -1,43 +1,51 @@
-import React, { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { Box, Button, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import RolList from '../components/Rol/RolList';
 import RolForm from '../components/Rol/RolForm';
-import { Rol } from '../types';
-import { Box, Button, Typography } from '@mui/material';
+import type { Rol } from '../types';
 
-const RolPage: React.FC = () => {
+export default function RolesPage() {
+  const [formOpen, setFormOpen] = useState(false);
   const [editingRol, setEditingRol] = useState<Rol | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [refreshToggle, setRefreshToggle] = useState(false);
 
-  const handleCreateClick = () => {
+  const triggerRefresh = useCallback(() => setRefreshToggle((p) => !p), []);
+
+  const handleCreate = () => {
     setEditingRol(null);
-    setShowForm(true);
+    setFormOpen(true);
   };
 
   const handleEdit = (rol: Rol) => {
     setEditingRol(rol);
-    setShowForm(true);
+    setFormOpen(true);
   };
 
-  const handleSuccess = () => {
-    setShowForm(false);
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
+  const handleSave = () => {
+    setFormOpen(false);
+    setEditingRol(null);
+    triggerRefresh();
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h3" mb={3}>Gestión de Roles</Typography>
-      {!showForm && <Button variant="contained" onClick={handleCreateClick}>Crear Nuevo Rol</Button>}
-
-      {showForm ? (
-        <RolForm rol={editingRol || undefined} onSuccess={handleSuccess} onCancel={handleCancel} />
-      ) : (
-        <RolList onEdit={handleEdit} />
-      )}
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4">Roles</Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
+          Nuevo Rol
+        </Button>
+      </Box>
+      <RolList onEdit={handleEdit} refreshToggle={refreshToggle} />
+      <RolForm
+        open={formOpen}
+        onClose={() => {
+          setFormOpen(false);
+          setEditingRol(null);
+        }}
+        onSave={handleSave}
+        initialData={editingRol}
+      />
     </Box>
   );
-};
-
-export default RolPage;
+}

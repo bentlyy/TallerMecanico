@@ -15,15 +15,33 @@ enum EstadoReparacion {
   ENTREGADO
 }
 
+model Empresa {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  activa    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuarios  Usuario[]
+  clientes  Cliente[]
+  piezas    Pieza[]
+
+  @@map("empresas")
+}
+
 model Cliente {
   id        Int      @id @default(autoincrement())
   nombre    String
-  email     String?  @unique
+  email     String?
   telefono  String?  @map("telefono")
   direccion String?  @map("direccion")
+  empresaId Int      @map("empresa_id")
 
+  empresa   Empresa   @relation(fields: [empresaId], references: [id])
   vehiculos Vehiculo[]
   facturas  Factura[]
+
+  @@unique([email, empresaId])
+  @@map("clientes")
 }
 
 model Vehiculo {
@@ -31,12 +49,15 @@ model Vehiculo {
   marca       String
   modelo      String
   anio        Int?    @map("anio")
-  patente     String  @unique
+  patente     String
   kilometraje Int?    @map("kilometraje")
   clienteId   Int     @map("cliente_id")
 
-  cliente     Cliente @relation(fields: [clienteId], references: [id])
+  cliente     Cliente     @relation(fields: [clienteId], references: [id])
   reparaciones Reparacion[]
+
+  @@unique([patente, clienteId])
+  @@map("vehiculos")
 }
 
 model Reparacion {
@@ -56,6 +77,8 @@ model Reparacion {
 
   detalleReparacion DetalleReparacion[]
   facturas          Factura[]
+
+  @@map("reparaciones")
 }
 
 model DetalleReparacion {
@@ -70,6 +93,7 @@ model DetalleReparacion {
   pieza         Pieza      @relation(fields: [piezaId], references: [id])
 
   @@unique([reparacionId, piezaId])
+  @@map("detalle_reparacion")
 }
 
 model Pieza {
@@ -78,9 +102,14 @@ model Pieza {
   marca    String?
   precio   Float
   stock    Int    @default(0)
-  codigo   String @unique
+  codigo   String
+  empresaId Int   @map("empresa_id")
 
+  empresa      Empresa           @relation(fields: [empresaId], references: [id])
   detalleReparacion DetalleReparacion[]
+
+  @@unique([codigo, empresaId])
+  @@map("piezas")
 }
 
 model Factura {
@@ -92,19 +121,28 @@ model Factura {
 
   cliente       Cliente    @relation(fields: [clienteId], references: [id])
   reparacion    Reparacion @relation(fields: [reparacionId], references: [id])
+
+  @@map("facturas")
 }
 
 model Usuario {
-  id           Int     @id @default(autoincrement())
-  email        String  @unique
-  passwordHash String  @map("password_hash")
+  id           Int      @id @default(autoincrement())
+  email        String
+  passwordHash String   @map("password_hash")
   nombre       String
-  activo       Boolean @default(true)
-  rolId        Int     @map("rol_id")
+  activo       Boolean  @default(true)
+  loginAttempts Int     @default(0) @map("login_attempts")
+  lockedUntil  DateTime? @map("locked_until")
+  rolId        Int      @map("rol_id")
+  empresaId    Int      @map("empresa_id")
 
   rol          Rol      @relation(fields: [rolId], references: [id])
+  empresa      Empresa  @relation(fields: [empresaId], references: [id])
   mecanico     Mecanico?
   reparacionesRecepcionista Reparacion[] @relation("reparacion_recepcionista")
+
+  @@unique([email, empresaId])
+  @@map("usuarios")
 }
 
 model Rol {
@@ -113,6 +151,7 @@ model Rol {
   permisos Json
 
   usuarios Usuario[]
+  @@map("roles")
 }
 
 model Mecanico {
@@ -122,4 +161,6 @@ model Mecanico {
 
   usuario      Usuario @relation(fields: [usuarioId], references: [id])
   reparaciones Reparacion[]
+
+  @@map("mecanicos")
 }

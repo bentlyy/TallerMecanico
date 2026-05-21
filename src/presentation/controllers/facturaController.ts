@@ -1,77 +1,41 @@
-// src/presentation/controllers/facturaController.ts
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../../infrastructure/http/authMiddleware';
 import { FacturaService } from '../../application/facturaService';
+import { asyncHandler } from '../../infrastructure/http/asyncHandler';
+import { NotFoundError } from '../../infrastructure/http/errors';
 
 export class FacturaController {
   constructor(private readonly facturaService: FacturaService) {}
 
-  async getAll(req: Request, res: Response): Promise<void> {
-    try {
-      const facturas = await this.facturaService.getAllFacturas();
-      res.status(200).json(facturas);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener las facturas' });
-    }
-  }
+  getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const result = await this.facturaService.getAllFacturas(page, limit);
+    res.json(result);
+  });
 
-  async getById(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      const factura = await this.facturaService.getFacturaById(id);
+  getById = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const factura = await this.facturaService.getFacturaById(id);
+    if (!factura) throw new NotFoundError('Factura');
+    res.json(factura);
+  });
 
-      if (factura) {
-        res.status(200).json(factura);
-      } else {
-        res.status(404).json({ error: 'Factura no encontrada' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener la factura' });
-    }
-  }
-
-  async create(req: Request, res: Response): Promise<void> {
-  try {
-    const { clienteId, reparacionId } = req.body;
-
-    if (!clienteId || !reparacionId) {
-      res.status(400).json({ error: 'clienteId y reparacionId son requeridos' });
-      return;
-    }
-
-    const factura = await this.facturaService.createFactura({
-      clienteId,
-      reparacionId
-    });
-
+  create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const factura = await this.facturaService.createFactura(req.body);
     res.status(201).json(factura);
-  } catch (error: any) {
-    console.error("[FacturaController] Error al crear factura:", error);
-    res.status(500).json({ error: error.message || 'Error al crear la factura' });
-  }
-}
+  });
 
-  async getByCliente(req: Request, res: Response): Promise<void> {
-    try {
-      const clienteId = parseInt(req.params.clienteId);
-      const facturas = await this.facturaService.getFacturasPorCliente(clienteId);
-      res.status(200).json(facturas);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener facturas por cliente' });
-    }
-  }
+  getByCliente = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const clienteId = parseInt(req.params.clienteId);
+    const facturas = await this.facturaService.getFacturasPorCliente(clienteId);
+    res.json(facturas);
+  });
 
-  async getByReparacion(req: Request, res: Response): Promise<void> {
-    try {
-      const reparacionId = parseInt(req.params.reparacionId);
-      const factura = await this.facturaService.getFacturasPorReparacion(reparacionId);
-
-      if (factura) {
-        res.status(200).json(factura);
-      } else {
-        res.status(404).json({ error: 'Factura no encontrada para esta reparación' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener factura por reparación' });
-    }
-  }
+  getByReparacion = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const reparacionId = parseInt(req.params.reparacionId);
+    const factura = await this.facturaService.getFacturasPorReparacion(reparacionId);
+    if (!factura) throw new NotFoundError('Factura no encontrada para esta reparación');
+    res.json(factura);
+  });
 }
