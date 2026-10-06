@@ -3,20 +3,21 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      DATABASE_URL: 'postgresql://${DB_USER:-taller_user}:${DB_PASSWORD:-taller_password}@db:5432/${DB_NAME:-taller_db}?schema=public'
-      NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:80}
-      LOG_LEVEL: info
     ports:
-      - '3000:3000'
+      - '127.0.0.1:3002:3002'
     depends_on:
       db:
         condition: service_healthy
+    environment:
+      DATABASE_URL: 'postgresql://${DB_USER:?DB_USER no definida en .env}:${DB_PASSWORD:?DB_PASSWORD no definida en .env}@db:5432/${DB_NAME:?DB_NAME no definida en .env}?schema=public'
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://taller.amgdeveloper.cl}
+      PORT: '3002'
+      LOG_LEVEL: info
     restart: unless-stopped
     logging:
-      driver: 'json-file'
+      driver: json-file
       options:
         max-size: '10m'
         max-file: '3'
@@ -24,18 +25,19 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
-      - '80:80'
+      - '127.0.0.1:3043:5174'
+    environment:
+      VITE_API_URL: 'http://app:3002'
     depends_on:
       - app
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 128m
-        reservations:
-          memory: 64m
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
 
 volumes:
   postgres_data:

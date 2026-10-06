@@ -6,9 +6,13 @@ import { fileURLToPath, URL } from 'url';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    allowedHosts: true,
+    port: 5174,
     host: true,
     strictPort: true,
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL || 'http://localhost:3000',

@@ -6,7 +6,7 @@ DB_PORT="${DB_PORT:-5432}"
 MAX_RETRIES="${DB_RETRIES:-30}"
 RETRY_INTERVAL="${DB_RETRY_INTERVAL:-2}"
 
-echo "Esperando a que la base de datos esté lista en ${DB_HOST}:${DB_PORT}..."
+echo "Esperando a que la base de datos estÃ© lista en ${DB_HOST}:${DB_PORT}..."
 i=1
 while [ $i -le $MAX_RETRIES ]; do
   if nc -z "$DB_HOST" "$DB_PORT" 2>/dev/null; then
@@ -19,7 +19,7 @@ while [ $i -le $MAX_RETRIES ]; do
 done
 
 if [ $i -gt $MAX_RETRIES ]; then
-  echo "Error: No se pudo conectar a la base de datos después de $MAX_RETRIES intentos"
+  echo "Error: No se pudo conectar a la base de datos despuÃ©s de $MAX_RETRIES intentos"
   exit 1
 fi
 
@@ -29,6 +29,9 @@ if [ $? -ne 0 ]; then
   echo "Error: Fallo al aplicar migraciones"
   exit 1
 fi
+
+echo "Ejecutando seed de datos..."
+node dist/seed.js 2>&1 || echo "Seed ya ejecutado o datos existentes, continuando..."
 
 echo "Iniciando el servidor..."
 exec "$@"

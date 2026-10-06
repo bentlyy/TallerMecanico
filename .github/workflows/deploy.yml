@@ -1,0 +1,23 @@
+name: Deploy to OCI
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.SERVER_PATH }}
+            git pull origin master
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+            docker system prune -f

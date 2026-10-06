@@ -3,24 +3,34 @@ import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+async function upsertEmpresa(nombre: string) {
+  const existing = await prisma.empresa.findFirst({ where: { nombre } });
+  if (existing) return existing;
+  return prisma.empresa.create({ data: { nombre, activa: true } });
+}
+
+async function upsertRol(nombre: string, permisos: object) {
+  const existing = await prisma.rol.findFirst({ where: { nombre } });
+  if (existing) return existing;
+  return prisma.rol.create({ data: { nombre, permisos } });
+}
+
 async function main() {
-  const empresa = await prisma.empresa.create({
-    data: { nombre: 'Taller Mecánico Central', activa: true },
-  });
+  const empresa = await upsertEmpresa('Taller Mecánico Central');
 
   const roles = await Promise.all([
-    prisma.rol.create({ data: { nombre: 'ADMIN', permisos: { ALL: true } } }),
-    prisma.rol.create({
-      data: { nombre: 'RECEPCIONISTA', permisos: { CLIENTES: true, REPARACIONES: true, FACTURAS: true, PIEZAS: true } },
-    }),
-    prisma.rol.create({ data: { nombre: 'MECANICO', permisos: { REPARACIONES: true, PIEZAS: true } } }),
+    upsertRol('ADMIN', { ALL: true }),
+    upsertRol('RECEPCIONISTA', { CLIENTES: true, REPARACIONES: true, FACTURAS: true, PIEZAS: true }),
+    upsertRol('MECANICO', { REPARACIONES: true, PIEZAS: true }),
   ]);
 
   const [adminRol, recepcionistaRol, mecanicoRol] = roles;
   const passwordHash = await bcrypt.hash('admin123', 10);
 
-  const adminUser = await prisma.usuario.create({
-    data: {
+  const adminUser = await prisma.usuario.upsert({
+    where: { email_empresaId: { email: 'admin@taller.com', empresaId: empresa.id } },
+    update: { passwordHash, nombre: 'Admin', activo: true, rolId: adminRol.id },
+    create: {
       email: 'admin@taller.com',
       passwordHash,
       nombre: 'Admin',
@@ -30,8 +40,10 @@ async function main() {
     },
   });
 
-  await prisma.usuario.create({
-    data: {
+  await prisma.usuario.upsert({
+    where: { email_empresaId: { email: 'recepcion@taller.com', empresaId: empresa.id } },
+    update: { passwordHash, nombre: 'Recepcionista', activo: true, rolId: recepcionistaRol.id },
+    create: {
       email: 'recepcion@taller.com',
       passwordHash,
       nombre: 'Recepcionista',
@@ -41,8 +53,10 @@ async function main() {
     },
   });
 
-  const mecanicoUser = await prisma.usuario.create({
-    data: {
+  const mecanicoUser = await prisma.usuario.upsert({
+    where: { email_empresaId: { email: 'mecanico@taller.com', empresaId: empresa.id } },
+    update: { passwordHash, nombre: 'Mecánico', activo: true, rolId: mecanicoRol.id },
+    create: {
       email: 'mecanico@taller.com',
       passwordHash,
       nombre: 'Mecánico',
@@ -52,12 +66,15 @@ async function main() {
     },
   });
 
-  await prisma.mecanico.create({
-    data: { usuarioId: mecanicoUser.id, especialidad: 'Motor y Transmisión' },
-  });
+  const existingMecanico = await prisma.mecanico.findFirst({ where: { usuarioId: mecanicoUser.id } });
+  if (!existingMecanico) {
+    await prisma.mecanico.create({ data: { usuarioId: mecanicoUser.id, especialidad: 'Motor y Transmisión' } });
+  }
 
-  const cliente = await prisma.cliente.create({
-    data: {
+  const cliente = await prisma.cliente.upsert({
+    where: { email_empresaId: { email: 'juan@email.com', empresaId: empresa.id } },
+    update: { nombre: 'Juan Pérez', telefono: '555-1234', direccion: 'Av. Siempre Viva 123' },
+    create: {
       nombre: 'Juan Pérez',
       email: 'juan@email.com',
       telefono: '555-1234',
@@ -66,8 +83,10 @@ async function main() {
     },
   });
 
-  await prisma.cliente.create({
-    data: {
+  await prisma.cliente.upsert({
+    where: { email_empresaId: { email: 'maria@email.com', empresaId: empresa.id } },
+    update: { nombre: 'María García', telefono: '555-5678', direccion: 'Calle Falsa 456' },
+    create: {
       nombre: 'María García',
       email: 'maria@email.com',
       telefono: '555-5678',
@@ -77,8 +96,10 @@ async function main() {
   });
 
   const vehiculos = await Promise.all([
-    prisma.vehiculo.create({
-      data: {
+    prisma.vehiculo.upsert({
+      where: { patente_clienteId: { patente: 'ABC123', clienteId: cliente.id } },
+      update: { marca: 'Toyota', modelo: 'Corolla', anio: 2020, kilometraje: 45000 },
+      create: {
         marca: 'Toyota',
         modelo: 'Corolla',
         anio: 2020,
@@ -87,8 +108,10 @@ async function main() {
         clienteId: cliente.id,
       },
     }),
-    prisma.vehiculo.create({
-      data: {
+    prisma.vehiculo.upsert({
+      where: { patente_clienteId: { patente: 'DEF456', clienteId: cliente.id } },
+      update: { marca: 'Honda', modelo: 'Civic', anio: 2021, kilometraje: 32000 },
+      create: {
         marca: 'Honda',
         modelo: 'Civic',
         anio: 2021,
@@ -97,8 +120,10 @@ async function main() {
         clienteId: cliente.id,
       },
     }),
-    prisma.vehiculo.create({
-      data: {
+    prisma.vehiculo.upsert({
+      where: { patente_clienteId: { patente: 'GHI789', clienteId: cliente.id } },
+      update: { marca: 'Ford', modelo: 'Fiesta', anio: 2019, kilometraje: 58000 },
+      create: {
         marca: 'Ford',
         modelo: 'Fiesta',
         anio: 2019,
@@ -110,8 +135,10 @@ async function main() {
   ]);
 
   const piezas = await Promise.all([
-    prisma.pieza.create({
-      data: {
+    prisma.pieza.upsert({
+      where: { codigo_empresaId: { codigo: 'FIL-001', empresaId: empresa.id } },
+      update: { nombre: 'Filtro de aceite', marca: 'Bosch', precio: 2500, stock: 10 },
+      create: {
         nombre: 'Filtro de aceite',
         marca: 'Bosch',
         precio: 2500,
@@ -120,8 +147,10 @@ async function main() {
         empresaId: empresa.id,
       },
     }),
-    prisma.pieza.create({
-      data: {
+    prisma.pieza.upsert({
+      where: { codigo_empresaId: { codigo: 'FRENO-001', empresaId: empresa.id } },
+      update: { nombre: 'Pastillas de freno', marca: 'Bosch', precio: 8500, stock: 15 },
+      create: {
         nombre: 'Pastillas de freno',
         marca: 'Bosch',
         precio: 8500,
@@ -130,11 +159,15 @@ async function main() {
         empresaId: empresa.id,
       },
     }),
-    prisma.pieza.create({
-      data: { nombre: 'Bujía NGK', marca: 'NGK', precio: 1200, stock: 30, codigo: 'BUJ-001', empresaId: empresa.id },
+    prisma.pieza.upsert({
+      where: { codigo_empresaId: { codigo: 'BUJ-001', empresaId: empresa.id } },
+      update: { nombre: 'Bujía NGK', marca: 'NGK', precio: 1200, stock: 30 },
+      create: { nombre: 'Bujía NGK', marca: 'NGK', precio: 1200, stock: 30, codigo: 'BUJ-001', empresaId: empresa.id },
     }),
-    prisma.pieza.create({
-      data: {
+    prisma.pieza.upsert({
+      where: { codigo_empresaId: { codigo: 'ACE-001', empresaId: empresa.id } },
+      update: { nombre: 'Aceite 10W40', marca: 'Castrol', precio: 4500, stock: 20 },
+      create: {
         nombre: 'Aceite 10W40',
         marca: 'Castrol',
         precio: 4500,
@@ -143,8 +176,10 @@ async function main() {
         empresaId: empresa.id,
       },
     }),
-    prisma.pieza.create({
-      data: {
+    prisma.pieza.upsert({
+      where: { codigo_empresaId: { codigo: 'COR-001', empresaId: empresa.id } },
+      update: { nombre: 'Correa de distribución', marca: 'Gates', precio: 15000, stock: 5 },
+      create: {
         nombre: 'Correa de distribución',
         marca: 'Gates',
         precio: 15000,

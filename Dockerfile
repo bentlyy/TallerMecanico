@@ -2,11 +2,11 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production && cp -r node_modules /node_modules_prod && npm ci
+RUN npm ci --only=production --ignore-scripts && cp -r node_modules /node_modules_prod && npm ci
 COPY . .
 ENV DATABASE_URL="postgresql://p:p@localhost:5432/db"
 RUN npx prisma generate
-RUN npm run build
+RUN npm run build && npx tsc prisma/seed.ts --outDir dist --esModuleInterop --skipLibCheck --experimentalDecorators --emitDecoratorMetadata
 
 # Production stage
 FROM node:20-alpine
@@ -19,7 +19,7 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY healthcheck.js /healthcheck.js
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh && chown -R appuser:appgroup /app/node_modules
 USER appuser
 EXPOSE 3000
 
@@ -27,4 +27,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node /healthcheck.js
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/src/server.js"]

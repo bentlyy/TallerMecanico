@@ -3,19 +3,28 @@ services:
   db:
     image: postgres:15-alpine
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5433:5432'
     environment:
-      POSTGRES_USER: ${DB_USER:-taller_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-taller_password}
-      POSTGRES_DB: ${DB_NAME:-taller_db}
+      POSTGRES_USER: ${DB_USER:?DB_USER no definida en .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD no definida en .env}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME no definida en .env}
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-taller_user} -d ${DB_NAME:-taller_db}']
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${DB_USER:?DB_USER no definida en .env} -d ${DB_NAME:?DB_NAME no definida en .env}',
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
 
 volumes:
   postgres_data:
