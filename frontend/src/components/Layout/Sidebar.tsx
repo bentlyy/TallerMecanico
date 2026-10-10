@@ -14,7 +14,6 @@ import {
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
-  DirectionsCar as CarIcon,
   Build as BuildIcon,
   MiscellaneousServices as ServicesIcon,
   Handyman as HandymanIcon,
@@ -36,7 +35,6 @@ interface SidebarProps {
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon />, roles: ['ADMIN', 'RECEPCIONISTA', 'MECANICO'] },
   { path: '/clientes', label: 'Clientes', icon: <PeopleIcon />, roles: ['ADMIN', 'RECEPCIONISTA'] },
-  { path: '/vehiculos', label: 'Vehículos', icon: <CarIcon />, roles: ['ADMIN', 'RECEPCIONISTA', 'MECANICO'] },
   { path: '/reparaciones', label: 'Reparaciones', icon: <BuildIcon />, roles: ['ADMIN', 'RECEPCIONISTA', 'MECANICO'] },
   { path: '/servicios', label: 'Servicios', icon: <ServicesIcon />, roles: ['ADMIN'] },
   { path: '/mecanicos', label: 'Mecánicos', icon: <HandymanIcon />, roles: ['ADMIN'] },

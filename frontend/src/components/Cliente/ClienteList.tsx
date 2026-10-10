@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Fragment } from 'react';
 import {
   Table,
   TableBody,
@@ -14,15 +14,19 @@ import {
   Snackbar,
   Alert,
   Tooltip,
+  Collapse,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { getClientes, deleteCliente } from '../../api/clienteApi';
 import { getErrorMessage } from '../../api/errorMessage';
 import { Cliente } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
+import ClienteVehiculos from './ClienteVehiculos';
 
 interface Props {
   onEdit: (cliente: Cliente) => void;
@@ -33,6 +37,7 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Cliente | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
@@ -102,6 +107,7 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell sx={{ width: 48 }} />
               <TableCell>Nombre</TableCell>
               <TableCell>RUT</TableCell>
               <TableCell>Email</TableCell>
@@ -113,7 +119,7 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   <Typography variant="body2" color="text.secondary" sx={{ py: 4 }}>
                     No se encontraron clientes
                   </Typography>
@@ -121,25 +127,44 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
               </TableRow>
             ) : (
               filtered.map((cliente) => (
-                <TableRow key={cliente.id} hover sx={{ transition: 'background-color 0.2s' }}>
-                  <TableCell>{cliente.nombre}</TableCell>
-                  <TableCell>{cliente.rut || '-'}</TableCell>
-                  <TableCell>{cliente.email || '-'}</TableCell>
-                  <TableCell>{cliente.telefono || '-'}</TableCell>
-                  <TableCell>{cliente.direccion || '-'}</TableCell>
-                  <TableCell align="center">
-                    <Tooltip title="Editar">
-                      <IconButton size="small" color="primary" onClick={() => onEdit(cliente)}>
-                        <EditIcon />
+                <Fragment key={cliente.id}>
+                  <TableRow hover sx={{ transition: 'background-color 0.2s' }}>
+                    <TableCell padding="checkbox">
+                      <IconButton
+                        size="small"
+                        onClick={() => setExpandedId((prev) => (prev === cliente.id ? null : cliente.id))}
+                      >
+                        {expandedId === cliente.id ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
                       </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Eliminar">
-                      <IconButton size="small" color="error" onClick={() => setDeleteTarget(cliente)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell>{cliente.nombre}</TableCell>
+                    <TableCell>{cliente.rut || '-'}</TableCell>
+                    <TableCell>{cliente.email || '-'}</TableCell>
+                    <TableCell>{cliente.telefono || '-'}</TableCell>
+                    <TableCell>{cliente.direccion || '-'}</TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Editar">
+                        <IconButton size="small" color="primary" onClick={() => onEdit(cliente)}>
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Eliminar">
+                        <IconButton size="small" color="error" onClick={() => setDeleteTarget(cliente)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell colSpan={7} sx={{ py: 0, borderBottom: 'none' }}>
+                      <Collapse in={expandedId === cliente.id} timeout="auto" unmountOnExit>
+                        <Box sx={{ py: 2 }}>
+                          <ClienteVehiculos cliente={cliente} />
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </Fragment>
               ))
             )}
           </TableBody>

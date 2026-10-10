@@ -6,7 +6,6 @@ import Layout from './components/Layout/Layout';
 import LoginPage from './components/Login/LoginPage';
 import Dashboard from './components/Dashboard/Dashboard';
 import ClientesPage from './pages/ClientesPage';
-import VehiculosPage from './pages/VehiculosPage';
 import ReparacionesPage from './pages/ReparacionesPage';
 import ServiciosPage from './pages/ServiciosPage';
 import PiezasPage from './pages/PiezasPage';
@@ -26,7 +25,6 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/clientes" element={<ClientesPage />} />
-              <Route path="/vehiculos" element={<VehiculosPage />} />
               <Route path="/reparaciones" element={<ReparacionesPage />} />
               <Route path="/servicios" element={<ServiciosPage />} />
               <Route path="/piezas" element={<PiezasPage />} />

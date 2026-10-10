@@ -22,9 +22,11 @@ interface Props {
   onClose: () => void;
   onSave: () => void;
   initialData?: Vehiculo | null;
+  defaultClienteId?: number;
+  lockCliente?: boolean;
 }
 
-const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
+const VehiculoForm = ({ open, onClose, onSave, initialData, defaultClienteId, lockCliente }: Props) => {
   const [marca, setMarca] = useState('');
   const [modelo, setModelo] = useState('');
   const [anio, setAnio] = useState<number | ''>('');
@@ -61,10 +63,10 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
       setAnio('');
       setPatente('');
       setKilometraje('');
-      setClienteId('');
+      setClienteId(defaultClienteId ?? '');
     }
     setErrors({});
-  }, [initialData, open]);
+  }, [initialData, open, defaultClienteId]);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -191,6 +193,7 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
             margin="normal"
             error={!!errors.clienteId}
             helperText={errors.clienteId}
+            disabled={lockCliente}
           >
             <MenuItem value="">-- Seleccione --</MenuItem>
             {clientes.map((c) => (
