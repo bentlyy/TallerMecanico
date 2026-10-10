@@ -6,6 +6,7 @@ import { validate, schemas } from '../../infrastructure/http/validationMiddlewar
 const piezaRouter = Router();
 
 piezaRouter.get('/', authMiddleware, piezaController.getAll.bind(piezaController));
+piezaRouter.get('/marcas', authMiddleware, piezaController.getMarcas.bind(piezaController));
 piezaRouter.get('/:id', authMiddleware, piezaController.getById.bind(piezaController));
 piezaRouter.get('/codigo/:codigo', authMiddleware, piezaController.getByCodigo.bind(piezaController));
 piezaRouter.post(

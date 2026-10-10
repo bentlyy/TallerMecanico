@@ -61,4 +61,9 @@ export class PiezaController {
     if (!pieza) throw new NotFoundError('Pieza');
     res.json(pieza);
   });
+
+  getMarcas = asyncHandler(async (_req: AuthRequest, res: Response) => {
+    const marcas = await this.piezaService.getMarcasMasUsadas(5);
+    res.json(marcas);
+  });
 }

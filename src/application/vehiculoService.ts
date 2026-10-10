@@ -46,4 +46,8 @@ export class VehiculoService {
   async getReparacionesPorVehiculo(vehiculoId: number): Promise<Reparacion[]> {
     return this.vehiculoRepository.getReparaciones(vehiculoId);
   }
+
+  async getMarcasMasUsadas(limit = 5): Promise<string[]> {
+    return this.vehiculoRepository.getTopMarcas(limit);
+  }
 }

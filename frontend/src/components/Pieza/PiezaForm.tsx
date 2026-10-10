@@ -8,8 +8,9 @@ import {
   Button,
   Box,
   CircularProgress,
+  Autocomplete,
 } from '@mui/material';
-import { createPieza, updatePieza } from '../../api/piezaApi';
+import { createPieza, updatePieza, getMarcasPiezas } from '../../api/piezaApi';
 import { Pieza } from '../../types';
 
 interface Props {
@@ -25,8 +26,15 @@ export default function PiezaForm({ open, onClose, onSave, initialData }: Props)
   const [marca, setMarca] = useState('');
   const [precio, setPrecio] = useState<number | ''>('');
   const [stock, setStock] = useState<number | ''>('');
+  const [marcas, setMarcas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    getMarcasPiezas()
+      .then((res) => setMarcas(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setMarcas([]));
+  }, []);
 
   useEffect(() => {
     if (initialData) {
@@ -109,7 +117,18 @@ export default function PiezaForm({ open, onClose, onSave, initialData }: Props)
             error={!!errors.nombre}
             helperText={errors.nombre}
           />
-          <TextField label="Marca" value={marca} onChange={(e) => setMarca(e.target.value)} fullWidth margin="normal" />
+          <Autocomplete
+            freeSolo
+            options={marcas}
+            value={marca}
+            inputValue={marca}
+            onChange={(_, value) => setMarca(typeof value === 'string' ? value : (value ?? ''))}
+            onInputChange={(_, value) => setMarca(value)}
+            fullWidth
+            renderInput={(params) => (
+              <TextField {...params} label="Marca" margin="normal" helperText="Sugerencias: las más usadas" />
+            )}
+          />
           <TextField
             label="Precio"
             type="number"

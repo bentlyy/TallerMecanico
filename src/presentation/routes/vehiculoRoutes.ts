@@ -6,6 +6,7 @@ import { validate, schemas } from '../../infrastructure/http/validationMiddlewar
 const vehiculoRouter = Router();
 
 vehiculoRouter.get('/', authMiddleware, vehiculoController.getAll.bind(vehiculoController));
+vehiculoRouter.get('/marcas', authMiddleware, vehiculoController.getMarcas.bind(vehiculoController));
 vehiculoRouter.get('/:id', authMiddleware, vehiculoController.getById.bind(vehiculoController));
 vehiculoRouter.post(
   '/',

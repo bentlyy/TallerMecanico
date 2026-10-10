@@ -9,8 +9,9 @@ import {
   CircularProgress,
   MenuItem,
   Box,
+  Autocomplete,
 } from '@mui/material';
-import { createVehiculo, updateVehiculo } from '../../api/vehiculoApi';
+import { createVehiculo, updateVehiculo, getMarcasVehiculos } from '../../api/vehiculoApi';
 import { getClientes } from '../../api/clienteApi';
 import { Vehiculo, Cliente } from '../../types';
 
@@ -29,6 +30,7 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
   const [kilometraje, setKilometraje] = useState<number | ''>('');
   const [clienteId, setClienteId] = useState<number | ''>('');
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [marcas, setMarcas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -36,6 +38,9 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
     getClientes()
       .then((res) => setClientes(res.data))
       .catch(() => setClientes([]));
+    getMarcasVehiculos()
+      .then((res) => setMarcas(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setMarcas([]));
   }, []);
 
   useEffect(() => {
@@ -104,16 +109,25 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
       <DialogTitle>{initialData ? 'Editar Vehículo' : 'Nuevo Vehículo'}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
-          <TextField
-            label="Marca"
+          <Autocomplete
+            freeSolo
+            options={marcas}
             value={marca}
-            onChange={(e) => setMarca(e.target.value)}
+            inputValue={marca}
+            onChange={(_, value) => setMarca(typeof value === 'string' ? value : (value ?? ''))}
+            onInputChange={(_, value) => setMarca(value)}
             fullWidth
-            required
-            margin="normal"
-            error={!!errors.marca}
-            helperText={errors.marca}
-            autoFocus
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Marca"
+                required
+                margin="normal"
+                error={!!errors.marca}
+                helperText={errors.marca || 'Sugerencias: las más usadas'}
+                autoFocus
+              />
+            )}
           />
           <TextField
             label="Modelo"

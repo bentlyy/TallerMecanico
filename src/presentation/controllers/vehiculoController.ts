@@ -50,4 +50,9 @@ export class VehiculoController {
     const reparaciones = await this.vehiculoService.getReparacionesPorVehiculo(vehiculoId);
     res.json(reparaciones);
   });
+
+  getMarcas = asyncHandler(async (_req: AuthRequest, res: Response) => {
+    const marcas = await this.vehiculoService.getMarcasMasUsadas(5);
+    res.json(marcas);
+  });
 }

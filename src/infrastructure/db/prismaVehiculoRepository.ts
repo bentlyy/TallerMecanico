@@ -67,4 +67,15 @@ export class PrismaVehiculoRepository implements VehiculoRepository {
         ),
     );
   }
+
+  async getTopMarcas(limit: number): Promise<string[]> {
+    const rows = await this.prisma.vehiculo.groupBy({
+      by: ['marca'],
+      _count: { marca: true },
+      where: { marca: { not: '' } },
+      orderBy: { _count: { marca: 'desc' } },
+      take: limit,
+    });
+    return rows.map((r) => r.marca);
+  }
 }

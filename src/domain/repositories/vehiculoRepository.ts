@@ -10,4 +10,5 @@ export interface VehiculoRepository {
   delete(id: number): Promise<void>;
   getByCliente(clienteId: number): Promise<Vehiculo[]>;
   getReparaciones(vehiculoId: number): Promise<Reparacion[]>;
+  getTopMarcas(limit: number): Promise<string[]>;
 }

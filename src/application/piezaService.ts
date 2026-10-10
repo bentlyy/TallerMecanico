@@ -47,4 +47,8 @@ export class PiezaService {
   async updateStock(id: number, cantidad: number): Promise<Pieza | null> {
     return this.piezaRepository.updateStock(id, cantidad);
   }
+
+  async getMarcasMasUsadas(limit = 5): Promise<string[]> {
+    return this.piezaRepository.getTopMarcas(limit);
+  }
 }

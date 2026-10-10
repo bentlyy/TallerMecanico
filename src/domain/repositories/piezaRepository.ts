@@ -9,4 +9,5 @@ export interface PiezaRepository {
   update(id: number, data: UpdatePieza): Promise<Pieza | null>;
   delete(id: number): Promise<void>;
   updateStock(id: number, cantidad: number): Promise<Pieza | null>;
+  getTopMarcas(limit: number): Promise<string[]>;
 }

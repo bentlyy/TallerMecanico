@@ -50,4 +50,15 @@ export class PrismaPiezaRepository implements PiezaRepository {
     const pieza = await this.prisma.pieza.update({ where: { id }, data: { stock: cantidad } });
     return pieza ? mapPieza(pieza) : null;
   }
+
+  async getTopMarcas(limit: number): Promise<string[]> {
+    const rows = await this.prisma.pieza.groupBy({
+      by: ['marca'],
+      _count: { marca: true },
+      where: { AND: [{ marca: { not: null } }, { marca: { not: '' } }] },
+      orderBy: { _count: { marca: 'desc' } },
+      take: limit,
+    });
+    return rows.map((r) => r.marca).filter((m): m is string => !!m);
+  }
 }
