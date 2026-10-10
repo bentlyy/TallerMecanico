@@ -155,7 +155,7 @@ export const schemas = {
     create: Joi.object({
       clienteId: Joi.number().integer().positive().required(),
       reparacionId: Joi.number().integer().positive().required(),
-      total: Joi.number().min(0).required(),
+      total: Joi.number().min(0).optional(),
     }),
   },
 

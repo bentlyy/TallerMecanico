@@ -11,6 +11,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import { createFactura } from '../../api/facturaApi';
+import { calcularTotal } from '../../api/detalleReparacionApi';
 import api from '../../api/axios';
 
 interface Props {
@@ -32,11 +33,14 @@ interface IReparacion {
 export default function FacturaForm({ open, onClose, onSave }: Props) {
   const [clienteId, setClienteId] = useState<number | ''>('');
   const [reparacionId, setReparacionId] = useState<number | ''>('');
-  const [total, setTotal] = useState<number | ''>('');
+  const [costoManoObra, setCostoManoObra] = useState(0);
+  const [totalRepuestos, setTotalRepuestos] = useState(0);
   const [clientes, setClientes] = useState<ICliente[]>([]);
   const [reparaciones, setReparaciones] = useState<IReparacion[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const total = costoManoObra + totalRepuestos;
 
   useEffect(() => {
     Promise.all([api.get('/clientes'), api.get('/reparaciones')])
@@ -53,7 +57,8 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
     if (!open) {
       setClienteId('');
       setReparacionId('');
-      setTotal('');
+      setCostoManoObra(0);
+      setTotalRepuestos(0);
       setErrors({});
     }
   }, [open]);
@@ -61,15 +66,18 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
   const handleReparacionChange = async (value: number | '') => {
     setReparacionId(value);
     if (value === '') {
-      setTotal('');
+      setCostoManoObra(0);
+      setTotalRepuestos(0);
       return;
     }
     try {
-      const res = await api.get(`/reparaciones/${value}`);
-      const rep = res.data.data || res.data;
-      setTotal(rep.costoManoObra || 0);
+      const [repRes, totRes] = await Promise.all([api.get(`/reparaciones/${value}`), calcularTotal(value)]);
+      const rep = repRes.data.data || repRes.data;
+      setCostoManoObra(Number(rep.costoManoObra) || 0);
+      setTotalRepuestos(Number(totRes.data.total) || 0);
     } catch {
-      setTotal(0);
+      setCostoManoObra(0);
+      setTotalRepuestos(0);
     }
   };
 
@@ -77,7 +85,6 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
     const errs: Record<string, string> = {};
     if (!clienteId) errs.clienteId = 'Debe seleccionar un cliente';
     if (!reparacionId) errs.reparacionId = 'Debe seleccionar una reparación';
-    if (total === '' || Number(total) < 0) errs.total = 'Ingrese un total válido';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -91,7 +98,7 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
       await createFactura({
         clienteId: Number(clienteId),
         reparacionId: Number(reparacionId),
-        total: Number(total),
+        total,
       });
       onSave();
       onClose();
@@ -145,16 +152,12 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
             ))}
           </TextField>
           <TextField
-            label="Total"
-            type="number"
-            value={total}
-            onChange={(e) => setTotal(e.target.value === '' ? '' : Number(e.target.value))}
+            label="Total (automático)"
+            value={`$${total.toFixed(2)}`}
             fullWidth
-            required
             margin="normal"
-            error={!!errors.total}
-            helperText={errors.total}
-            slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+            disabled
+            helperText={`Repuestos: $${totalRepuestos.toFixed(2)} + Mano de obra: $${costoManoObra.toFixed(2)}`}
           />
         </DialogContent>
         <DialogActions>

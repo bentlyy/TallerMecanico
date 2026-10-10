@@ -67,22 +67,32 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
     severity: 'success',
   });
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const [rRes, mRes] = await Promise.all([getReparaciones(), getMecanicos()]);
       setReparaciones(rRes.data);
       setMecanicos(mRes.data);
     } catch {
-      setSnackbar({ open: true, message: 'Error al cargar reparaciones', severity: 'error' });
+      if (!silent) setSnackbar({ open: true, message: 'Error al cargar reparaciones', severity: 'error' });
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData, refreshToggle]);
+
+  useEffect(() => {
+    const interval = setInterval(() => fetchData(true), 10000);
+    const onFocus = () => fetchData(true);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [fetchData]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -91,7 +101,7 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
       await deleteReparacion(deleteTarget.id);
       setSnackbar({ open: true, message: 'Reparación eliminada con éxito', severity: 'success' });
       setDeleteTarget(null);
-      fetchData();
+      fetchData(true);
     } catch (err) {
       const msg =
         (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Error al eliminar reparación';
@@ -109,7 +119,7 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
         message: 'Estado actualizado a ' + estadoLabels[nuevo as EstadoReparacion],
         severity: 'success',
       });
-      fetchData();
+      fetchData(true);
     } catch {
       setSnackbar({ open: true, message: 'Error al cambiar estado', severity: 'error' });
     }
@@ -122,7 +132,7 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
       await asignarMecanico(id, Number(mech));
       setAssignValues((prev) => ({ ...prev, [id]: '' }));
       setSnackbar({ open: true, message: 'Mecánico asignado con éxito', severity: 'success' });
-      fetchData();
+      fetchData(true);
     } catch {
       setSnackbar({ open: true, message: 'Error al asignar mecánico', severity: 'error' });
     }
