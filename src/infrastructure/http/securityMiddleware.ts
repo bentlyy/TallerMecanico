@@ -41,9 +41,10 @@ export function configureSecurity(app: Express): void {
   app.use(
     rateLimit({
       windowMs: 15 * 60 * 1000,
-      max: 200,
+      max: 1000,
       standardHeaders: true,
       legacyHeaders: false,
+      skip: (req) => req.path === '/health' || req.path === '/metrics',
       message: { error: 'Demasiadas solicitudes. Intenta de nuevo en 15 minutos.' },
     }),
   );

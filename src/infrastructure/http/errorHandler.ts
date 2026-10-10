@@ -27,6 +27,23 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     return;
   }
 
+  const httpErr = err as { status?: number; statusCode?: number; type?: string };
+  const httpStatus = httpErr.statusCode ?? httpErr.status;
+  if (typeof httpStatus === 'number' && httpStatus >= 400 && httpStatus < 500) {
+    if (httpErr.type === 'entity.parse.failed') {
+      res.status(400).json({ error: 'JSON inválido en el cuerpo de la solicitud' });
+      return;
+    }
+    if (httpErr.type === 'entity.too.large') {
+      res.status(413).json({ error: 'El cuerpo de la solicitud es demasiado grande' });
+      return;
+    }
+    res.status(httpStatus).json({
+      error: config.nodeEnv === 'production' ? 'Solicitud inválida' : err.message,
+    });
+    return;
+  }
+
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     res.status(401).json({ error: 'Token inválido o expirado' });
     return;

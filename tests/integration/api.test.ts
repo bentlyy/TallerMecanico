@@ -21,6 +21,17 @@ describe('API root', () => {
   });
 });
 
+describe('Cuerpo JSON inválido', () => {
+  it('POST con JSON malformado debe retornar 400 (no 500)', async () => {
+    const res = await request(app)
+      .post('/api/usuarios/login')
+      .set('Content-Type', 'application/json')
+      .send('{"email":');
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+});
+
 describe('Swagger docs', () => {
   it('GET /api-docs debe retornar HTML', async () => {
     const res = await request(app).get('/api-docs/');

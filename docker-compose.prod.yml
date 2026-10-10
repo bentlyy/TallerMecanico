@@ -25,11 +25,9 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     ports:
-      - '127.0.0.1:3043:5174'
-    environment:
-      VITE_API_URL: 'http://app:3002'
+      - '127.0.0.1:3043:80'
     depends_on:
       - app
     restart: unless-stopped

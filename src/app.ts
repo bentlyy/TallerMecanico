@@ -23,6 +23,8 @@ import 'reflect-metadata';
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 configureSecurity(app);
 
 app.use(
