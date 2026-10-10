@@ -17,6 +17,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getPiezas, deletePieza } from '../../api/piezaApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Pieza } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
@@ -42,8 +43,8 @@ export default function PiezaList({ onEdit, refreshToggle }: Props) {
       setLoading(true);
       const res = await getPiezas();
       setPiezas(res.data);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cargar piezas', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar piezas'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -61,8 +62,8 @@ export default function PiezaList({ onEdit, refreshToggle }: Props) {
       setSnackbar({ open: true, message: 'Pieza eliminada con éxito', severity: 'success' });
       setDeleteTarget(null);
       fetchPiezas();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al eliminar pieza', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al eliminar pieza'), severity: 'error' });
     } finally {
       setDeleting(false);
     }

@@ -26,6 +26,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { getDetalles, addDetalle, removeDetalle } from '../../api/detalleReparacionApi';
 import { getPiezas } from '../../api/piezaApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { DetalleReparacion, Pieza } from '../../types';
 import Loading from '../common/Loading';
 
@@ -54,8 +55,8 @@ const DetalleReparacionDialog = ({ open, onClose, reparacionId, costoManoObra = 
       setLoading(true);
       const res = await getDetalles(reparacionId);
       setDetalles(res.data);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cargar detalles', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar detalles'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -89,8 +90,8 @@ const DetalleReparacionDialog = ({ open, onClose, reparacionId, costoManoObra = 
       setSelectedPiezaId('');
       setCantidad(1);
       fetchDetalles();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al agregar pieza', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al agregar pieza'), severity: 'error' });
     } finally {
       setAdding(false);
     }
@@ -101,8 +102,8 @@ const DetalleReparacionDialog = ({ open, onClose, reparacionId, costoManoObra = 
       await removeDetalle(reparacionId, piezaId);
       setSnackbar({ open: true, message: 'Pieza eliminada con éxito', severity: 'success' });
       fetchDetalles();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al eliminar pieza', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al eliminar pieza'), severity: 'error' });
     }
   };
 

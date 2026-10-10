@@ -19,6 +19,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import { getClientes, deleteCliente } from '../../api/clienteApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Cliente } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
@@ -45,8 +46,8 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
       setLoading(true);
       const res = await getClientes();
       setClientes(res.data);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cargar clientes', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar clientes'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -64,8 +65,8 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
       setSnackbar({ open: true, message: 'Cliente eliminado con éxito', severity: 'success' });
       setDeleteTarget(null);
       fetchClientes();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al eliminar cliente', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al eliminar cliente'), severity: 'error' });
     } finally {
       setDeleting(false);
     }

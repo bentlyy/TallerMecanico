@@ -16,6 +16,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getRoles, deleteRol } from '../../api/rolApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Rol } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
@@ -41,8 +42,8 @@ export default function RolList({ onEdit, refreshToggle }: Props) {
       setLoading(true);
       const res = await getRoles();
       setRoles(res.data);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cargar roles', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar roles'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -60,8 +61,8 @@ export default function RolList({ onEdit, refreshToggle }: Props) {
       setSnackbar({ open: true, message: 'Rol eliminado con éxito', severity: 'success' });
       setDeleteTarget(null);
       fetchRoles();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al eliminar rol', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al eliminar rol'), severity: 'error' });
     } finally {
       setDeleting(false);
     }

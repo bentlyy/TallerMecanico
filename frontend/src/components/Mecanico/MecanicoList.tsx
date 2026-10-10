@@ -16,6 +16,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getMecanicos, deleteMecanico } from '../../api/mecanicoApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Mecanico } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
@@ -41,8 +42,8 @@ export default function MecanicoList({ onEdit, refreshToggle }: Props) {
       setLoading(true);
       const res = await getMecanicos();
       setMecanicos(res.data);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cargar mecánicos', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar mecánicos'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -60,8 +61,8 @@ export default function MecanicoList({ onEdit, refreshToggle }: Props) {
       setSnackbar({ open: true, message: 'Mecánico eliminado con éxito', severity: 'success' });
       setDeleteTarget(null);
       fetchMecanicos();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al eliminar mecánico', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al eliminar mecánico'), severity: 'error' });
     } finally {
       setDeleting(false);
     }

@@ -29,6 +29,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { getReparaciones, deleteReparacion, cambiarEstado, asignarMecanico } from '../../api/reparacionApi';
 import { getMecanicos } from '../../api/mecanicoApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Reparacion, Mecanico, EstadoReparacion } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
@@ -73,8 +74,9 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
       const [rRes, mRes] = await Promise.all([getReparaciones(), getMecanicos()]);
       setReparaciones(rRes.data);
       setMecanicos(mRes.data);
-    } catch {
-      if (!silent) setSnackbar({ open: true, message: 'Error al cargar reparaciones', severity: 'error' });
+    } catch (err) {
+      if (!silent)
+        setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar reparaciones'), severity: 'error' });
     } finally {
       if (!silent) setLoading(false);
     }
@@ -103,9 +105,7 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
       setDeleteTarget(null);
       fetchData(true);
     } catch (err) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Error al eliminar reparación';
-      setSnackbar({ open: true, message: msg, severity: 'error' });
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al eliminar reparación'), severity: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -120,8 +120,8 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
         severity: 'success',
       });
       fetchData(true);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cambiar estado', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cambiar estado'), severity: 'error' });
     }
   };
 
@@ -133,8 +133,8 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
       setAssignValues((prev) => ({ ...prev, [id]: '' }));
       setSnackbar({ open: true, message: 'Mecánico asignado con éxito', severity: 'success' });
       fetchData(true);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al asignar mecánico', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al asignar mecánico'), severity: 'error' });
     }
   };
 

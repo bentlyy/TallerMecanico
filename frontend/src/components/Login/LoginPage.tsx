@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff, Build } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { getErrorMessage } from '../../api/errorMessage';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -35,8 +36,8 @@ export default function LoginPage() {
     try {
       await login({ email, password });
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Credenciales inválidas');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Credenciales inválidas'));
     } finally {
       setLoading(false);
     }

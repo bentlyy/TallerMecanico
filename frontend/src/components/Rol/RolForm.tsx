@@ -8,8 +8,10 @@ import {
   Button,
   Box,
   CircularProgress,
+  Alert,
 } from '@mui/material';
 import { createRol, updateRol } from '../../api/rolApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Rol } from '../../types';
 
 interface Props {
@@ -24,8 +26,10 @@ export default function RolForm({ open, onClose, onSave, initialData }: Props) {
   const [permisos, setPermisos] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
+    setErrorMsg('');
     if (initialData) {
       setNombre(initialData.nombre || '');
       setPermisos(JSON.stringify(initialData.permisos, null, 2));
@@ -56,6 +60,7 @@ export default function RolForm({ open, onClose, onSave, initialData }: Props) {
 
     try {
       setLoading(true);
+      setErrorMsg('');
       if (initialData) {
         await updateRol(initialData.id, { nombre: nombre.trim(), permisos: permisosJson });
       } else {
@@ -63,8 +68,8 @@ export default function RolForm({ open, onClose, onSave, initialData }: Props) {
       }
       onSave();
       onClose();
-    } catch {
-      // handled by caller
+    } catch (err) {
+      setErrorMsg(getErrorMessage(err, 'Error al guardar el rol'));
     } finally {
       setLoading(false);
     }
@@ -75,6 +80,11 @@ export default function RolForm({ open, onClose, onSave, initialData }: Props) {
       <DialogTitle>{initialData ? 'Editar Rol' : 'Nuevo Rol'}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
+          {errorMsg && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorMsg('')}>
+              {errorMsg}
+            </Alert>
+          )}
           <TextField
             label="Nombre"
             value={nombre}

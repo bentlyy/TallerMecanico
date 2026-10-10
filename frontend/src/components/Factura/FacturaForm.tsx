@@ -9,9 +9,11 @@ import {
   Box,
   CircularProgress,
   MenuItem,
+  Alert,
 } from '@mui/material';
 import { createFactura } from '../../api/facturaApi';
 import { calcularTotal } from '../../api/detalleReparacionApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import api from '../../api/axios';
 
 interface Props {
@@ -39,6 +41,7 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
   const [reparaciones, setReparaciones] = useState<IReparacion[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errorMsg, setErrorMsg] = useState('');
 
   const total = costoManoObra + totalRepuestos;
 
@@ -50,7 +53,7 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
         if (Array.isArray(cData)) setClientes(cData);
         if (Array.isArray(rData)) setReparaciones(rData);
       })
-      .catch(() => {});
+      .catch((err) => setErrorMsg(getErrorMessage(err, 'No se pudieron cargar los datos')));
   }, []);
 
   useEffect(() => {
@@ -60,6 +63,7 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
       setCostoManoObra(0);
       setTotalRepuestos(0);
       setErrors({});
+      setErrorMsg('');
     }
   }, [open]);
 
@@ -75,9 +79,10 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
       const rep = repRes.data.data || repRes.data;
       setCostoManoObra(Number(rep.costoManoObra) || 0);
       setTotalRepuestos(Number(totRes.data.total) || 0);
-    } catch {
+    } catch (err) {
       setCostoManoObra(0);
       setTotalRepuestos(0);
+      setErrorMsg(getErrorMessage(err, 'No se pudo calcular el total de la reparación'));
     }
   };
 
@@ -95,6 +100,7 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
 
     try {
       setLoading(true);
+      setErrorMsg('');
       await createFactura({
         clienteId: Number(clienteId),
         reparacionId: Number(reparacionId),
@@ -102,8 +108,8 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
       });
       onSave();
       onClose();
-    } catch {
-      // handled by caller
+    } catch (err) {
+      setErrorMsg(getErrorMessage(err, 'Error al crear la factura'));
     } finally {
       setLoading(false);
     }
@@ -114,6 +120,11 @@ export default function FacturaForm({ open, onClose, onSave }: Props) {
       <DialogTitle>Nueva Factura</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
+          {errorMsg && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorMsg('')}>
+              {errorMsg}
+            </Alert>
+          )}
           <TextField
             select
             label="Cliente"

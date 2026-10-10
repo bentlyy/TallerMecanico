@@ -19,6 +19,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getVehiculos, deleteVehiculo } from '../../api/vehiculoApi';
 import { getClientes } from '../../api/clienteApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Vehiculo, Cliente } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
@@ -46,8 +47,8 @@ const VehiculoList = ({ onEdit, refreshToggle }: Props) => {
       const [vRes, cRes] = await Promise.all([getVehiculos(), getClientes()]);
       setVehiculos(vRes.data);
       setClientes(cRes.data);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cargar vehículos', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar vehículos'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -65,8 +66,8 @@ const VehiculoList = ({ onEdit, refreshToggle }: Props) => {
       setSnackbar({ open: true, message: 'Vehículo eliminado con éxito', severity: 'success' });
       setDeleteTarget(null);
       fetchData();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al eliminar vehículo', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al eliminar vehículo'), severity: 'error' });
     } finally {
       setDeleting(false);
     }

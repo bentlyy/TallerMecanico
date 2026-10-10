@@ -9,11 +9,13 @@ import {
   CircularProgress,
   MenuItem,
   Box,
+  Alert,
 } from '@mui/material';
 import { createReparacion, updateReparacion } from '../../api/reparacionApi';
 import { getVehiculos } from '../../api/vehiculoApi';
 import { getMecanicos } from '../../api/mecanicoApi';
 import { getUsuarios } from '../../api/usuarioApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Reparacion, Vehiculo, Mecanico, Usuario } from '../../types';
 
 interface Props {
@@ -37,6 +39,7 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     Promise.all([getVehiculos(), getMecanicos(), getUsuarios()])
@@ -45,12 +48,11 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
         setMecanicos(mRes.data);
         setUsuarios(uRes.data);
       })
-      .catch(() => {
-        // silent
-      });
+      .catch((err) => setErrorMsg(getErrorMessage(err, 'No se pudieron cargar los datos')));
   }, []);
 
   useEffect(() => {
+    setErrorMsg('');
     if (initialData) {
       setDescripcion(initialData.descripcion || '');
       setProblemaReportado(initialData.problemaReportado || '');
@@ -100,6 +102,7 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
 
     try {
       setLoading(true);
+      setErrorMsg('');
       if (initialData) {
         await updateReparacion(initialData.id, payload);
       } else {
@@ -107,8 +110,8 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
       }
       onSave();
       onClose();
-    } catch {
-      // handled by caller
+    } catch (err) {
+      setErrorMsg(getErrorMessage(err, 'Error al guardar la reparación'));
     } finally {
       setLoading(false);
     }
@@ -119,6 +122,11 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
       <DialogTitle>{initialData ? 'Editar Reparación' : 'Nueva Reparación'}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
+          {errorMsg && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorMsg('')}>
+              {errorMsg}
+            </Alert>
+          )}
           <TextField
             label="Resumen"
             value={descripcion}

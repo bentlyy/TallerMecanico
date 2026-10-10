@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import Grid from '@mui/material/Grid';
-import { Card, CardContent, Typography, Box, Button } from '@mui/material';
+import { Card, CardContent, Typography, Box, Button, Alert } from '@mui/material';
 import { People, DirectionsCar, Build, Receipt, Handyman, Warning } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
+import { getErrorMessage } from '../../api/errorMessage';
 import Loading from '../common/Loading';
 
 interface Stats {
@@ -19,6 +20,7 @@ interface Stats {
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,8 +44,8 @@ export default function Dashboard() {
           piezasStockBajo: piezas.data.filter((p: any) => p.stock <= 5).length,
           mecanicos: mecanicos.data.length,
         });
-      } catch {
-        /* ignore */
+      } catch (err) {
+        setErrorMsg(getErrorMessage(err, 'No se pudieron cargar las estadísticas'));
       } finally {
         setLoading(false);
       }
@@ -110,6 +112,11 @@ export default function Dashboard() {
       <Typography variant="h4" sx={{ mb: 3 }}>
         Dashboard
       </Typography>
+      {errorMsg && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setErrorMsg('')}>
+          {errorMsg}
+        </Alert>
+      )}
       <Grid container spacing={3}>
         {cards.map((card) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.label}>

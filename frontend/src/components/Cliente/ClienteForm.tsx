@@ -8,8 +8,10 @@ import {
   Button,
   CircularProgress,
   Box,
+  Alert,
 } from '@mui/material';
 import { createCliente, updateCliente } from '../../api/clienteApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Cliente } from '../../types';
 
 interface Props {
@@ -25,8 +27,10 @@ export const ClienteForm = ({ open, onClose, onSave, initialData }: Props) => {
   const [telefono, setTelefono] = useState('');
   const [direccion, setDireccion] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
+    setErrorMsg('');
     if (initialData) {
       setNombre(initialData.nombre || '');
       setEmail(initialData.email || '');
@@ -53,6 +57,7 @@ export const ClienteForm = ({ open, onClose, onSave, initialData }: Props) => {
 
     try {
       setLoading(true);
+      setErrorMsg('');
       if (initialData) {
         await updateCliente(initialData.id, payload);
       } else {
@@ -60,8 +65,8 @@ export const ClienteForm = ({ open, onClose, onSave, initialData }: Props) => {
       }
       onSave();
       onClose();
-    } catch {
-      // error handled by caller
+    } catch (err) {
+      setErrorMsg(getErrorMessage(err, 'Error al guardar el cliente'));
     } finally {
       setLoading(false);
     }
@@ -72,6 +77,11 @@ export const ClienteForm = ({ open, onClose, onSave, initialData }: Props) => {
       <DialogTitle>{initialData ? 'Editar Cliente' : 'Nuevo Cliente'}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
+          {errorMsg && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorMsg('')}>
+              {errorMsg}
+            </Alert>
+          )}
           <TextField
             label="Nombre"
             value={nombre}

@@ -19,6 +19,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { getFacturas, deleteFactura } from '../../api/facturaApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Factura } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
@@ -44,8 +45,8 @@ export default function FacturaList({ refreshToggle }: Props) {
       setLoading(true);
       const res = await getFacturas();
       setFacturas(res.data);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cargar facturas', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar facturas'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -63,8 +64,8 @@ export default function FacturaList({ refreshToggle }: Props) {
       setSnackbar({ open: true, message: 'Factura eliminada con éxito', severity: 'success' });
       setDeleteTarget(null);
       fetchFacturas();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al eliminar factura', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al eliminar factura'), severity: 'error' });
     } finally {
       setDeleting(false);
     }

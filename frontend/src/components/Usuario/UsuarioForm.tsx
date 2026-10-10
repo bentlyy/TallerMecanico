@@ -9,9 +9,11 @@ import {
   Box,
   CircularProgress,
   MenuItem,
+  Alert,
 } from '@mui/material';
 import { createUsuario, updateUsuario } from '../../api/usuarioApi';
 import { getRoles } from '../../api/rolApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Usuario, Rol } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -31,6 +33,7 @@ export default function UsuarioForm({ open, onClose, onSave, initialData }: Prop
   const [roles, setRoles] = useState<Rol[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     getRoles()
@@ -39,6 +42,7 @@ export default function UsuarioForm({ open, onClose, onSave, initialData }: Prop
   }, []);
 
   useEffect(() => {
+    setErrorMsg('');
     if (initialData) {
       setNombre(initialData.nombre || '');
       setEmail(initialData.email || '');
@@ -69,6 +73,7 @@ export default function UsuarioForm({ open, onClose, onSave, initialData }: Prop
 
     try {
       setLoading(true);
+      setErrorMsg('');
       if (initialData) {
         await updateUsuario(initialData.id, {
           nombre: nombre.trim(),
@@ -85,8 +90,8 @@ export default function UsuarioForm({ open, onClose, onSave, initialData }: Prop
       }
       onSave();
       onClose();
-    } catch {
-      // handled by caller
+    } catch (err) {
+      setErrorMsg(getErrorMessage(err, 'Error al guardar el usuario'));
     } finally {
       setLoading(false);
     }
@@ -101,6 +106,11 @@ export default function UsuarioForm({ open, onClose, onSave, initialData }: Prop
       <DialogTitle>{initialData ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
+          {errorMsg && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorMsg('')}>
+              {errorMsg}
+            </Alert>
+          )}
           <TextField
             label="Nombre"
             value={nombre}

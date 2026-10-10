@@ -21,6 +21,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { getUsuarios, deleteUsuario, activateUsuario, deactivateUsuario } from '../../api/usuarioApi';
 import { getRoles } from '../../api/rolApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Usuario, Rol } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import ConfirmDialog from '../common/ConfirmDialog';
@@ -54,8 +55,8 @@ export default function UsuarioList({ onEdit, refreshToggle }: Props) {
         map[rol.id] = rol.nombre;
       });
       setRolesMap(map);
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cargar usuarios', severity: 'error' });
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar usuarios'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -74,9 +75,7 @@ export default function UsuarioList({ onEdit, refreshToggle }: Props) {
       setDeleteTarget(null);
       fetchUsuarios();
     } catch (err) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Error al eliminar usuario';
-      setSnackbar({ open: true, message: msg, severity: 'error' });
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Error al eliminar usuario'), severity: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -93,10 +92,11 @@ export default function UsuarioList({ onEdit, refreshToggle }: Props) {
       }
       fetchUsuarios();
     } catch (err) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
-        'Error al cambiar estado del usuario';
-      setSnackbar({ open: true, message: msg, severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: getErrorMessage(err, 'Error al cambiar estado del usuario'),
+        severity: 'error',
+      });
     }
   };
 

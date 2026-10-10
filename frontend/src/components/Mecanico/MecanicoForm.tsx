@@ -13,6 +13,7 @@ import {
 import { createMecanico, updateMecanico } from '../../api/mecanicoApi';
 import { createUsuario, updateUsuario, getUsuario, deleteUsuario } from '../../api/usuarioApi';
 import { getRoles } from '../../api/rolApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Mecanico } from '../../types';
 
 interface Props {
@@ -116,8 +117,7 @@ export default function MecanicoForm({ open, onClose, onSave, initialData }: Pro
           // ignore cleanup failure
         }
       }
-      const e = err as { response?: { data?: { error?: string } }; message?: string };
-      setErrorMsg(e?.response?.data?.error || e?.message || 'Error al guardar el mecánico');
+      setErrorMsg(getErrorMessage(err, 'Error al guardar el mecánico'));
     } finally {
       setLoading(false);
     }

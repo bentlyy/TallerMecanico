@@ -10,9 +10,11 @@ import {
   MenuItem,
   Box,
   Autocomplete,
+  Alert,
 } from '@mui/material';
 import { createVehiculo, updateVehiculo, getMarcasVehiculos } from '../../api/vehiculoApi';
 import { getClientes } from '../../api/clienteApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Vehiculo, Cliente } from '../../types';
 
 interface Props {
@@ -33,6 +35,7 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
   const [marcas, setMarcas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     getClientes()
@@ -44,6 +47,7 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
   }, []);
 
   useEffect(() => {
+    setErrorMsg('');
     if (initialData) {
       setMarca(initialData.marca || '');
       setModelo(initialData.modelo || '');
@@ -90,6 +94,7 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
 
     try {
       setLoading(true);
+      setErrorMsg('');
       if (initialData) {
         await updateVehiculo(initialData.id, payload);
       } else {
@@ -97,8 +102,8 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
       }
       onSave();
       onClose();
-    } catch {
-      // handled by caller
+    } catch (err) {
+      setErrorMsg(getErrorMessage(err, 'Error al guardar el vehículo'));
     } finally {
       setLoading(false);
     }
@@ -109,6 +114,11 @@ const VehiculoForm = ({ open, onClose, onSave, initialData }: Props) => {
       <DialogTitle>{initialData ? 'Editar Vehículo' : 'Nuevo Vehículo'}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
+          {errorMsg && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorMsg('')}>
+              {errorMsg}
+            </Alert>
+          )}
           <Autocomplete
             freeSolo
             options={marcas}

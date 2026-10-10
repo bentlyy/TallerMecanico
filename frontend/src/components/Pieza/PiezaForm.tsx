@@ -9,8 +9,10 @@ import {
   Box,
   CircularProgress,
   Autocomplete,
+  Alert,
 } from '@mui/material';
 import { createPieza, updatePieza, getMarcasPiezas } from '../../api/piezaApi';
+import { getErrorMessage } from '../../api/errorMessage';
 import { Pieza } from '../../types';
 
 interface Props {
@@ -29,6 +31,7 @@ export default function PiezaForm({ open, onClose, onSave, initialData }: Props)
   const [marcas, setMarcas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     getMarcasPiezas()
@@ -37,6 +40,7 @@ export default function PiezaForm({ open, onClose, onSave, initialData }: Props)
   }, []);
 
   useEffect(() => {
+    setErrorMsg('');
     if (initialData) {
       setCodigo(initialData.codigo || '');
       setNombre(initialData.nombre || '');
@@ -77,6 +81,7 @@ export default function PiezaForm({ open, onClose, onSave, initialData }: Props)
 
     try {
       setLoading(true);
+      setErrorMsg('');
       if (initialData) {
         await updatePieza(initialData.id, payload);
       } else {
@@ -84,8 +89,8 @@ export default function PiezaForm({ open, onClose, onSave, initialData }: Props)
       }
       onSave();
       onClose();
-    } catch {
-      // handled by caller
+    } catch (err) {
+      setErrorMsg(getErrorMessage(err, 'Error al guardar la pieza'));
     } finally {
       setLoading(false);
     }
@@ -96,6 +101,11 @@ export default function PiezaForm({ open, onClose, onSave, initialData }: Props)
       <DialogTitle>{initialData ? 'Editar Pieza' : 'Nueva Pieza'}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
+          {errorMsg && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorMsg('')}>
+              {errorMsg}
+            </Alert>
+          )}
           <TextField
             label="Código"
             value={codigo}
