@@ -11,6 +11,7 @@ import { PrismaPiezaRepository } from '../db/prismaPiezaRepository';
 import { PrismaReparacionRepository } from '../db/prismaReparacionRepository';
 import { PrismaDetalleReparacionRepository } from '../db/prismaDetalleReparacionRepository';
 import { PrismaFacturaRepository } from '../db/prismaFacturaRepository';
+import { PrismaPagoRepository } from '../db/prismaPagoRepository';
 import { PrismaServicioRepository } from '../db/prismaServicioRepository';
 import { PrismaReparacionServicioRepository } from '../db/prismaReparacionServicioRepository';
 
@@ -45,6 +46,7 @@ const piezaRepository = new PrismaPiezaRepository(prisma);
 const reparacionRepository = new PrismaReparacionRepository(prisma);
 const detalleReparacionRepository = new PrismaDetalleReparacionRepository(prisma);
 const facturaRepository = new PrismaFacturaRepository(prisma);
+const pagoRepository = new PrismaPagoRepository(prisma);
 const servicioRepository = new PrismaServicioRepository(prisma);
 const reparacionServicioRepository = new PrismaReparacionServicioRepository(prisma);
 
@@ -56,7 +58,7 @@ const mecanicoService = new MecanicoService(mecanicoRepository, usuarioService);
 const piezaService = new PiezaService(piezaRepository);
 const reparacionService = new ReparacionService(reparacionRepository, reparacionServicioRepository, servicioRepository);
 const detalleReparacionService = new DetalleReparacionService(detalleReparacionRepository);
-const facturaService = new FacturaService(facturaRepository);
+const facturaService = new FacturaService(facturaRepository, pagoRepository, reparacionRepository);
 const servicioService = new ServicioService(servicioRepository);
 
 const clienteController = new ClienteController(clienteService);
@@ -154,6 +156,7 @@ export {
   facturaRepository,
   facturaService,
   facturaController,
+  pagoRepository,
   servicioRepository,
   servicioService,
   servicioController,

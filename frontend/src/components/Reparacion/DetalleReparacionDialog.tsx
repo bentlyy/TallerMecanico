@@ -30,6 +30,7 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import { getDetalles, addDetalle, removeDetalle } from '../../api/detalleReparacionApi';
 import { getServiciosReparacion, cambiarEstado, asignarMecanico, registrarSalida } from '../../api/reparacionApi';
+import { getFacturaByReparacion, createFactura } from '../../api/facturaApi';
 import { getPiezas } from '../../api/piezaApi';
 import { getMecanicos } from '../../api/mecanicoApi';
 import { getCliente } from '../../api/clienteApi';
@@ -41,6 +42,7 @@ import {
   Reparacion,
   Mecanico,
   Cliente,
+  Factura,
   EstadoReparacion,
 } from '../../types';
 import Loading from '../common/Loading';
@@ -52,24 +54,32 @@ interface Props {
   onChanged: () => void;
 }
 
+type ChipColor = 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+
 const estadoLabels: Record<EstadoReparacion, string> = {
   EN_REVISION: 'En Revisión',
   EN_REPARACION: 'En Reparación',
   TERMINADO: 'Terminado',
+  FACTURADO: 'Facturado',
+  PAGADO: 'Pagado',
   ENTREGADO: 'Entregado',
 };
 
-const estadoColors: Record<EstadoReparacion, 'warning' | 'info' | 'success' | 'default'> = {
+const estadoColors: Record<EstadoReparacion, ChipColor> = {
   EN_REVISION: 'warning',
   EN_REPARACION: 'info',
-  TERMINADO: 'success',
+  TERMINADO: 'primary',
+  FACTURADO: 'secondary',
+  PAGADO: 'success',
   ENTREGADO: 'default',
 };
 
-const estadoButtonColors: Record<EstadoReparacion, 'warning' | 'info' | 'success' | 'inherit'> = {
+const estadoButtonColors: Record<EstadoReparacion, 'warning' | 'info' | 'primary' | 'success' | 'inherit'> = {
   EN_REVISION: 'warning',
   EN_REPARACION: 'info',
-  TERMINADO: 'success',
+  TERMINADO: 'primary',
+  FACTURADO: 'inherit',
+  PAGADO: 'success',
   ENTREGADO: 'inherit',
 };
 
@@ -88,6 +98,8 @@ const DetalleReparacionDialog = ({ open, onClose, reparacion, onChanged }: Props
   const [cantidad, setCantidad] = useState<number>(1);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [factura, setFactura] = useState<Factura | null>(null);
   const [selectedMecanico, setSelectedMecanico] = useState<number | ''>('');
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -116,6 +128,10 @@ const DetalleReparacionDialog = ({ open, onClose, reparacion, onChanged }: Props
     } finally {
       setLoading(false);
     }
+
+    getFacturaByReparacion(reparacionId)
+      .then((res) => setFactura(res.data))
+      .catch(() => setFactura(null));
   }, [reparacionId]);
 
   useEffect(() => {
@@ -220,6 +236,26 @@ const DetalleReparacionDialog = ({ open, onClose, reparacion, onChanged }: Props
   const manoObraEfectiva = totalServicios > 0 ? totalServicios : Number(rep.costoManoObra || 0);
   const totalGeneral = totalPiezas + manoObraEfectiva;
 
+  const handleGenerarFactura = async () => {
+    const clienteId = rep.vehiculo?.clienteId ?? cliente?.id;
+    if (!clienteId) {
+      notify('No se pudo determinar el cliente de la reparación', 'error');
+      return;
+    }
+    try {
+      setGenerating(true);
+      const res = await createFactura({ clienteId, reparacionId, total: totalGeneral });
+      setFactura(res.data);
+      setRep((prev) => ({ ...prev, estado: 'FACTURADO' }));
+      notify('Factura generada correctamente');
+      onChanged();
+    } catch (err) {
+      notify(getErrorMessage(err, 'Error al generar la factura'), 'error');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const formatDate = (value?: string | null) => {
     if (!value) return '—';
     try {
@@ -307,7 +343,7 @@ const DetalleReparacionDialog = ({ open, onClose, reparacion, onChanged }: Props
                   size="small"
                   variant={rep.estado === estado ? 'contained' : 'outlined'}
                   color={estadoButtonColors[estado]}
-                  disabled={busy}
+                  disabled={busy || (estado === 'ENTREGADO' && !factura)}
                   onClick={() => handleEstado(estado)}
                 >
                   {estadoLabels[estado]}
@@ -323,6 +359,11 @@ const DetalleReparacionDialog = ({ open, onClose, reparacion, onChanged }: Props
                 Registrar salida
               </Button>
             </Stack>
+            {!factura && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                Para marcar como Entregado, primero generá la factura.
+              </Typography>
+            )}
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start" sx={{ mb: 2 }}>
               <TextField
@@ -482,6 +523,45 @@ const DetalleReparacionDialog = ({ open, onClose, reparacion, onChanged }: Props
                 Total general: <strong>${totalGeneral.toFixed(2)}</strong>
               </Typography>
             </Box>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              Facturación
+            </Typography>
+            {factura ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Chip label={`Factura #${factura.id}`} size="small" />
+                <Typography variant="body2">
+                  Total: <strong>${Number(factura.total).toFixed(2)}</strong> · Pagado:{' '}
+                  <strong>${(factura.pagos ?? []).reduce((s, p) => s + p.monto, 0).toFixed(2)}</strong> · Saldo:{' '}
+                  <strong>
+                    ${(factura.total - (factura.pagos ?? []).reduce((s, p) => s + p.monto, 0)).toFixed(2)}
+                  </strong>
+                </Typography>
+                {Number(factura.total) - (factura.pagos ?? []).reduce((s, p) => s + p.monto, 0) <= 0.001 ? (
+                  <Chip label="Pagada" color="success" size="small" />
+                ) : (
+                  <Chip label="Pendiente de pago" color="warning" size="small" />
+                )}
+              </Box>
+            ) : (
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="secondary"
+                  disabled={generating || busy}
+                  onClick={handleGenerarFactura}
+                >
+                  {generating ? 'Generando...' : 'Generar factura'}
+                </Button>
+                <Typography variant="body2" color="text.secondary">
+                  Se creará una factura por el total actual (${totalGeneral.toFixed(2)}) y la reparación pasará a
+                  Facturado.
+                </Typography>
+              </Stack>
+            )}
           </>
         )}
       </DialogContent>

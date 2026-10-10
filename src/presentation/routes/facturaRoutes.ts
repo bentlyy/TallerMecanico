@@ -22,4 +22,13 @@ facturaRouter.post(
 );
 facturaRouter.delete('/:id', authMiddleware, facturaController.delete.bind(facturaController));
 
+facturaRouter.get('/:id/pagos', authMiddleware, facturaController.getPagos.bind(facturaController));
+facturaRouter.post(
+  '/:id/pagos',
+  authMiddleware,
+  validate({ body: schemas.pago.create }),
+  facturaController.addPago.bind(facturaController),
+);
+facturaRouter.delete('/:id/pagos/:pagoId', authMiddleware, facturaController.deletePago.bind(facturaController));
+
 export default facturaRouter;

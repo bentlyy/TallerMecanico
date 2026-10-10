@@ -43,10 +43,14 @@ import ConfirmDialog from '../common/ConfirmDialog';
 import PdfExportMenu from '../common/PdfExportMenu';
 import Loading from '../common/Loading';
 
-const estadoColors: Record<EstadoReparacion, 'warning' | 'info' | 'success' | 'default'> = {
+type ChipColor = 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+
+const estadoColors: Record<EstadoReparacion, ChipColor> = {
   EN_REVISION: 'warning',
   EN_REPARACION: 'info',
-  TERMINADO: 'success',
+  TERMINADO: 'primary',
+  FACTURADO: 'secondary',
+  PAGADO: 'success',
   ENTREGADO: 'default',
 };
 
@@ -54,6 +58,8 @@ const estadoLabels: Record<EstadoReparacion, string> = {
   EN_REVISION: 'En Revisión',
   EN_REPARACION: 'En Reparación',
   TERMINADO: 'Terminado',
+  FACTURADO: 'Facturado',
+  PAGADO: 'Pagado',
   ENTREGADO: 'Entregado',
 };
 
@@ -324,6 +330,12 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
                               <MenuItem value="EN_REVISION">En Revisión</MenuItem>
                               <MenuItem value="EN_REPARACION">En Reparación</MenuItem>
                               <MenuItem value="TERMINADO">Terminado</MenuItem>
+                              <MenuItem value="FACTURADO" disabled>
+                                Facturado (automático)
+                              </MenuItem>
+                              <MenuItem value="PAGADO" disabled>
+                                Pagado (automático)
+                              </MenuItem>
                               <MenuItem value="ENTREGADO">Entregado</MenuItem>
                             </TextField>
 

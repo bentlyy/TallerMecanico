@@ -52,6 +52,16 @@ export class ReparacionService {
   }
 
   async cambiarEstadoReparacion(id: number, nuevoEstado: string): Promise<Reparacion | null> {
+    const reparacion = await this.reparacionRepository.getById(id);
+    if (!reparacion) throw new NotFoundError('Reparación');
+
+    if (nuevoEstado === EstadoReparacion.ENTREGADO) {
+      const facturas = await this.reparacionRepository.countFacturas(id);
+      if (facturas === 0) {
+        throw new ConflictError('No se puede entregar: la reparación no tiene factura');
+      }
+    }
+
     return this.reparacionRepository.cambiarEstado(id, nuevoEstado);
   }
 

@@ -21,6 +21,8 @@ const ESTADO_LABELS: Record<EstadoReparacion, string> = {
   EN_REVISION: 'En Revisión',
   EN_REPARACION: 'En Reparación',
   TERMINADO: 'Terminado',
+  FACTURADO: 'Facturado',
+  PAGADO: 'Pagado',
   ENTREGADO: 'Entregado',
 };
 

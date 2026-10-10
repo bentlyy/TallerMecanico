@@ -44,4 +44,24 @@ export class FacturaController {
     if (!factura) throw new NotFoundError('Factura no encontrada para esta reparación');
     res.json(factura);
   });
+
+  getPagos = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const facturaId = parseInt(req.params.id);
+    const pagos = await this.facturaService.getPagos(facturaId);
+    res.json(pagos);
+  });
+
+  addPago = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const facturaId = parseInt(req.params.id);
+    const { monto, metodo, nota } = req.body;
+    const factura = await this.facturaService.addPago(facturaId, { monto, metodo, nota });
+    res.status(201).json(factura);
+  });
+
+  deletePago = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const facturaId = parseInt(req.params.id);
+    const pagoId = parseInt(req.params.pagoId);
+    const factura = await this.facturaService.deletePago(facturaId, pagoId);
+    res.json(factura);
+  });
 }

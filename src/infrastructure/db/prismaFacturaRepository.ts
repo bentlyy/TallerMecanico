@@ -1,16 +1,21 @@
 import { PrismaClient } from '@prisma/client';
 import { FacturaRepository } from '../../domain/repositories/facturaRepository';
 import { Factura, CreateFactura } from '../../domain/entities/factura';
+import { Pago } from '../../domain/entities/pago';
+
+function mapPago(p: any): Pago {
+  return new Pago(p.id, p.facturaId, p.fecha, p.monto, p.metodo, p.nota ?? null);
+}
 
 function mapFactura(f: any): Factura {
-  return new Factura(f.id, f.fecha, f.total, f.clienteId, f.reparacionId);
+  return new Factura(f.id, f.fecha, f.total, f.clienteId, f.reparacionId, (f.pagos ?? []).map(mapPago));
 }
 
 export class PrismaFacturaRepository implements FacturaRepository {
   constructor(private prisma: PrismaClient) {}
 
   async getAll(skip?: number, limit?: number): Promise<Factura[]> {
-    const facturas = await this.prisma.factura.findMany({ skip, take: limit });
+    const facturas = await this.prisma.factura.findMany({ skip, take: limit, include: { pagos: true } });
     return facturas.map(mapFactura);
   }
 
@@ -19,7 +24,7 @@ export class PrismaFacturaRepository implements FacturaRepository {
   }
 
   async getById(id: number): Promise<Factura | null> {
-    const factura = await this.prisma.factura.findUnique({ where: { id } });
+    const factura = await this.prisma.factura.findUnique({ where: { id }, include: { pagos: true } });
     return factura ? mapFactura(factura) : null;
   }
 
@@ -44,12 +49,12 @@ export class PrismaFacturaRepository implements FacturaRepository {
   }
 
   async getByCliente(clienteId: number): Promise<Factura[]> {
-    const facturas = await this.prisma.factura.findMany({ where: { clienteId } });
+    const facturas = await this.prisma.factura.findMany({ where: { clienteId }, include: { pagos: true } });
     return facturas.map(mapFactura);
   }
 
   async getByReparacion(reparacionId: number): Promise<Factura | null> {
-    const factura = await this.prisma.factura.findFirst({ where: { reparacionId } });
+    const factura = await this.prisma.factura.findFirst({ where: { reparacionId }, include: { pagos: true } });
     return factura ? mapFactura(factura) : null;
   }
 }

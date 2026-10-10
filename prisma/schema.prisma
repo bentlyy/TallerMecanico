@@ -13,6 +13,8 @@ enum EstadoReparacion {
   EN_REPARACION
   TERMINADO
   ENTREGADO
+  FACTURADO
+  PAGADO
 }
 
 model Empresa {
@@ -127,8 +129,23 @@ model Factura {
 
   cliente       Cliente    @relation(fields: [clienteId], references: [id])
   reparacion    Reparacion @relation(fields: [reparacionId], references: [id])
+  pagos         Pago[]
 
   @@map("facturas")
+}
+
+model Pago {
+  id        Int      @id @default(autoincrement())
+  facturaId Int      @map("factura_id")
+  fecha     DateTime @default(now())
+  monto     Float
+  metodo    String
+  nota      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  factura   Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+
+  @@map("pagos")
 }
 
 model Servicio {

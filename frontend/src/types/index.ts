@@ -73,7 +73,18 @@ export interface ReparacionServicio {
   servicio?: Servicio;
 }
 
-export type EstadoReparacion = 'EN_REVISION' | 'EN_REPARACION' | 'TERMINADO' | 'ENTREGADO';
+export type EstadoReparacion = 'EN_REVISION' | 'EN_REPARACION' | 'TERMINADO' | 'FACTURADO' | 'PAGADO' | 'ENTREGADO';
+
+export type MetodoPago = 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'OTRO';
+
+export interface Pago {
+  id: number;
+  facturaId: number;
+  fecha: string;
+  monto: number;
+  metodo: MetodoPago;
+  nota?: string | null;
+}
 
 export interface Reparacion {
   id: number;
@@ -111,6 +122,7 @@ export interface Factura {
   total: number;
   cliente?: Cliente;
   reparacion?: Reparacion;
+  pagos?: Pago[];
 }
 
 export interface CreateFactura {

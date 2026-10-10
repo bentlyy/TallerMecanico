@@ -198,6 +198,20 @@ export const schemas = {
     }),
   },
 
+  pago: {
+    create: Joi.object({
+      monto: Joi.number().positive().required().messages({
+        'number.positive': 'El monto debe ser mayor a 0',
+        'any.required': 'El monto es requerido',
+      }),
+      metodo: Joi.string().valid('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO').required().messages({
+        'any.only': 'Método de pago inválido',
+        'any.required': 'El método de pago es requerido',
+      }),
+      nota: Joi.string().trim().max(200).allow('', null).optional(),
+    }),
+  },
+
   mecanico: {
     create: Joi.object({
       usuarioId: Joi.number().integer().positive().required(),

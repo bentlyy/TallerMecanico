@@ -1,3 +1,5 @@
+import { Pago } from './pago';
+
 // src/domain/entities/factura.ts
 export class Factura {
   constructor(
@@ -5,12 +7,13 @@ export class Factura {
     public fecha: Date,
     public total: number,
     public clienteId: number,
-    public reparacionId: number
+    public reparacionId: number,
+    public pagos: Pago[] = [],
   ) {}
 }
 
 export interface CreateFactura {
-  fecha?: Date;           // opcional, se puede generar en el backend
+  fecha?: Date; // opcional, se puede generar en el backend
   clienteId: number;
   reparacionId: number;
 }
