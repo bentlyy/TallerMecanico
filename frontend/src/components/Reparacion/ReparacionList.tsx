@@ -316,8 +316,8 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
                             <TextField
                               select
                               size="small"
-                              label="Cambiar estado"
-                              value=""
+                              label="Estado"
+                              value={r.estado}
                               onChange={(e) => handleChangeEstado(r.id, e.target.value)}
                               sx={{ width: 200 }}
                             >
