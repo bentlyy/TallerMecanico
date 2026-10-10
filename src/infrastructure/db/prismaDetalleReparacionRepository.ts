@@ -1,6 +1,10 @@
 // src/infrastructure/db/prismaDetalleReparacionRepository.ts
 import { DetalleReparacionRepository } from '../../domain/repositories/detalleReparacionRepository';
-import { CreateDetalleReparacion, UpdateDetalleReparacion, DetalleReparacion } from '../../domain/entities/detalleReparacion';
+import {
+  CreateDetalleReparacion,
+  UpdateDetalleReparacion,
+  DetalleReparacion,
+} from '../../domain/entities/detalleReparacion';
 import { PrismaClient } from '@prisma/client';
 
 export class PrismaDetalleReparacionRepository implements DetalleReparacionRepository {
@@ -12,12 +16,16 @@ export class PrismaDetalleReparacionRepository implements DetalleReparacionRepos
       model.piezaId,
       model.cantidad,
       model.precioUnitario,
-      model.descripcion
+      model.descripcion,
     );
   }
 
   async agregarDetalle(data: CreateDetalleReparacion): Promise<DetalleReparacion> {
-    const detalle = await this.prisma.detalleReparacion.create({ data });
+    const detalle = await this.prisma.detalleReparacion.upsert({
+      where: { reparacionId_piezaId: { reparacionId: data.reparacionId, piezaId: data.piezaId } },
+      update: { cantidad: { increment: data.cantidad }, precioUnitario: data.precioUnitario },
+      create: data,
+    });
     return this.toEntity(detalle);
   }
 
@@ -25,7 +33,11 @@ export class PrismaDetalleReparacionRepository implements DetalleReparacionRepos
     await this.prisma.detalleReparacion.delete({ where: { reparacionId_piezaId: { reparacionId, piezaId } } });
   }
 
-  async actualizarDetalle(reparacionId: number, piezaId: number, data: UpdateDetalleReparacion): Promise<DetalleReparacion | null> {
+  async actualizarDetalle(
+    reparacionId: number,
+    piezaId: number,
+    data: UpdateDetalleReparacion,
+  ): Promise<DetalleReparacion | null> {
     const detalle = await this.prisma.detalleReparacion.update({
       where: { reparacionId_piezaId: { reparacionId, piezaId } },
       data,
