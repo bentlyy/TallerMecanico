@@ -5,6 +5,7 @@ export interface FacturaRepository {
   count(): Promise<number>;
   getById(id: number): Promise<Factura | null>;
   create(data: CreateFactura): Promise<Factura>;
+  delete(id: number): Promise<void>;
   getByCliente(clienteId: number): Promise<Factura[]>;
   getByReparacion(reparacionId: number): Promise<Factura | null>;
 }

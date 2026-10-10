@@ -26,6 +26,12 @@ export class FacturaController {
     res.status(201).json(factura);
   });
 
+  delete = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    await this.facturaService.deleteFactura(id);
+    res.status(204).send();
+  });
+
   getByCliente = asyncHandler(async (req: AuthRequest, res: Response) => {
     const clienteId = parseInt(req.params.clienteId);
     const facturas = await this.facturaService.getFacturasPorCliente(clienteId);

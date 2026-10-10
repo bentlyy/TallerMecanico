@@ -20,5 +20,6 @@ facturaRouter.post(
   validate({ body: schemas.factura.create }),
   facturaController.create.bind(facturaController),
 );
+facturaRouter.delete('/:id', authMiddleware, facturaController.delete.bind(facturaController));
 
 export default facturaRouter;

@@ -39,6 +39,10 @@ export class PrismaFacturaRepository implements FacturaRepository {
     return mapFactura(factura);
   }
 
+  async delete(id: number): Promise<void> {
+    await this.prisma.factura.delete({ where: { id } });
+  }
+
   async getByCliente(clienteId: number): Promise<Factura[]> {
     const facturas = await this.prisma.factura.findMany({ where: { clienteId } });
     return facturas.map(mapFactura);

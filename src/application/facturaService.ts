@@ -1,6 +1,7 @@
 import { FacturaRepository } from '../domain/repositories/facturaRepository';
 import { CreateFactura, Factura } from '../domain/entities/factura';
 import { PaginatedResult } from '../domain/types/pagination';
+import { NotFoundError } from '../infrastructure/http/errors';
 
 export class FacturaService {
   constructor(private readonly repository: FacturaRepository) {}
@@ -17,6 +18,12 @@ export class FacturaService {
 
   async createFactura(data: CreateFactura): Promise<Factura> {
     return this.repository.create(data);
+  }
+
+  async deleteFactura(id: number): Promise<void> {
+    const factura = await this.repository.getById(id);
+    if (!factura) throw new NotFoundError('Factura');
+    await this.repository.delete(id);
   }
 
   async getFacturasPorCliente(clienteId: number): Promise<Factura[]> {
