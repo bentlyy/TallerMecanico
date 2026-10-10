@@ -68,7 +68,7 @@ export default function Dashboard() {
       value: stats?.vehiculos ?? 0,
       icon: <DirectionsCar sx={{ fontSize: 40 }} />,
       color: '#1565c0',
-      path: '/vehiculos',
+      path: '/clientes',
     },
     {
       label: 'En Revisión',
@@ -103,7 +103,7 @@ export default function Dashboard() {
       value: stats?.piezasStockBajo ?? 0,
       icon: <Warning sx={{ fontSize: 40 }} />,
       color: '#d32f2f',
-      path: '/piezas',
+      path: '/inventario',
     },
   ];
 

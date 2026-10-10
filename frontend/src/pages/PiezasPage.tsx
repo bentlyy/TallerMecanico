@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Box, Button, Typography, Paper } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { Pieza } from '../types';
 import PiezaList from '../components/Pieza/PiezaList';
 import PiezaForm from '../components/Pieza/PiezaForm';
@@ -31,18 +32,19 @@ export default function PiezasPage() {
   };
 
   return (
-    <Box sx={{ p: 3, backgroundColor: '#f4f6f8', minHeight: '100vh' }}>
+    <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" sx={{ color: '#0d47a1', fontWeight: 600 }}>
-          Gestión de Piezas
-        </Typography>
-        <Button variant="contained" onClick={handleCreate} sx={{ backgroundColor: '#0d47a1' }}>
+        <Box>
+          <Typography variant="h4">Inventario</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Piezas y repuestos del taller
+          </Typography>
+        </Box>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           Nueva Pieza
         </Button>
       </Box>
-      <Paper sx={{ p: 2, borderRadius: 2 }}>
-        <PiezaList onEdit={handleEdit} refreshToggle={refreshToggle} />
-      </Paper>
+      <PiezaList onEdit={handleEdit} refreshToggle={refreshToggle} />
       <PiezaForm open={formOpen} onClose={handleClose} onSave={handleSave} initialData={editingPieza} />
     </Box>
   );
