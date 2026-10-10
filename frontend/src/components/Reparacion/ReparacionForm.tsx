@@ -36,9 +36,11 @@ import { getVehiculosByCliente, createVehiculo, getVehiculo } from '../../api/ve
 import { getMecanicos } from '../../api/mecanicoApi';
 import { getClientes, createCliente } from '../../api/clienteApi';
 import { getServicios } from '../../api/servicioApi';
+import { getPiezas } from '../../api/piezaApi';
+import { getDetalles, addDetalle, updateDetalle, removeDetalle } from '../../api/detalleReparacionApi';
 import { getErrorMessage } from '../../api/errorMessage';
 import { useAuth } from '../../contexts/AuthContext';
-import { Reparacion, Vehiculo, Mecanico, Cliente, Servicio } from '../../types';
+import { Reparacion, Vehiculo, Mecanico, Cliente, Servicio, Pieza } from '../../types';
 
 interface Props {
   open: boolean;
@@ -49,6 +51,13 @@ interface Props {
 
 interface ServiceLine {
   servicioId: number;
+  nombre: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+interface PiezaLine {
+  piezaId: number;
   nombre: string;
   cantidad: number;
   precioUnitario: number;
@@ -73,6 +82,11 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
   const [originalLines, setOriginalLines] = useState<ServiceLine[]>([]);
   const [servicioSel, setServicioSel] = useState<Servicio | null>(null);
   const [cantidadSel, setCantidadSel] = useState<number>(1);
+  const [piezasCatalogo, setPiezasCatalogo] = useState<Pieza[]>([]);
+  const [piezaLines, setPiezaLines] = useState<PiezaLine[]>([]);
+  const [originalPiezaLines, setOriginalPiezaLines] = useState<PiezaLine[]>([]);
+  const [piezaSel, setPiezaSel] = useState<Pieza | null>(null);
+  const [cantidadPieza, setCantidadPieza] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [errorMsg, setErrorMsg] = useState('');
@@ -92,6 +106,7 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
   const [savingVehiculo, setSavingVehiculo] = useState(false);
 
   const manoObra = lines.reduce((sum, l) => sum + l.cantidad * l.precioUnitario, 0);
+  const totalPiezas = piezaLines.reduce((sum, l) => sum + l.cantidad * l.precioUnitario, 0);
 
   useEffect(() => {
     if (!open) return;
@@ -147,6 +162,22 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
             setOriginalLines([]);
           });
       }
+
+      getDetalles(initialData.id)
+        .then((res) => {
+          const l = res.data.map((d) => ({
+            piezaId: d.piezaId,
+            nombre: d.pieza?.nombre || `Pieza ${d.piezaId}`,
+            cantidad: d.cantidad,
+            precioUnitario: d.precioUnitario,
+          }));
+          setPiezaLines(l);
+          setOriginalPiezaLines(l);
+        })
+        .catch(() => {
+          setPiezaLines([]);
+          setOriginalPiezaLines([]);
+        });
     } else {
       setDescripcion('');
       setProblemaReportado('');
@@ -159,6 +190,8 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
       setRecepcionistaId(user?.id ?? '');
       setLines([]);
       setOriginalLines([]);
+      setPiezaLines([]);
+      setOriginalPiezaLines([]);
     }
   }, [open, initialData, user]);
 
@@ -173,6 +206,9 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
     getServicios()
       .then((res) => setCatalogo(res.data))
       .catch((err) => setErrorMsg(getErrorMessage(err, 'No se pudo cargar el catálogo de servicios')));
+    getPiezas()
+      .then((res) => setPiezasCatalogo(res.data))
+      .catch((err) => setErrorMsg(getErrorMessage(err, 'No se pudo cargar el catálogo de piezas')));
   }, [open]);
 
   useEffect(() => {
@@ -223,6 +259,38 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
 
   const handleRemoveLinea = (servicioId: number) => {
     setLines((prev) => prev.filter((l) => l.servicioId !== servicioId));
+  };
+
+  const handleAddPieza = () => {
+    if (!piezaSel) return;
+    const cant = Math.max(1, Number(cantidadPieza) || 1);
+    setPiezaLines((prev) => {
+      const existing = prev.find((l) => l.piezaId === piezaSel.id);
+      if (existing) {
+        return prev.map((l) => (l.piezaId === piezaSel.id ? { ...l, cantidad: l.cantidad + cant } : l));
+      }
+      return [
+        ...prev,
+        {
+          piezaId: piezaSel.id,
+          nombre: piezaSel.nombre,
+          cantidad: cant,
+          precioUnitario: piezaSel.precio,
+        },
+      ];
+    });
+    setPiezaSel(null);
+    setCantidadPieza(1);
+  };
+
+  const handleCantidadPiezaLinea = (piezaId: number, cantidad: number) => {
+    setPiezaLines((prev) =>
+      prev.map((l) => (l.piezaId === piezaId ? { ...l, cantidad: Math.max(1, cantidad || 1) } : l)),
+    );
+  };
+
+  const handleRemovePiezaLinea = (piezaId: number) => {
+    setPiezaLines((prev) => prev.filter((l) => l.piezaId !== piezaId));
   };
 
   const handleCreateCliente = async () => {
@@ -317,11 +385,37 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
             await updateServicioReparacion(initialData.id, line.servicioId, line.cantidad);
           }
         }
+        for (const orig of originalPiezaLines) {
+          if (!piezaLines.some((l) => l.piezaId === orig.piezaId)) {
+            await removeDetalle(initialData.id, orig.piezaId);
+          }
+        }
+        for (const line of piezaLines) {
+          const orig = originalPiezaLines.find((o) => o.piezaId === line.piezaId);
+          if (!orig) {
+            await addDetalle({
+              reparacionId: initialData.id,
+              piezaId: line.piezaId,
+              cantidad: line.cantidad,
+              precioUnitario: line.precioUnitario,
+            });
+          } else if (orig.cantidad !== line.cantidad) {
+            await updateDetalle(initialData.id, line.piezaId, { cantidad: line.cantidad });
+          }
+        }
       } else {
         const res = await createReparacion(basePayload);
         const newId = res.data.id;
         for (const line of lines) {
           await addServicioReparacion(newId, line.servicioId, line.cantidad);
+        }
+        for (const line of piezaLines) {
+          await addDetalle({
+            reparacionId: newId,
+            piezaId: line.piezaId,
+            cantidad: line.cantidad,
+            precioUnitario: line.precioUnitario,
+          });
         }
       }
 
@@ -616,7 +710,101 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
           <Divider sx={{ my: 2 }} />
 
           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-            3. Descripción del trabajo
+            3. Piezas y repuestos
+          </Typography>
+
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start" sx={{ mb: 1 }}>
+            <Autocomplete
+              fullWidth
+              options={piezasCatalogo}
+              value={piezaSel}
+              onChange={(_, value) => setPiezaSel(value)}
+              getOptionLabel={(p) => `${p.nombre} · $${Number(p.precio).toFixed(2)}`}
+              isOptionEqualToValue={(a, b) => a.id === b.id}
+              renderInput={(params) => <TextField {...params} label="Pieza" placeholder="Buscar pieza del catálogo" />}
+            />
+            <TextField
+              label="Cantidad"
+              type="number"
+              value={cantidadPieza}
+              onChange={(e) => setCantidadPieza(Math.max(1, Number(e.target.value) || 1))}
+              sx={{ width: 110 }}
+              slotProps={{ htmlInput: { min: 1 } }}
+            />
+            <Button
+              variant="contained"
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={handleAddPieza}
+              disabled={!piezaSel}
+              sx={{ whiteSpace: 'nowrap', height: 56 }}
+            >
+              Agregar
+            </Button>
+          </Stack>
+
+          <TableContainer sx={{ mb: 1 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Pieza</TableCell>
+                  <TableCell align="center" width={110}>
+                    Cantidad
+                  </TableCell>
+                  <TableCell align="right">Precio Unit.</TableCell>
+                  <TableCell align="right">Subtotal</TableCell>
+                  <TableCell align="center" width={60} />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {piezaLines.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                        Sin piezas cargadas.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  piezaLines.map((l) => (
+                    <TableRow key={l.piezaId}>
+                      <TableCell>{l.nombre}</TableCell>
+                      <TableCell align="center">
+                        <TextField
+                          type="number"
+                          size="small"
+                          value={l.cantidad}
+                          onChange={(e) => handleCantidadPiezaLinea(l.piezaId, Number(e.target.value))}
+                          slotProps={{ htmlInput: { min: 1, style: { textAlign: 'center' } } }}
+                        />
+                      </TableCell>
+                      <TableCell align="right">${Number(l.precioUnitario).toFixed(2)}</TableCell>
+                      <TableCell align="right">
+                        <Typography fontWeight={600}>${(l.cantidad * l.precioUnitario).toFixed(2)}</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton size="small" color="error" onClick={() => handleRemovePiezaLinea(l.piezaId)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {piezaLines.length > 0 && (
+            <Box sx={{ textAlign: 'right', mb: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                Total repuestos: <strong>${totalPiezas.toFixed(2)}</strong>
+              </Typography>
+            </Box>
+          )}
+
+          <Divider sx={{ my: 2 }} />
+
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+            4. Descripción del trabajo
           </Typography>
 
           <TextField

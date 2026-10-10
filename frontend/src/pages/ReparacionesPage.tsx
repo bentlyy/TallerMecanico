@@ -63,8 +63,8 @@ export default function ReparacionesPage() {
         <DetalleReparacionDialog
           open={detalleOpen}
           onClose={() => setDetalleOpen(false)}
-          reparacionId={detalleReparacion.id}
-          costoManoObra={detalleReparacion.costoManoObra}
+          reparacion={detalleReparacion}
+          onChanged={triggerRefresh}
         />
       )}
     </Box>

@@ -11,13 +11,15 @@ export class PrismaDetalleReparacionRepository implements DetalleReparacionRepos
   constructor(private readonly prisma: PrismaClient) {}
 
   private toEntity(model: any): DetalleReparacion {
-    return new DetalleReparacion(
+    const detalle = new DetalleReparacion(
       model.reparacionId,
       model.piezaId,
       model.cantidad,
       model.precioUnitario,
       model.descripcion,
     );
+    if (model.pieza !== undefined) (detalle as any).pieza = model.pieza;
+    return detalle;
   }
 
   async agregarDetalle(data: CreateDetalleReparacion): Promise<DetalleReparacion> {
@@ -46,8 +48,11 @@ export class PrismaDetalleReparacionRepository implements DetalleReparacionRepos
   }
 
   async getDetallesDeReparacion(reparacionId: number): Promise<DetalleReparacion[]> {
-    const detalles = await this.prisma.detalleReparacion.findMany({ where: { reparacionId } });
-    return detalles.map(this.toEntity);
+    const detalles = await this.prisma.detalleReparacion.findMany({
+      where: { reparacionId },
+      include: { pieza: true },
+    });
+    return detalles.map((d) => this.toEntity(d));
   }
 
   async calcularTotalRepuestos(reparacionId: number): Promise<number> {

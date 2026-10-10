@@ -10,7 +10,8 @@ export const deleteReparacion = (id: number) => api.delete(`/reparaciones/${id}`
 export const cambiarEstado = (id: number, estado: string) => api.patch(`/reparaciones/${id}/estado`, { estado });
 export const asignarMecanico = (id: number, mecanicoId: number) =>
   api.patch(`/reparaciones/${id}/mecanico`, { mecanicoId });
-export const registrarSalida = (id: number) => api.patch(`/reparaciones/${id}/salida`);
+export const registrarSalida = (id: number, fechaSalida?: string) =>
+  api.patch(`/reparaciones/${id}/salida`, { fechaSalida: fechaSalida ?? new Date().toISOString() });
 
 export const getServiciosReparacion = (id: number) => api.get<ReparacionServicio[]>(`/reparaciones/${id}/servicios`);
 export const addServicioReparacion = (id: number, servicioId: number, cantidad = 1) =>
