@@ -29,9 +29,18 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { getReparaciones, deleteReparacion, cambiarEstado, asignarMecanico } from '../../api/reparacionApi';
 import { getMecanicos } from '../../api/mecanicoApi';
+import { getClientes } from '../../api/clienteApi';
 import { getErrorMessage } from '../../api/errorMessage';
-import { Reparacion, Mecanico, EstadoReparacion } from '../../types';
+import {
+  exportReparacionesPdf,
+  getPresetRange,
+  rangeSubtitle,
+  isWithinRange,
+  type RangePreset,
+} from '../../utils/pdfExport';
+import { Reparacion, Mecanico, Cliente, EstadoReparacion } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
+import PdfExportMenu from '../common/PdfExportMenu';
 import Loading from '../common/Loading';
 
 const estadoColors: Record<EstadoReparacion, 'warning' | 'info' | 'success' | 'default'> = {
@@ -57,6 +66,7 @@ interface Props {
 const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
   const [reparaciones, setReparaciones] = useState<Reparacion[]>([]);
   const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Reparacion | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -71,9 +81,10 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
   const fetchData = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [rRes, mRes] = await Promise.all([getReparaciones(), getMecanicos()]);
+      const [rRes, mRes, cRes] = await Promise.all([getReparaciones(), getMecanicos(), getClientes()]);
       setReparaciones(rRes.data);
       setMecanicos(mRes.data);
+      setClientes(cRes.data);
     } catch (err) {
       if (!silent)
         setSnackbar({ open: true, message: getErrorMessage(err, 'Error al cargar reparaciones'), severity: 'error' });
@@ -138,6 +149,17 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
     }
   };
 
+  const handleExportPdf = async (preset: RangePreset) => {
+    const range = getPresetRange(preset);
+    const filtered = reparaciones.filter((r) => isWithinRange(r.fechaEntrada, range));
+    const clienteMap = new Map(clientes.map((c) => [c.id, c.nombre]));
+    try {
+      await exportReparacionesPdf(filtered, { subtitle: rangeSubtitle(range), clienteMap });
+    } catch {
+      setSnackbar({ open: true, message: 'No se pudo generar el PDF', severity: 'error' });
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     try {
       return new Date(dateStr).toLocaleDateString('es-AR');
@@ -150,6 +172,9 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
 
   return (
     <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <PdfExportMenu onExport={handleExportPdf} />
+      </Box>
       <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>

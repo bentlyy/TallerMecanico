@@ -20,8 +20,16 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { getFacturas, deleteFactura } from '../../api/facturaApi';
 import { getErrorMessage } from '../../api/errorMessage';
+import {
+  exportFacturasPdf,
+  getPresetRange,
+  rangeSubtitle,
+  isWithinRange,
+  type RangePreset,
+} from '../../utils/pdfExport';
 import { Factura } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
+import PdfExportMenu from '../common/PdfExportMenu';
 import Loading from '../common/Loading';
 
 interface Props {
@@ -71,6 +79,16 @@ export default function FacturaList({ refreshToggle }: Props) {
     }
   };
 
+  const handleExportPdf = async (preset: RangePreset) => {
+    const range = getPresetRange(preset);
+    const filtered = facturas.filter((f) => isWithinRange(f.fecha, range));
+    try {
+      await exportFacturasPdf(filtered, { subtitle: rangeSubtitle(range) });
+    } catch {
+      setSnackbar({ open: true, message: 'No se pudo generar el PDF', severity: 'error' });
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -80,6 +98,9 @@ export default function FacturaList({ refreshToggle }: Props) {
 
   return (
     <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <PdfExportMenu onExport={handleExportPdf} />
+      </Box>
       <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>

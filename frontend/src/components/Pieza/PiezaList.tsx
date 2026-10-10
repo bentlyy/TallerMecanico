@@ -19,6 +19,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
+  Button,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
@@ -28,9 +29,11 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import BlockIcon from '@mui/icons-material/Block';
 import PaymentsIcon from '@mui/icons-material/Payments';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { getPiezas, deletePieza } from '../../api/piezaApi';
 import { getErrorMessage } from '../../api/errorMessage';
 import { Pieza } from '../../types';
+import { exportInventarioPdf } from '../../utils/pdfExport';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
 
@@ -145,6 +148,16 @@ export default function PiezaList({ onEdit, refreshToggle }: Props) {
     });
   }, [piezas, search, filter]);
 
+  const handleExportPdf = async () => {
+    const filterLabel = filter === 'todos' ? 'Todos' : filter === 'bajo' ? 'Stock bajo' : 'Sin stock';
+    const subtitle = `${filterLabel}${search ? ` · Búsqueda: "${search}"` : ''} · ${filtered.length} piezas`;
+    try {
+      await exportInventarioPdf(filtered, subtitle);
+    } catch {
+      setSnackbar({ open: true, message: 'No se pudo generar el PDF', severity: 'error' });
+    }
+  };
+
   if (loading) return <Loading message="Cargando inventario..." />;
 
   return (
@@ -156,34 +169,48 @@ export default function PiezaList({ onEdit, refreshToggle }: Props) {
         <StatCard icon={<BlockIcon />} label="Sin stock" value={String(stats.sin)} color="#d32f2f" />
       </Stack>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'space-between', mb: 2 }}>
-        <TextField
-          size="small"
-          placeholder="Buscar por código, nombre o marca..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ width: { xs: '100%', sm: 340 } }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={filter}
-          onChange={(_e, val) => val && setFilter(val)}
-          sx={{ flexWrap: 'wrap' }}
-        >
-          <ToggleButton value="todos">Todos</ToggleButton>
-          <ToggleButton value="bajo">Stock bajo</ToggleButton>
-          <ToggleButton value="sin">Sin stock</ToggleButton>
-        </ToggleButtonGroup>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 2,
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+          <TextField
+            size="small"
+            placeholder="Buscar por código, nombre o marca..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ width: { xs: '100%', sm: 340 } }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" color="action" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={filter}
+            onChange={(_e, val) => val && setFilter(val)}
+            sx={{ flexWrap: 'wrap' }}
+          >
+            <ToggleButton value="todos">Todos</ToggleButton>
+            <ToggleButton value="bajo">Stock bajo</ToggleButton>
+            <ToggleButton value="sin">Sin stock</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+        <Button variant="outlined" color="error" startIcon={<PictureAsPdfIcon />} onClick={handleExportPdf}>
+          Descargar PDF
+        </Button>
       </Box>
 
       <TableContainer
