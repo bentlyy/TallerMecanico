@@ -14,6 +14,7 @@ import { PrismaFacturaRepository } from '../db/prismaFacturaRepository';
 import { PrismaPagoRepository } from '../db/prismaPagoRepository';
 import { PrismaServicioRepository } from '../db/prismaServicioRepository';
 import { PrismaReparacionServicioRepository } from '../db/prismaReparacionServicioRepository';
+import { PrismaUbicacionRepository } from '../db/prismaUbicacionRepository';
 
 import { ClienteService } from '../../application/clienteService';
 import { VehiculoService } from '../../application/vehiculoService';
@@ -25,6 +26,7 @@ import { ReparacionService } from '../../application/reparacionService';
 import { DetalleReparacionService } from '../../application/detalleReparacionService';
 import { FacturaService } from '../../application/facturaService';
 import { ServicioService } from '../../application/servicioService';
+import { UbicacionService } from '../../application/ubicacionService';
 
 import { ClienteController } from '../../presentation/controllers/clienteController';
 import { VehiculoController } from '../../presentation/controllers/vehiculoController';
@@ -36,6 +38,7 @@ import { ReparacionController } from '../../presentation/controllers/reparacionC
 import { DetalleReparacionController } from '../../presentation/controllers/detalleReparacionController';
 import { FacturaController } from '../../presentation/controllers/facturaController';
 import { ServicioController } from '../../presentation/controllers/servicioController';
+import { UbicacionController } from '../../presentation/controllers/ubicacionController';
 
 const clienteRepository = new PrismaClienteRepository(prisma);
 const vehiculoRepository = new PrismaVehiculoRepository(prisma);
@@ -49,6 +52,7 @@ const facturaRepository = new PrismaFacturaRepository(prisma);
 const pagoRepository = new PrismaPagoRepository(prisma);
 const servicioRepository = new PrismaServicioRepository(prisma);
 const reparacionServicioRepository = new PrismaReparacionServicioRepository(prisma);
+const ubicacionRepository = new PrismaUbicacionRepository(prisma);
 
 const clienteService = new ClienteService(clienteRepository);
 const vehiculoService = new VehiculoService(vehiculoRepository, clienteRepository);
@@ -60,6 +64,7 @@ const reparacionService = new ReparacionService(reparacionRepository, reparacion
 const detalleReparacionService = new DetalleReparacionService(detalleReparacionRepository);
 const facturaService = new FacturaService(facturaRepository, pagoRepository, reparacionRepository);
 const servicioService = new ServicioService(servicioRepository);
+const ubicacionService = new UbicacionService(ubicacionRepository, reparacionRepository);
 
 const clienteController = new ClienteController(clienteService);
 const vehiculoController = new VehiculoController(vehiculoService);
@@ -71,13 +76,22 @@ const reparacionController = new ReparacionController(reparacionService);
 const detalleReparacionController = new DetalleReparacionController(detalleReparacionService);
 const facturaController = new FacturaController(facturaService);
 const servicioController = new ServicioController(servicioService);
+const ubicacionController = new UbicacionController(ubicacionService);
 
 export async function loginService(
   email: string,
   password: string,
 ): Promise<{
   token: string;
-  usuario: { id: number; email: string; nombre: string; rolId: number; rolNombre: string; empresaId: number };
+  usuario: {
+    id: number;
+    email: string;
+    nombre: string;
+    rolId: number;
+    rolNombre: string;
+    empresaId: number;
+    plan: string;
+  };
 } | null> {
   const user = await prisma.usuario.findFirst({
     where: { email },
@@ -113,6 +127,7 @@ export async function loginService(
     rolId: user.rolId,
     empresaId: user.empresaId,
     rolNombre: user.rol.nombre,
+    plan: user.empresa.plan,
   });
 
   return {
@@ -124,6 +139,7 @@ export async function loginService(
       rolId: user.rolId,
       rolNombre: user.rol.nombre,
       empresaId: user.empresaId,
+      plan: user.empresa.plan,
     },
   };
 }
@@ -161,4 +177,7 @@ export {
   servicioService,
   servicioController,
   reparacionServicioRepository,
+  ubicacionRepository,
+  ubicacionService,
+  ubicacionController,
 };

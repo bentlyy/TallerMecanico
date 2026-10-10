@@ -212,6 +212,60 @@ export const schemas = {
     }),
   },
 
+  ubicacion: {
+    create: Joi.object({
+      nombre: Joi.string().trim().min(1).max(100).required(),
+      tipo: Joi.string()
+        .valid(
+          'RECEPCION',
+          'ESTACIONAMIENTO',
+          'BAHIA',
+          'ELEVADOR',
+          'FOSO',
+          'DIAGNOSTICO',
+          'ALINEACION',
+          'NEUMATICOS',
+          'LUBRICACION',
+          'ELECTRICIDAD',
+          'CHAPA_PINTURA',
+          'LAVADO',
+          'TERMINADOS',
+          'OTRO',
+        )
+        .optional()
+        .default('OTRO'),
+      orden: Joi.number().integer().min(0).optional().default(0),
+      activo: Joi.boolean().optional().default(true),
+    }),
+    update: Joi.object({
+      nombre: Joi.string().trim().min(1).max(100).optional(),
+      tipo: Joi.string()
+        .valid(
+          'RECEPCION',
+          'ESTACIONAMIENTO',
+          'BAHIA',
+          'ELEVADOR',
+          'FOSO',
+          'DIAGNOSTICO',
+          'ALINEACION',
+          'NEUMATICOS',
+          'LUBRICACION',
+          'ELECTRICIDAD',
+          'CHAPA_PINTURA',
+          'LAVADO',
+          'TERMINADOS',
+          'OTRO',
+        )
+        .optional(),
+      orden: Joi.number().integer().min(0).optional(),
+      activo: Joi.boolean().optional(),
+    }),
+    mover: Joi.object({
+      ubicacionId: Joi.number().integer().positive().allow(null).required(),
+      nota: Joi.string().trim().max(200).allow('', null).optional(),
+    }),
+  },
+
   mecanico: {
     create: Joi.object({
       usuarioId: Joi.number().integer().positive().required(),

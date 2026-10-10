@@ -42,6 +42,7 @@ const menuItems = [
   { path: '/facturas', label: 'Facturas', icon: <ReceiptIcon />, roles: ['ADMIN', 'RECEPCIONISTA'] },
   { path: '/usuarios', label: 'Usuarios', icon: <UserIcon />, roles: ['ADMIN'] },
   { path: '/roles', label: 'Roles', icon: <SecurityIcon />, roles: ['ADMIN'] },
+  { path: '/ubicaciones', label: 'Ubicaciones', icon: <BuildIcon />, roles: ['ADMIN'], premium: true },
 ];
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
@@ -51,7 +52,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const visibleItems = menuItems.filter((item) => user && item.roles.includes(user.rolNombre));
+  const visibleItems = menuItems.filter((item) => {
+    if (!user) return false;
+    if (!item.roles.includes(user.rolNombre)) return false;
+    if ((item as any).premium && user.plan !== 'PREMIUM') return false;
+    return true;
+  });
 
   const content = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

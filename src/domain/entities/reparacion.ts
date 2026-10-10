@@ -15,9 +15,12 @@ export class Reparacion {
     public problemaReportado: string | null = null,
     public diagnostico: string | null = null,
     public trabajosRealizados: string | null = null,
+    public ubicacionId: number | null = null,
   ) {}
 }
 
-export type CreateReparacion = Omit<Reparacion, 'id' | 'fechaEntrada' | 'fechaSalida' | 'estado'>;
+export type CreateReparacion = Omit<Reparacion, 'id' | 'fechaEntrada' | 'fechaSalida' | 'estado' | 'ubicacionId'> & {
+  ubicacionId?: number | null;
+};
 export type UpdateReparacion = Partial<CreateReparacion>;
 export { EstadoReparacion };

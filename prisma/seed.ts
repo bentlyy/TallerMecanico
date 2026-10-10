@@ -1,4 +1,4 @@
-import { PrismaClient, EstadoReparacion } from '@prisma/client';
+import { PrismaClient, EstadoReparacion, TipoUbicacion } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -29,6 +29,12 @@ async function upsertServicio(
   const existing = await prisma.servicio.findFirst({ where: { nombre: data.nombre, empresaId } });
   if (existing) return prisma.servicio.update({ where: { id: existing.id }, data });
   return prisma.servicio.create({ data: { ...data, empresaId } });
+}
+
+async function upsertUbicacion(empresaId: number, nombre: string, tipo: TipoUbicacion, orden: number) {
+  const existing = await prisma.ubicacion.findUnique({ where: { nombre_empresaId: { nombre, empresaId } } });
+  if (existing) return existing;
+  return prisma.ubicacion.create({ data: { nombre, tipo, orden, empresaId } });
 }
 
 async function main() {
@@ -279,6 +285,26 @@ async function main() {
 
   for (const servicio of serviciosData) {
     await upsertServicio(empresa.id, servicio);
+  }
+
+  const ubicacionesData: { nombre: string; tipo: TipoUbicacion; orden: number }[] = [
+    { nombre: 'Recepción', tipo: 'RECEPCION', orden: 1 },
+    { nombre: 'Patio / estacionamiento', tipo: 'ESTACIONAMIENTO', orden: 2 },
+    { nombre: 'Bahía 1', tipo: 'BAHIA', orden: 3 },
+    { nombre: 'Bahía 2', tipo: 'BAHIA', orden: 4 },
+    { nombre: 'Bahía 3', tipo: 'BAHIA', orden: 5 },
+    { nombre: 'Elevador', tipo: 'ELEVADOR', orden: 6 },
+    { nombre: 'Diagnóstico', tipo: 'DIAGNOSTICO', orden: 7 },
+    { nombre: 'Alineación y balanceo', tipo: 'ALINEACION', orden: 8 },
+    { nombre: 'Neumáticos', tipo: 'NEUMATICOS', orden: 9 },
+    { nombre: 'Lubricación', tipo: 'LUBRICACION', orden: 10 },
+    { nombre: 'Chapa y pintura', tipo: 'CHAPA_PINTURA', orden: 11 },
+    { nombre: 'Lavado', tipo: 'LAVADO', orden: 12 },
+    { nombre: 'Listos para entrega', tipo: 'TERMINADOS', orden: 13 },
+  ];
+
+  for (const u of ubicacionesData) {
+    await upsertUbicacion(empresa.id, u.nombre, u.tipo, u.orden);
   }
 
   const demo = {

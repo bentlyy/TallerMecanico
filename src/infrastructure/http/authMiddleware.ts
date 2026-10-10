@@ -5,7 +5,7 @@ import config from '../../../config/env';
 const JWT_SECRET = config.jwtSecret;
 
 export interface AuthRequest extends Request {
-  usuario?: { id: number; email: string; rolId: number; empresaId: number; rolNombre: string };
+  usuario?: { id: number; email: string; rolId: number; empresaId: number; rolNombre: string; plan?: string };
 }
 
 export interface TokenPayload {
@@ -14,6 +14,7 @@ export interface TokenPayload {
   rolId: number;
   empresaId: number;
   rolNombre: string;
+  plan?: string;
 }
 
 export function generateToken(payload: TokenPayload): string {
@@ -51,6 +52,18 @@ export function requireRol(...roles: string[]) {
 
     next();
   };
+}
+
+export function requirePremium(req: AuthRequest, res: Response, next: NextFunction): void {
+  if (!req.usuario) {
+    res.status(401).json({ error: 'No autenticado' });
+    return;
+  }
+  if (req.usuario.plan !== 'PREMIUM') {
+    res.status(403).json({ error: 'Función disponible solo en el plan Premium' });
+    return;
+  }
+  next();
 }
 
 export const LOGIN_RATE_LIMIT = {

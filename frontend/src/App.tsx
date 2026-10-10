@@ -13,6 +13,7 @@ import MecanicosPage from './pages/MecanicosPage';
 import FacturasPage from './pages/FacturasPage';
 import UsuariosPage from './pages/UsuariosPage';
 import RolesPage from './pages/RolesPage';
+import UbicacionesPage from './pages/UbicacionesPage';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
               <Route path="/facturas" element={<FacturasPage />} />
               <Route path="/usuarios" element={<UsuariosPage />} />
               <Route path="/roles" element={<RolesPage />} />
+              <Route path="/ubicaciones" element={<UbicacionesPage />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Route>
           </Routes>

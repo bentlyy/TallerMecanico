@@ -17,16 +17,40 @@ enum EstadoReparacion {
   PAGADO
 }
 
-model Empresa {
-  id        Int      @id @default(autoincrement())
-  nombre    String
-  activa    Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at")
+enum TipoUbicacion {
+  RECEPCION
+  ESTACIONAMIENTO
+  BAHIA
+  ELEVADOR
+  FOSO
+  DIAGNOSTICO
+  ALINEACION
+  NEUMATICOS
+  LUBRICACION
+  ELECTRICIDAD
+  CHAPA_PINTURA
+  LAVADO
+  TERMINADOS
+  OTRO
+}
 
-  usuarios  Usuario[]
-  clientes  Cliente[]
-  piezas    Pieza[]
-  servicios Servicio[]
+enum PlanEmpresa {
+  NORMAL
+  PREMIUM
+}
+
+model Empresa {
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  activa    Boolean    @default(true)
+  plan      PlanEmpresa @default(NORMAL)
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  usuarios    Usuario[]
+  clientes    Cliente[]
+  piezas      Pieza[]
+  servicios   Servicio[]
+  ubicaciones Ubicacion[]
 
   @@map("empresas")
 }
@@ -77,14 +101,17 @@ model Reparacion {
   vehiculoId      Int             @map("vehiculo_id")
   mecanicoId      Int?            @map("mecanico_id")
   recepcionistaId Int             @map("recepcionista_id")
+  ubicacionId     Int?            @map("ubicacion_id")
 
   vehiculo        Vehiculo        @relation(fields: [vehiculoId], references: [id])
   mecanico        Mecanico?       @relation(fields: [mecanicoId], references: [id])
   recepcionista   Usuario         @relation("reparacion_recepcionista", fields: [recepcionistaId], references: [id])
+  ubicacion       Ubicacion?      @relation(fields: [ubicacionId], references: [id])
 
   detalleReparacion DetalleReparacion[]
   servicios         ReparacionServicio[]
   facturas          Factura[]
+  movimientos       MovimientoUbicacion[]
 
   @@map("reparaciones")
 }
@@ -217,4 +244,35 @@ model Mecanico {
   reparaciones Reparacion[]
 
   @@map("mecanicos")
+}
+
+model Ubicacion {
+  id        Int           @id @default(autoincrement())
+  nombre    String
+  tipo      TipoUbicacion @default(OTRO)
+  orden     Int           @default(0)
+  activo    Boolean       @default(true)
+  empresaId Int           @map("empresa_id")
+
+  empresa      Empresa               @relation(fields: [empresaId], references: [id])
+  reparaciones Reparacion[]
+  movimientos  MovimientoUbicacion[]
+
+  @@unique([nombre, empresaId])
+  @@map("ubicaciones")
+}
+
+model MovimientoUbicacion {
+  id              Int      @id @default(autoincrement())
+  reparacionId    Int      @map("reparacion_id")
+  ubicacionId     Int?     @map("ubicacion_id")
+  ubicacionNombre String?  @map("ubicacion_nombre")
+  usuarioId       Int?     @map("usuario_id")
+  nota            String?
+  fecha           DateTime @default(now())
+
+  reparacion Reparacion @relation(fields: [reparacionId], references: [id], onDelete: Cascade)
+  ubicacion  Ubicacion? @relation(fields: [ubicacionId], references: [id])
+
+  @@map("movimiento_ubicacion")
 }

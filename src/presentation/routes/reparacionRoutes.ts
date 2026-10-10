@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { reparacionController } from '../../infrastructure/di/container';
-import { authMiddleware } from '../../infrastructure/http/authMiddleware';
+import { reparacionController, ubicacionController } from '../../infrastructure/di/container';
+import { authMiddleware, requirePremium } from '../../infrastructure/http/authMiddleware';
 import { validate, schemas } from '../../infrastructure/http/validationMiddleware';
 
 const router = Router();
@@ -50,6 +50,20 @@ router.delete(
   '/:id/servicios/:servicioId',
   authMiddleware,
   reparacionController.removeServicio.bind(reparacionController),
+);
+
+router.get(
+  '/:id/ubicaciones',
+  authMiddleware,
+  requirePremium,
+  ubicacionController.getHistorial.bind(ubicacionController),
+);
+router.post(
+  '/:id/ubicacion',
+  authMiddleware,
+  requirePremium,
+  validate({ body: schemas.ubicacion.mover }),
+  ubicacionController.mover.bind(ubicacionController),
 );
 
 export default router;

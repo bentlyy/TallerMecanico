@@ -19,10 +19,12 @@ export class PrismaReparacionRepository implements ReparacionRepository {
       model.problemaReportado ?? null,
       model.diagnostico ?? null,
       model.trabajosRealizados ?? null,
+      model.ubicacionId ?? null,
     );
     if (model.vehiculo !== undefined) (rep as any).vehiculo = model.vehiculo;
     if (model.mecanico !== undefined) (rep as any).mecanico = model.mecanico;
     if (model.servicios !== undefined) (rep as any).servicios = model.servicios;
+    if (model.ubicacion !== undefined) (rep as any).ubicacion = model.ubicacion;
     return rep;
   }
 
@@ -30,6 +32,7 @@ export class PrismaReparacionRepository implements ReparacionRepository {
     vehiculo: true,
     mecanico: { include: { usuario: true } },
     servicios: { include: { servicio: true } },
+    ubicacion: true,
   };
 
   async getAll(skip?: number, limit?: number): Promise<Reparacion[]> {

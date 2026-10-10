@@ -20,6 +20,7 @@ import detalleReparacionRoutes from './presentation/routes/detalleReparacionRout
 import facturaRoutes from './presentation/routes/facturaRoutes';
 import reparacionRoutes from './presentation/routes/reparacionRoutes';
 import servicioRoutes from './presentation/routes/servicioRoutes';
+import ubicacionRoutes from './presentation/routes/ubicacionRoutes';
 import 'reflect-metadata';
 
 const app = express();
@@ -82,6 +83,7 @@ app.use(`${apiPrefix}/reparaciones`, reparacionRoutes);
 app.use(`${apiPrefix}/detalle-reparacion`, detalleReparacionRoutes);
 app.use(`${apiPrefix}/facturas`, facturaRoutes);
 app.use(`${apiPrefix}/servicios`, servicioRoutes);
+app.use(`${apiPrefix}/ubicaciones`, ubicacionRoutes);
 
 // Legacy routes without version prefix
 app.use('/api/clientes', clienteRoutes);
@@ -94,6 +96,7 @@ app.use('/api/reparaciones', reparacionRoutes);
 app.use('/api/detalle-reparacion', detalleReparacionRoutes);
 app.use('/api/facturas', facturaRoutes);
 app.use('/api/servicios', servicioRoutes);
+app.use('/api/ubicaciones', ubicacionRoutes);
 
 const collectDefaultMetrics = client.collectDefaultMetrics;
 collectDefaultMetrics();

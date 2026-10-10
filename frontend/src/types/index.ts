@@ -73,6 +73,41 @@ export interface ReparacionServicio {
   servicio?: Servicio;
 }
 
+export type TipoUbicacion =
+  | 'RECEPCION'
+  | 'ESTACIONAMIENTO'
+  | 'BAHIA'
+  | 'ELEVADOR'
+  | 'FOSO'
+  | 'DIAGNOSTICO'
+  | 'ALINEACION'
+  | 'NEUMATICOS'
+  | 'LUBRICACION'
+  | 'ELECTRICIDAD'
+  | 'CHAPA_PINTURA'
+  | 'LAVADO'
+  | 'TERMINADOS'
+  | 'OTRO';
+
+export interface Ubicacion {
+  id: number;
+  nombre: string;
+  tipo: TipoUbicacion;
+  orden: number;
+  activo: boolean;
+  empresaId: number;
+}
+
+export interface MovimientoUbicacion {
+  id: number;
+  reparacionId: number;
+  ubicacionId: number | null;
+  ubicacionNombre: string | null;
+  usuarioId: number | null;
+  nota: string | null;
+  fecha: string;
+}
+
 export type EstadoReparacion = 'EN_REVISION' | 'EN_REPARACION' | 'TERMINADO' | 'FACTURADO' | 'PAGADO' | 'ENTREGADO';
 
 export type MetodoPago = 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'OTRO';
@@ -102,6 +137,8 @@ export interface Reparacion {
   vehiculo?: Vehiculo;
   mecanico?: Mecanico;
   servicios?: ReparacionServicio[];
+  ubicacionId?: number | null;
+  ubicacion?: Ubicacion;
 }
 
 export interface DetalleReparacion {
@@ -145,6 +182,7 @@ export interface LoginResponse {
     rolId: number;
     rolNombre: string;
     empresaId: number;
+    plan?: string;
   };
 }
 
