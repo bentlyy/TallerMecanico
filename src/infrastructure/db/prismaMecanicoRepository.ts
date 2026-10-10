@@ -2,15 +2,22 @@ import { PrismaClient } from '@prisma/client';
 import { MecanicoRepository } from '../../domain/repositories/mecanicoRepository';
 import { Mecanico, CreateMecanico, UpdateMecanico } from '../../domain/entities/mecanico';
 
+const usuarioInclude = { usuario: { select: { id: true, email: true, nombre: true, rolId: true } } };
+
 function mapMecanico(m: any): Mecanico {
-  return new Mecanico(m.id, m.usuarioId, m.especialidad);
+  return new Mecanico(m.id, m.usuarioId, m.especialidad, m.usuario ?? undefined);
 }
 
 export class PrismaMecanicoRepository implements MecanicoRepository {
   constructor(private prisma: PrismaClient) {}
 
   async getAll(skip?: number, limit?: number): Promise<Mecanico[]> {
-    const mecanicos = await this.prisma.mecanico.findMany({ skip, take: limit });
+    const mecanicos = await this.prisma.mecanico.findMany({
+      skip,
+      take: limit,
+      include: usuarioInclude,
+      orderBy: { id: 'asc' },
+    });
     return mecanicos.map(mapMecanico);
   }
 
@@ -19,7 +26,7 @@ export class PrismaMecanicoRepository implements MecanicoRepository {
   }
 
   async getById(id: number): Promise<Mecanico | null> {
-    const mecanico = await this.prisma.mecanico.findUnique({ where: { id } });
+    const mecanico = await this.prisma.mecanico.findUnique({ where: { id }, include: usuarioInclude });
     return mecanico ? mapMecanico(mecanico) : null;
   }
 
