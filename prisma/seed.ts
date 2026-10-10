@@ -190,15 +190,24 @@ async function main() {
     }),
   ]);
 
-  const demoDescripcion = 'Cambio de aceite y filtro + revisión general';
-  const demoReparacion = await prisma.reparacion.findFirst({
-    where: { vehiculoId: vehiculos[0].id, descripcion: demoDescripcion },
-  });
+  const demo = {
+    descripcion: 'Service de mantenimiento preventivo (45.000 km)',
+    problemaReportado:
+      'El cliente reporta un ruido leve en el motor y solicita el service correspondiente a los 45.000 km.',
+    diagnostico:
+      'Aceite de motor degradado y filtro de aceite obstruido. Niveles de fluidos por debajo del mínimo. Frenos y suspensión sin novedades.',
+    trabajosRealizados:
+      'Cambio de aceite 10W40 y filtro de aceite. Control y reposición de niveles. Revisión general de 30 puntos.',
+  };
 
-  if (!demoReparacion) {
+  const demoReparacion = await prisma.reparacion.findFirst({ where: { vehiculoId: vehiculos[0].id } });
+
+  if (demoReparacion) {
+    await prisma.reparacion.update({ where: { id: demoReparacion.id }, data: demo });
+  } else {
     const reparacion = await prisma.reparacion.create({
       data: {
-        descripcion: demoDescripcion,
+        ...demo,
         vehiculoId: vehiculos[0].id,
         recepcionistaId: adminUser.id,
         mecanicoId: (await prisma.mecanico.findFirst())!.id,

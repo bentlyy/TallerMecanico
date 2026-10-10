@@ -16,6 +16,9 @@ export class PrismaReparacionRepository implements ReparacionRepository {
       model.vehiculoId,
       model.mecanicoId,
       model.recepcionistaId,
+      model.problemaReportado ?? null,
+      model.diagnostico ?? null,
+      model.trabajosRealizados ?? null,
     );
   }
 

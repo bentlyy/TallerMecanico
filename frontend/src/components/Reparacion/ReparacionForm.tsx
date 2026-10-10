@@ -25,6 +25,9 @@ interface Props {
 
 const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
   const [descripcion, setDescripcion] = useState('');
+  const [problemaReportado, setProblemaReportado] = useState('');
+  const [diagnostico, setDiagnostico] = useState('');
+  const [trabajosRealizados, setTrabajosRealizados] = useState('');
   const [costoManoObra, setCostoManoObra] = useState<number>(0);
   const [vehiculoId, setVehiculoId] = useState<number | ''>('');
   const [mecanicoId, setMecanicoId] = useState<number | ''>('');
@@ -50,12 +53,18 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
   useEffect(() => {
     if (initialData) {
       setDescripcion(initialData.descripcion || '');
+      setProblemaReportado(initialData.problemaReportado || '');
+      setDiagnostico(initialData.diagnostico || '');
+      setTrabajosRealizados(initialData.trabajosRealizados || '');
       setCostoManoObra(initialData.costoManoObra ?? 0);
       setVehiculoId(initialData.vehiculoId || '');
       setMecanicoId(initialData.mecanicoId ?? '');
       setRecepcionistaId(initialData.recepcionistaId || '');
     } else {
       setDescripcion('');
+      setProblemaReportado('');
+      setDiagnostico('');
+      setTrabajosRealizados('');
       setCostoManoObra(0);
       setVehiculoId('');
       setMecanicoId('');
@@ -80,6 +89,9 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
 
     const payload = {
       descripcion: descripcion.trim(),
+      problemaReportado: problemaReportado.trim() || null,
+      diagnostico: diagnostico.trim() || null,
+      trabajosRealizados: trabajosRealizados.trim() || null,
       costoManoObra,
       vehiculoId: Number(vehiculoId),
       mecanicoId: mecanicoId === '' ? null : Number(mecanicoId),
@@ -108,17 +120,50 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
           <TextField
-            label="Descripción"
+            label="Resumen"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             fullWidth
             required
             margin="normal"
             error={!!errors.descripcion}
-            helperText={errors.descripcion}
+            helperText={
+              errors.descripcion || 'Resumen breve del trabajo (ej: "Service de mantenimiento preventivo 45.000 km")'
+            }
             autoFocus
+          />
+
+          <TextField
+            label="Problema reportado por el cliente"
+            value={problemaReportado}
+            onChange={(e) => setProblemaReportado(e.target.value)}
+            fullWidth
+            margin="normal"
             multiline
             rows={2}
+            placeholder="Qué refiere el cliente: síntomas, ruidos, fallas previas..."
+          />
+
+          <TextField
+            label="Diagnóstico técnico"
+            value={diagnostico}
+            onChange={(e) => setDiagnostico(e.target.value)}
+            fullWidth
+            margin="normal"
+            multiline
+            rows={2}
+            placeholder="Hallazgos de la inspección y causa raíz del problema."
+          />
+
+          <TextField
+            label="Trabajos realizados"
+            value={trabajosRealizados}
+            onChange={(e) => setTrabajosRealizados(e.target.value)}
+            fullWidth
+            margin="normal"
+            multiline
+            rows={2}
+            placeholder="Repuestos y tareas ejecutadas durante la reparación."
           />
 
           <TextField

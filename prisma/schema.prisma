@@ -61,9 +61,12 @@ model Vehiculo {
 }
 
 model Reparacion {
-  id              Int             @id @default(autoincrement())
-  descripcion     String
-  fechaEntrada    DateTime        @default(now()) @map("fecha_entrada")
+  id                 Int             @id @default(autoincrement())
+  descripcion        String
+  problemaReportado  String?         @map("problema_reportado")
+  diagnostico        String?
+  trabajosRealizados String?         @map("trabajos_realizados")
+  fechaEntrada       DateTime        @default(now()) @map("fecha_entrada")
   fechaSalida     DateTime?       @map("fecha_salida")
   estado          EstadoReparacion @default(EN_REVISION)
   costoManoObra   Float           @default(0.0) @map("costo_mano_obra")

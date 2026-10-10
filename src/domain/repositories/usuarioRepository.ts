@@ -6,6 +6,7 @@ export interface UsuarioRepository {
   count(empresaId?: number): Promise<number>;
   getById(id: number): Promise<Usuario | null>;
   getByEmail(email: string, empresaId: number): Promise<Usuario | null>;
+  countActiveByRol(empresaId: number, rolId: number): Promise<number>;
   create(data: CreateUsuario): Promise<Usuario>;
   update(id: number, data: UpdateUsuario): Promise<Usuario | null>;
   delete(id: number): Promise<void>;

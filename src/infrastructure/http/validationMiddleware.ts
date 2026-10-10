@@ -82,6 +82,9 @@ export const schemas = {
   reparacion: {
     create: Joi.object({
       descripcion: Joi.string().trim().min(1).max(1000).required(),
+      problemaReportado: Joi.string().trim().max(2000).allow('', null).optional(),
+      diagnostico: Joi.string().trim().max(2000).allow('', null).optional(),
+      trabajosRealizados: Joi.string().trim().max(2000).allow('', null).optional(),
       costoManoObra: Joi.number().min(0).optional().default(0),
       vehiculoId: Joi.number().integer().positive().required(),
       mecanicoId: Joi.number().integer().positive().optional().allow(null),
@@ -89,6 +92,9 @@ export const schemas = {
     }),
     update: Joi.object({
       descripcion: Joi.string().trim().min(1).max(1000).optional(),
+      problemaReportado: Joi.string().trim().max(2000).allow('', null).optional(),
+      diagnostico: Joi.string().trim().max(2000).allow('', null).optional(),
+      trabajosRealizados: Joi.string().trim().max(2000).allow('', null).optional(),
       costoManoObra: Joi.number().min(0).optional(),
       vehiculoId: Joi.number().integer().positive().optional(),
       mecanicoId: Joi.number().integer().positive().optional().allow(null),

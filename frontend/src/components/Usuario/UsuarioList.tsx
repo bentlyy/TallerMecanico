@@ -13,6 +13,7 @@ import {
   Snackbar,
   Alert,
   Chip,
+  Tooltip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -21,6 +22,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { getUsuarios, deleteUsuario, activateUsuario, deactivateUsuario } from '../../api/usuarioApi';
 import { getRoles } from '../../api/rolApi';
 import { Usuario, Rol } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Loading from '../common/Loading';
 
@@ -30,6 +32,7 @@ interface Props {
 }
 
 export default function UsuarioList({ onEdit, refreshToggle }: Props) {
+  const { user } = useAuth();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [rolesMap, setRolesMap] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
@@ -70,8 +73,10 @@ export default function UsuarioList({ onEdit, refreshToggle }: Props) {
       setSnackbar({ open: true, message: 'Usuario eliminado con éxito', severity: 'success' });
       setDeleteTarget(null);
       fetchUsuarios();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al eliminar usuario', severity: 'error' });
+    } catch (err) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Error al eliminar usuario';
+      setSnackbar({ open: true, message: msg, severity: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -87,10 +92,16 @@ export default function UsuarioList({ onEdit, refreshToggle }: Props) {
         setSnackbar({ open: true, message: 'Usuario activado', severity: 'success' });
       }
       fetchUsuarios();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al cambiar estado del usuario', severity: 'error' });
+    } catch (err) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+        'Error al cambiar estado del usuario';
+      setSnackbar({ open: true, message: msg, severity: 'error' });
     }
   };
+
+  const activeAdmins = usuarios.filter((u) => (u.rolNombre || rolesMap[u.rolId]) === 'ADMIN' && u.activo).length;
+  const isSoleAdminSelf = (u: Usuario) => user?.id === u.id && user?.rolNombre === 'ADMIN' && activeAdmins <= 1;
 
   if (loading) return <Loading message="Cargando usuarios..." />;
 
@@ -130,19 +141,51 @@ export default function UsuarioList({ onEdit, refreshToggle }: Props) {
                     />
                   </TableCell>
                   <TableCell align="center">
-                    <IconButton size="small" color="primary" onClick={() => onEdit(u)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color={u.activo ? 'warning' : 'success'}
-                      onClick={() => handleToggleActive(u)}
+                    <Tooltip title="Editar">
+                      <span>
+                        <IconButton size="small" color="primary" onClick={() => onEdit(u)}>
+                          <EditIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip
+                      title={
+                        isSoleAdminSelf(u)
+                          ? 'No puedes bloquear tu propio usuario: eres el único administrador activo'
+                          : u.activo
+                            ? 'Bloquear'
+                            : 'Activar'
+                      }
                     >
-                      {u.activo ? <BlockIcon /> : <CheckCircleIcon />}
-                    </IconButton>
-                    <IconButton size="small" color="error" onClick={() => setDeleteTarget(u)}>
-                      <DeleteIcon />
-                    </IconButton>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color={u.activo ? 'warning' : 'success'}
+                          onClick={() => handleToggleActive(u)}
+                          disabled={isSoleAdminSelf(u)}
+                        >
+                          {u.activo ? <BlockIcon /> : <CheckCircleIcon />}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip
+                      title={
+                        isSoleAdminSelf(u)
+                          ? 'No puedes eliminar tu propio usuario: eres el único administrador activo'
+                          : 'Eliminar'
+                      }
+                    >
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => setDeleteTarget(u)}
+                          disabled={isSoleAdminSelf(u)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))

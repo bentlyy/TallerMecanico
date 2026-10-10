@@ -56,6 +56,9 @@ export type EstadoReparacion = 'EN_REVISION' | 'EN_REPARACION' | 'TERMINADO' | '
 export interface Reparacion {
   id: number;
   descripcion: string;
+  problemaReportado?: string | null;
+  diagnostico?: string | null;
+  trabajosRealizados?: string | null;
   fechaEntrada: string;
   fechaSalida?: string | null;
   estado: EstadoReparacion;

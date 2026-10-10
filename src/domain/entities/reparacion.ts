@@ -11,7 +11,10 @@ export class Reparacion {
     public costoManoObra: number,
     public vehiculoId: number,
     public mecanicoId: number | null,
-    public recepcionistaId: number
+    public recepcionistaId: number,
+    public problemaReportado: string | null = null,
+    public diagnostico: string | null = null,
+    public trabajosRealizados: string | null = null,
   ) {}
 }
 

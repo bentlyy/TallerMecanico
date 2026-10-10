@@ -37,14 +37,19 @@ export class UsuarioController {
 
   update = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
-    const usuarioActualizado = await this.usuarioService.updateUsuario(id, req.body);
+    const usuarioActualizado = await this.usuarioService.updateUsuario(
+      id,
+      req.body,
+      req.usuario!.id,
+      req.usuario!.empresaId,
+    );
     if (!usuarioActualizado) throw new NotFoundError('Usuario');
     res.json(usuarioActualizado);
   });
 
   delete = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
-    await this.usuarioService.deleteUsuario(id);
+    await this.usuarioService.deleteUsuario(id, req.usuario!.id, req.usuario!.empresaId);
     res.sendStatus(204);
   });
 
@@ -57,7 +62,7 @@ export class UsuarioController {
 
   deactivate = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
-    const usuario = await this.usuarioService.deactivateUsuario(id);
+    const usuario = await this.usuarioService.deactivateUsuario(id, req.usuario!.id, req.usuario!.empresaId);
     if (!usuario) throw new NotFoundError('Usuario');
     res.json(usuario);
   });

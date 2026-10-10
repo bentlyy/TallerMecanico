@@ -13,6 +13,7 @@ import {
 import { createUsuario, updateUsuario } from '../../api/usuarioApi';
 import { getRoles } from '../../api/rolApi';
 import { Usuario, Rol } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Props {
   open: boolean;
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function UsuarioForm({ open, onClose, onSave, initialData }: Props) {
+  const { user } = useAuth();
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -90,6 +92,10 @@ export default function UsuarioForm({ open, onClose, onSave, initialData }: Prop
     }
   };
 
+  const rolNombre = roles.find((r) => r.id === rolId)?.nombre;
+  const isSelf = !!initialData && user?.id === initialData.id;
+  const selfDemotion = isSelf && !!rolNombre && rolNombre !== 'ADMIN';
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{initialData ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
@@ -139,7 +145,12 @@ export default function UsuarioForm({ open, onClose, onSave, initialData }: Prop
             required
             margin="normal"
             error={!!errors.rolId}
-            helperText={errors.rolId}
+            helperText={
+              errors.rolId ||
+              (selfDemotion
+                ? 'Atención: si te quitás el rol de administrador y sos el único admin activo, perderás el acceso a la gestión de usuarios.'
+                : 'Solo los administradores pueden gestionar usuarios y roles.')
+            }
           >
             <MenuItem value="">-- Seleccione --</MenuItem>
             {roles.map((r) => (

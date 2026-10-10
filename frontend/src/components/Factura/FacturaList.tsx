@@ -135,6 +135,21 @@ export default function FacturaList({ refreshToggle }: Props) {
                               <Typography variant="body2">
                                 <strong>Descripción:</strong> {factura.reparacion.descripcion}
                               </Typography>
+                              {factura.reparacion.problemaReportado && (
+                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                  <strong>Problema reportado:</strong> {factura.reparacion.problemaReportado}
+                                </Typography>
+                              )}
+                              {factura.reparacion.diagnostico && (
+                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                  <strong>Diagnóstico:</strong> {factura.reparacion.diagnostico}
+                                </Typography>
+                              )}
+                              {factura.reparacion.trabajosRealizados && (
+                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                  <strong>Trabajos realizados:</strong> {factura.reparacion.trabajosRealizados}
+                                </Typography>
+                              )}
                               <Typography variant="body2" sx={{ mt: 0.5 }}>
                                 <strong>Estado:</strong>{' '}
                                 <Chip

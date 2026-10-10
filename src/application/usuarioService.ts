@@ -2,6 +2,7 @@ import { UsuarioRepository } from '../domain/repositories/usuarioRepository';
 import { Usuario, CreateUsuario, UpdateUsuario } from '../domain/entities/usuario';
 import { RolService } from './rolService';
 import { PaginatedResult } from '../domain/types/pagination';
+import { ConflictError } from '../infrastructure/http/errors';
 
 export class UsuarioService {
   constructor(
@@ -38,17 +39,30 @@ export class UsuarioService {
     return this.usuarioRepository.create(data);
   }
 
-  async updateUsuario(id: number, data: UpdateUsuario): Promise<Usuario | null> {
+  async updateUsuario(
+    id: number,
+    data: UpdateUsuario,
+    requesterId?: number,
+    empresaId?: number,
+  ): Promise<Usuario | null> {
     if (data.rolId) {
       const rol = await this.rolService.getRolById(data.rolId);
       if (!rol) {
         throw new Error('El rol especificado no existe');
       }
     }
+    if (requesterId && empresaId && id === requesterId) {
+      const adminRol = await this.rolService.getRolByNombre('ADMIN');
+      const removingAdminAccess = data.activo === false || (data.rolId !== undefined && data.rolId !== adminRol?.id);
+      if (removingAdminAccess) {
+        await this.assertNotLastAdmin(id, empresaId, requesterId);
+      }
+    }
     return this.usuarioRepository.update(id, data);
   }
 
-  async deleteUsuario(id: number): Promise<void> {
+  async deleteUsuario(id: number, requesterId: number, empresaId: number): Promise<void> {
+    await this.assertNotLastAdmin(id, empresaId, requesterId);
     return this.usuarioRepository.delete(id);
   }
 
@@ -56,7 +70,22 @@ export class UsuarioService {
     return this.usuarioRepository.activate(id);
   }
 
-  async deactivateUsuario(id: number): Promise<Usuario | null> {
+  async deactivateUsuario(id: number, requesterId: number, empresaId: number): Promise<Usuario | null> {
+    await this.assertNotLastAdmin(id, empresaId, requesterId);
     return this.usuarioRepository.deactivate(id);
+  }
+
+  private async assertNotLastAdmin(targetId: number, empresaId: number, requesterId: number): Promise<void> {
+    if (targetId !== requesterId) return;
+    const target = await this.usuarioRepository.getById(targetId);
+    if (!target || !target.activo) return;
+    const adminRol = await this.rolService.getRolByNombre('ADMIN');
+    if (!adminRol || target.rolId !== adminRol.id) return;
+    const admins = await this.usuarioRepository.countActiveByRol(empresaId, adminRol.id);
+    if (admins <= 1) {
+      throw new ConflictError(
+        'No puedes bloquear ni eliminar tu propio usuario porque eres el único administrador activo',
+      );
+    }
   }
 }

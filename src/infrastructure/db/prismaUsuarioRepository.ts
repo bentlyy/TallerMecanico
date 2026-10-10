@@ -43,6 +43,10 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     return usuario ? mapUsuario(usuario) : null;
   }
 
+  async countActiveByRol(empresaId: number, rolId: number): Promise<number> {
+    return this.prisma.usuario.count({ where: { empresaId, rolId, activo: true } });
+  }
+
   async create(data: CreateUsuario): Promise<Usuario> {
     const passwordHash = await bcrypt.hash(data.passwordHash, 10);
     const usuario = await this.prisma.usuario.create({

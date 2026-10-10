@@ -157,6 +157,7 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
               <TableCell width={40} />
               <TableCell>ID</TableCell>
               <TableCell>Vehículo</TableCell>
+              <TableCell>Descripción</TableCell>
               <TableCell>Estado</TableCell>
               <TableCell>Mecánico</TableCell>
               <TableCell>Fecha Entrada</TableCell>
@@ -166,7 +167,7 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
           <TableBody>
             {reparaciones.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={8} align="center">
                   <Typography variant="body2" color="text.secondary" sx={{ py: 4 }}>
                     No se encontraron reparaciones
                   </Typography>
@@ -190,6 +191,17 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
                       {r.vehiculo
                         ? `${r.vehiculo.marca} ${r.vehiculo.modelo} (${r.vehiculo.patente})`
                         : `ID: ${r.vehiculoId}`}
+                    </TableCell>
+                    <TableCell sx={{ maxWidth: 280 }}>
+                      <Tooltip title={r.descripcion || ''} arrow placement="top">
+                        <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 280 }}>
+                          {r.descripcion
+                            ? r.descripcion.length > 60
+                              ? `${r.descripcion.slice(0, 60)}…`
+                              : r.descripcion
+                            : '—'}
+                        </Typography>
+                      </Tooltip>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -222,70 +234,82 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell colSpan={7} sx={{ py: 0 }}>
+                    <TableCell colSpan={8} sx={{ py: 0 }}>
                       <Collapse in={expandedRow === r.id} timeout="auto" unmountOnExit>
-                        <Box
-                          sx={{
-                            py: 2,
-                            px: 2,
-                            display: 'flex',
-                            gap: 2,
-                            alignItems: 'center',
-                            flexWrap: 'wrap',
-                            bgcolor: 'grey.50',
-                          }}
-                        >
-                          <TextField
-                            select
-                            size="small"
-                            label="Cambiar estado"
-                            value=""
-                            onChange={(e) => handleChangeEstado(r.id, e.target.value)}
-                            sx={{ width: 200 }}
-                          >
-                            <MenuItem value="EN_REVISION">En Revisión</MenuItem>
-                            <MenuItem value="EN_REPARACION">En Reparación</MenuItem>
-                            <MenuItem value="TERMINADO">Terminado</MenuItem>
-                            <MenuItem value="ENTREGADO">Entregado</MenuItem>
-                          </TextField>
+                        <Box sx={{ py: 2, px: 2, bgcolor: 'grey.50' }}>
+                          <Stack spacing={0.5} sx={{ mb: 2 }}>
+                            <Typography variant="body2">
+                              <strong>Resumen:</strong> {r.descripcion}
+                            </Typography>
+                            {r.problemaReportado && (
+                              <Typography variant="body2">
+                                <strong>Problema reportado:</strong> {r.problemaReportado}
+                              </Typography>
+                            )}
+                            {r.diagnostico && (
+                              <Typography variant="body2">
+                                <strong>Diagnóstico:</strong> {r.diagnostico}
+                              </Typography>
+                            )}
+                            {r.trabajosRealizados && (
+                              <Typography variant="body2">
+                                <strong>Trabajos realizados:</strong> {r.trabajosRealizados}
+                              </Typography>
+                            )}
+                          </Stack>
+                          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <TextField
+                              select
+                              size="small"
+                              label="Cambiar estado"
+                              value=""
+                              onChange={(e) => handleChangeEstado(r.id, e.target.value)}
+                              sx={{ width: 200 }}
+                            >
+                              <MenuItem value="EN_REVISION">En Revisión</MenuItem>
+                              <MenuItem value="EN_REPARACION">En Reparación</MenuItem>
+                              <MenuItem value="TERMINADO">Terminado</MenuItem>
+                              <MenuItem value="ENTREGADO">Entregado</MenuItem>
+                            </TextField>
 
-                          <TextField
-                            select
-                            size="small"
-                            label="Asignar mecánico"
-                            value={assignValues[r.id] ?? ''}
-                            onChange={(e) => {
-                              const val = e.target.value === '' ? '' : Number(e.target.value);
-                              setAssignValues((prev) => ({ ...prev, [r.id]: val }));
-                            }}
-                            sx={{ width: 220 }}
-                          >
-                            <MenuItem value="">-- Ninguno --</MenuItem>
-                            {mecanicos.map((m) => (
-                              <MenuItem key={m.id} value={m.id}>
-                                {m.usuario?.nombre ?? `Mecánico ${m.id}`}
-                              </MenuItem>
-                            ))}
-                          </TextField>
+                            <TextField
+                              select
+                              size="small"
+                              label="Asignar mecánico"
+                              value={assignValues[r.id] ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? '' : Number(e.target.value);
+                                setAssignValues((prev) => ({ ...prev, [r.id]: val }));
+                              }}
+                              sx={{ width: 220 }}
+                            >
+                              <MenuItem value="">-- Ninguno --</MenuItem>
+                              {mecanicos.map((m) => (
+                                <MenuItem key={m.id} value={m.id}>
+                                  {m.usuario?.nombre ?? `Mecánico ${m.id}`}
+                                </MenuItem>
+                              ))}
+                            </TextField>
 
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleAssign(r.id)}
-                            startIcon={<PlayArrowIcon />}
-                          >
-                            Asignar
-                          </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleAssign(r.id)}
+                              startIcon={<PlayArrowIcon />}
+                            >
+                              Asignar
+                            </Button>
 
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="success"
-                            onClick={() => handleChangeEstado(r.id, 'TERMINADO')}
-                            startIcon={<DoneAllIcon />}
-                          >
-                            Marc. terminado
-                          </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="success"
+                              onClick={() => handleChangeEstado(r.id, 'TERMINADO')}
+                              startIcon={<DoneAllIcon />}
+                            >
+                              Marc. terminado
+                            </Button>
+                          </Box>
                         </Box>
                       </Collapse>
                     </TableCell>
