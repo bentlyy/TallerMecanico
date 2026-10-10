@@ -3,7 +3,7 @@ import { ClienteRepository } from '../../domain/repositories/clienteRepository';
 import { Cliente, CreateCliente, UpdateCliente } from '../../domain/entities/cliente';
 
 function mapCliente(c: any): Cliente {
-  return new Cliente(c.id, c.nombre, c.email, c.telefono, c.direccion, c.empresaId);
+  return new Cliente(c.id, c.nombre, c.email, c.telefono, c.direccion, c.empresaId, c.rut);
 }
 
 export class PrismaClienteRepository implements ClienteRepository {

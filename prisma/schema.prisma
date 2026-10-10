@@ -31,6 +31,7 @@ model Empresa {
 model Cliente {
   id        Int      @id @default(autoincrement())
   nombre    String
+  rut       String?
   email     String?
   telefono  String?  @map("telefono")
   direccion String?  @map("direccion")

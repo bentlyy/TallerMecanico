@@ -72,7 +72,9 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
     }
   };
 
-  const filtered = clientes.filter((c) => c.nombre.toLowerCase().includes(search.toLowerCase()));
+  const filtered = clientes.filter((c) =>
+    `${c.nombre} ${c.rut ?? ''} ${c.telefono ?? ''}`.toLowerCase().includes(search.toLowerCase()),
+  );
 
   if (loading) return <Loading message="Cargando clientes..." />;
 
@@ -101,6 +103,7 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
           <TableHead>
             <TableRow>
               <TableCell>Nombre</TableCell>
+              <TableCell>RUT</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Teléfono</TableCell>
               <TableCell>Dirección</TableCell>
@@ -110,7 +113,7 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={6} align="center">
                   <Typography variant="body2" color="text.secondary" sx={{ py: 4 }}>
                     No se encontraron clientes
                   </Typography>
@@ -120,6 +123,7 @@ export const ClienteList = ({ onEdit, refreshToggle }: Props) => {
               filtered.map((cliente) => (
                 <TableRow key={cliente.id} hover sx={{ transition: 'background-color 0.2s' }}>
                   <TableCell>{cliente.nombre}</TableCell>
+                  <TableCell>{cliente.rut || '-'}</TableCell>
                   <TableCell>{cliente.email || '-'}</TableCell>
                   <TableCell>{cliente.telefono || '-'}</TableCell>
                   <TableCell>{cliente.direccion || '-'}</TableCell>

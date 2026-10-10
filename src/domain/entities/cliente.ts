@@ -7,8 +7,9 @@ export class Cliente {
     public telefono: string | null,
     public direccion: string | null,
     public empresaId: number,
+    public rut: string | null = null,
   ) {}
 }
 
-export type CreateCliente = Omit<Cliente, 'id'>;
+export type CreateCliente = Omit<Cliente, 'id' | 'rut'> & { rut?: string | null };
 export type UpdateCliente = Partial<CreateCliente>;

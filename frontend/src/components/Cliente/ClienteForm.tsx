@@ -23,6 +23,7 @@ interface Props {
 
 export const ClienteForm = ({ open, onClose, onSave, initialData }: Props) => {
   const [nombre, setNombre] = useState('');
+  const [rut, setRut] = useState('');
   const [email, setEmail] = useState('');
   const [telefono, setTelefono] = useState('');
   const [direccion, setDireccion] = useState('');
@@ -33,11 +34,13 @@ export const ClienteForm = ({ open, onClose, onSave, initialData }: Props) => {
     setErrorMsg('');
     if (initialData) {
       setNombre(initialData.nombre || '');
+      setRut(initialData.rut || '');
       setEmail(initialData.email || '');
       setTelefono(initialData.telefono || '');
       setDireccion(initialData.direccion || '');
     } else {
       setNombre('');
+      setRut('');
       setEmail('');
       setTelefono('');
       setDireccion('');
@@ -50,6 +53,7 @@ export const ClienteForm = ({ open, onClose, onSave, initialData }: Props) => {
 
     const payload = {
       nombre: nombre.trim(),
+      rut: rut.trim() || undefined,
       email: email.trim() || undefined,
       telefono: telefono.trim() || undefined,
       direccion: direccion.trim() || undefined,
@@ -90,6 +94,14 @@ export const ClienteForm = ({ open, onClose, onSave, initialData }: Props) => {
             required
             margin="normal"
             autoFocus
+          />
+          <TextField
+            label="RUT"
+            value={rut}
+            onChange={(e) => setRut(e.target.value)}
+            fullWidth
+            margin="normal"
+            placeholder="Ej: 12.345.678-9"
           />
           <TextField
             label="Email"

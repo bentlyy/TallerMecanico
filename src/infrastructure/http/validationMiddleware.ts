@@ -48,13 +48,15 @@ export const schemas = {
   cliente: {
     create: Joi.object({
       nombre: Joi.string().trim().min(1).max(100).required(),
-      email: Joi.string().email().max(100).required(),
+      rut: Joi.string().trim().max(20).allow('', null).optional(),
+      email: Joi.string().email().max(100).allow(null).optional(),
       telefono: Joi.string().trim().max(20).allow('', null).optional(),
       direccion: Joi.string().trim().max(200).allow('', null).optional(),
     }),
     update: Joi.object({
       nombre: Joi.string().trim().min(1).max(100).optional(),
-      email: Joi.string().email().max(100).optional(),
+      rut: Joi.string().trim().max(20).allow('', null).optional(),
+      email: Joi.string().email().max(100).allow(null).optional(),
       telefono: Joi.string().trim().max(20).allow('', null).optional(),
       direccion: Joi.string().trim().max(200).allow('', null).optional(),
     }),

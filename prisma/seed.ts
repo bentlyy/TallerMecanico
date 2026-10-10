@@ -73,9 +73,10 @@ async function main() {
 
   const cliente = await prisma.cliente.upsert({
     where: { email_empresaId: { email: 'juan@email.com', empresaId: empresa.id } },
-    update: { nombre: 'Juan Pérez', telefono: '555-1234', direccion: 'Av. Siempre Viva 123' },
+    update: { nombre: 'Juan Pérez', rut: '12.345.678-9', telefono: '555-1234', direccion: 'Av. Siempre Viva 123' },
     create: {
       nombre: 'Juan Pérez',
+      rut: '12.345.678-9',
       email: 'juan@email.com',
       telefono: '555-1234',
       direccion: 'Av. Siempre Viva 123',
@@ -85,9 +86,10 @@ async function main() {
 
   await prisma.cliente.upsert({
     where: { email_empresaId: { email: 'maria@email.com', empresaId: empresa.id } },
-    update: { nombre: 'María García', telefono: '555-5678', direccion: 'Calle Falsa 456' },
+    update: { nombre: 'María García', rut: '9.876.543-2', telefono: '555-5678', direccion: 'Calle Falsa 456' },
     create: {
       nombre: 'María García',
+      rut: '9.876.543-2',
       email: 'maria@email.com',
       telefono: '555-5678',
       direccion: 'Calle Falsa 456',
