@@ -33,6 +33,10 @@ export class PrismaReparacionRepository implements ReparacionRepository {
     return rep ? this.toEntity(rep) : null;
   }
 
+  async countFacturas(reparacionId: number): Promise<number> {
+    return this.prisma.factura.count({ where: { reparacionId } });
+  }
+
   async create(data: CreateReparacion): Promise<Reparacion> {
     const rep = await this.prisma.reparacion.create({
       data: { ...data, estado: EstadoReparacion.EN_REVISION, fechaEntrada: new Date() },

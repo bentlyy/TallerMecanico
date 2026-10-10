@@ -4,6 +4,7 @@ export interface ReparacionRepository {
   getAll(skip?: number, limit?: number): Promise<Reparacion[]>;
   count(): Promise<number>;
   getById(id: number): Promise<Reparacion | null>;
+  countFacturas(reparacionId: number): Promise<number>;
   create(data: CreateReparacion): Promise<Reparacion>;
   update(id: number, data: UpdateReparacion): Promise<Reparacion | null>;
   delete(id: number): Promise<void>;

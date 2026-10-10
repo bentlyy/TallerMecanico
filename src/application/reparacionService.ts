@@ -1,6 +1,7 @@
 import { ReparacionRepository } from '../domain/repositories/reparacionRepository';
-import { Reparacion, CreateReparacion, UpdateReparacion } from '../domain/entities/reparacion';
+import { Reparacion, CreateReparacion, UpdateReparacion, EstadoReparacion } from '../domain/entities/reparacion';
 import { PaginatedResult } from '../domain/types/pagination';
+import { ConflictError, NotFoundError } from '../infrastructure/http/errors';
 
 export class ReparacionService {
   constructor(private readonly reparacionRepository: ReparacionRepository) {}
@@ -27,6 +28,19 @@ export class ReparacionService {
   }
 
   async deleteReparacion(id: number): Promise<void> {
+    const reparacion = await this.reparacionRepository.getById(id);
+    if (!reparacion) throw new NotFoundError('Reparación');
+    if (reparacion.estado === EstadoReparacion.TERMINADO || reparacion.estado === EstadoReparacion.ENTREGADO) {
+      throw new ConflictError(
+        reparacion.estado === EstadoReparacion.TERMINADO
+          ? 'No se puede eliminar una reparación ya terminada'
+          : 'No se puede eliminar una reparación ya entregada',
+      );
+    }
+    const facturas = await this.reparacionRepository.countFacturas(id);
+    if (facturas > 0) {
+      throw new ConflictError('No se puede eliminar: la reparación tiene facturas asociadas');
+    }
     return this.reparacionRepository.delete(id);
   }
 

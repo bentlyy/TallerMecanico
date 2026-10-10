@@ -92,8 +92,10 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
       setSnackbar({ open: true, message: 'Reparación eliminada con éxito', severity: 'success' });
       setDeleteTarget(null);
       fetchData();
-    } catch {
-      setSnackbar({ open: true, message: 'Error al eliminar reparación', severity: 'error' });
+    } catch (err) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Error al eliminar reparación';
+      setSnackbar({ open: true, message: msg, severity: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -288,7 +290,7 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
       <ConfirmDialog
         open={!!deleteTarget}
         title="Eliminar reparación"
-        message={`¿Está seguro de eliminar la reparación #${deleteTarget?.id}?`}
+        message={`Se eliminará permanentemente la reparación #${deleteTarget?.id}. Esta acción no se puede deshacer y no se permite si la reparación tiene una factura asociada o ya está terminada/entregada. ¿Desea continuar?`}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
         loading={deleting}

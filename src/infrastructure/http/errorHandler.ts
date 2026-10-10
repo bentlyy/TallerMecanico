@@ -26,6 +26,10 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     res.status(503).json({ error: 'Base de datos temporalmente no disponible' });
     return;
   }
+  if (prismaErr.code === 'P2003') {
+    res.status(409).json({ error: 'No se puede eliminar: el registro tiene dependencias relacionadas' });
+    return;
+  }
 
   const httpErr = err as { status?: number; statusCode?: number; type?: string };
   const httpStatus = httpErr.statusCode ?? httpErr.status;
