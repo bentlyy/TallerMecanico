@@ -190,27 +190,34 @@ async function main() {
     }),
   ]);
 
-  const reparacion = await prisma.reparacion.create({
-    data: {
-      descripcion: 'Cambio de aceite y filtro + revisión general',
-      vehiculoId: vehiculos[0].id,
-      recepcionistaId: adminUser.id,
-      mecanicoId: (await prisma.mecanico.findFirst())!.id,
-      estado: EstadoReparacion.TERMINADO,
-      costoManoObra: 8000,
-    },
+  const demoDescripcion = 'Cambio de aceite y filtro + revisión general';
+  const demoReparacion = await prisma.reparacion.findFirst({
+    where: { vehiculoId: vehiculos[0].id, descripcion: demoDescripcion },
   });
 
-  await prisma.detalleReparacion.create({
-    data: { reparacionId: reparacion.id, piezaId: piezas[0].id, cantidad: 1, precioUnitario: 2500 },
-  });
-  await prisma.detalleReparacion.create({
-    data: { reparacionId: reparacion.id, piezaId: piezas[3].id, cantidad: 1, precioUnitario: 4500 },
-  });
+  if (!demoReparacion) {
+    const reparacion = await prisma.reparacion.create({
+      data: {
+        descripcion: demoDescripcion,
+        vehiculoId: vehiculos[0].id,
+        recepcionistaId: adminUser.id,
+        mecanicoId: (await prisma.mecanico.findFirst())!.id,
+        estado: EstadoReparacion.TERMINADO,
+        costoManoObra: 8000,
+      },
+    });
 
-  await prisma.factura.create({
-    data: { total: 15000, clienteId: cliente.id, reparacionId: reparacion.id },
-  });
+    await prisma.detalleReparacion.create({
+      data: { reparacionId: reparacion.id, piezaId: piezas[0].id, cantidad: 1, precioUnitario: 2500 },
+    });
+    await prisma.detalleReparacion.create({
+      data: { reparacionId: reparacion.id, piezaId: piezas[3].id, cantidad: 1, precioUnitario: 4500 },
+    });
+
+    await prisma.factura.create({
+      data: { total: 15000, clienteId: cliente.id, reparacionId: reparacion.id },
+    });
+  }
 
   console.log('Seed completado exitosamente con datos realistas');
 }
