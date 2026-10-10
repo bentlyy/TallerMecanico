@@ -11,6 +11,8 @@ import { PrismaPiezaRepository } from '../db/prismaPiezaRepository';
 import { PrismaReparacionRepository } from '../db/prismaReparacionRepository';
 import { PrismaDetalleReparacionRepository } from '../db/prismaDetalleReparacionRepository';
 import { PrismaFacturaRepository } from '../db/prismaFacturaRepository';
+import { PrismaServicioRepository } from '../db/prismaServicioRepository';
+import { PrismaReparacionServicioRepository } from '../db/prismaReparacionServicioRepository';
 
 import { ClienteService } from '../../application/clienteService';
 import { VehiculoService } from '../../application/vehiculoService';
@@ -21,6 +23,7 @@ import { PiezaService } from '../../application/piezaService';
 import { ReparacionService } from '../../application/reparacionService';
 import { DetalleReparacionService } from '../../application/detalleReparacionService';
 import { FacturaService } from '../../application/facturaService';
+import { ServicioService } from '../../application/servicioService';
 
 import { ClienteController } from '../../presentation/controllers/clienteController';
 import { VehiculoController } from '../../presentation/controllers/vehiculoController';
@@ -31,6 +34,7 @@ import { PiezaController } from '../../presentation/controllers/piezaController'
 import { ReparacionController } from '../../presentation/controllers/reparacionController';
 import { DetalleReparacionController } from '../../presentation/controllers/detalleReparacionController';
 import { FacturaController } from '../../presentation/controllers/facturaController';
+import { ServicioController } from '../../presentation/controllers/servicioController';
 
 const clienteRepository = new PrismaClienteRepository(prisma);
 const vehiculoRepository = new PrismaVehiculoRepository(prisma);
@@ -41,6 +45,8 @@ const piezaRepository = new PrismaPiezaRepository(prisma);
 const reparacionRepository = new PrismaReparacionRepository(prisma);
 const detalleReparacionRepository = new PrismaDetalleReparacionRepository(prisma);
 const facturaRepository = new PrismaFacturaRepository(prisma);
+const servicioRepository = new PrismaServicioRepository(prisma);
+const reparacionServicioRepository = new PrismaReparacionServicioRepository(prisma);
 
 const clienteService = new ClienteService(clienteRepository);
 const vehiculoService = new VehiculoService(vehiculoRepository, clienteRepository);
@@ -48,9 +54,10 @@ const rolService = new RolService(rolRepository);
 const usuarioService = new UsuarioService(usuarioRepository, rolService);
 const mecanicoService = new MecanicoService(mecanicoRepository, usuarioService);
 const piezaService = new PiezaService(piezaRepository);
-const reparacionService = new ReparacionService(reparacionRepository);
+const reparacionService = new ReparacionService(reparacionRepository, reparacionServicioRepository, servicioRepository);
 const detalleReparacionService = new DetalleReparacionService(detalleReparacionRepository);
 const facturaService = new FacturaService(facturaRepository);
+const servicioService = new ServicioService(servicioRepository);
 
 const clienteController = new ClienteController(clienteService);
 const vehiculoController = new VehiculoController(vehiculoService);
@@ -61,6 +68,7 @@ const piezaController = new PiezaController(piezaService);
 const reparacionController = new ReparacionController(reparacionService);
 const detalleReparacionController = new DetalleReparacionController(detalleReparacionService);
 const facturaController = new FacturaController(facturaService);
+const servicioController = new ServicioController(servicioService);
 
 export async function loginService(
   email: string,
@@ -146,4 +154,8 @@ export {
   facturaRepository,
   facturaService,
   facturaController,
+  servicioRepository,
+  servicioService,
+  servicioController,
+  reparacionServicioRepository,
 };

@@ -11,7 +11,7 @@ export default function ReparacionesPage() {
   const [editingReparacion, setEditingReparacion] = useState<Reparacion | null>(null);
   const [refreshToggle, setRefreshToggle] = useState(false);
   const [detalleOpen, setDetalleOpen] = useState(false);
-  const [detalleReparacionId, setDetalleReparacionId] = useState<number | null>(null);
+  const [detalleReparacion, setDetalleReparacion] = useState<Reparacion | null>(null);
   const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
 
   const triggerRefresh = useCallback(() => setRefreshToggle((p) => !p), []);
@@ -27,7 +27,7 @@ export default function ReparacionesPage() {
   };
 
   const handleViewDetalles = (reparacion: Reparacion) => {
-    setDetalleReparacionId(reparacion.id);
+    setDetalleReparacion(reparacion);
     setDetalleOpen(true);
   };
 
@@ -59,11 +59,12 @@ export default function ReparacionesPage() {
         onSave={handleSave}
         initialData={editingReparacion}
       />
-      {detalleReparacionId && (
+      {detalleReparacion && (
         <DetalleReparacionDialog
           open={detalleOpen}
           onClose={() => setDetalleOpen(false)}
-          reparacionId={detalleReparacionId}
+          reparacionId={detalleReparacion.id}
+          costoManoObra={detalleReparacion.costoManoObra}
         />
       )}
     </Box>

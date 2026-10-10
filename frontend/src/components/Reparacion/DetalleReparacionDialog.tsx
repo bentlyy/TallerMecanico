@@ -25,9 +25,10 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { getDetalles, addDetalle, removeDetalle } from '../../api/detalleReparacionApi';
+import { getServiciosReparacion } from '../../api/reparacionApi';
 import { getPiezas } from '../../api/piezaApi';
 import { getErrorMessage } from '../../api/errorMessage';
-import { DetalleReparacion, Pieza } from '../../types';
+import { DetalleReparacion, Pieza, ReparacionServicio } from '../../types';
 import Loading from '../common/Loading';
 
 interface Props {
@@ -39,6 +40,7 @@ interface Props {
 
 const DetalleReparacionDialog = ({ open, onClose, reparacionId, costoManoObra = 0 }: Props) => {
   const [detalles, setDetalles] = useState<DetalleReparacion[]>([]);
+  const [servicios, setServicios] = useState<ReparacionServicio[]>([]);
   const [piezas, setPiezas] = useState<Pieza[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPiezaId, setSelectedPiezaId] = useState<number | ''>('');
@@ -68,10 +70,13 @@ const DetalleReparacionDialog = ({ open, onClose, reparacionId, costoManoObra = 
       getPiezas()
         .then((res) => setPiezas(res.data))
         .catch(() => setPiezas([]));
+      getServiciosReparacion(reparacionId)
+        .then((res) => setServicios(res.data))
+        .catch(() => setServicios([]));
       setSelectedPiezaId('');
       setCantidad(1);
     }
-  }, [open, fetchDetalles]);
+  }, [open, fetchDetalles, reparacionId]);
 
   const handleAdd = async () => {
     if (!selectedPiezaId) return;
@@ -108,7 +113,9 @@ const DetalleReparacionDialog = ({ open, onClose, reparacionId, costoManoObra = 
   };
 
   const totalPiezas = detalles.reduce((sum, d) => sum + d.cantidad * d.precioUnitario, 0);
-  const totalGeneral = totalPiezas + Number(costoManoObra);
+  const totalServicios = servicios.reduce((sum, s) => sum + s.cantidad * s.precioUnitario, 0);
+  const manoObraEfectiva = totalServicios > 0 ? totalServicios : Number(costoManoObra);
+  const totalGeneral = totalPiezas + manoObraEfectiva;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -118,6 +125,37 @@ const DetalleReparacionDialog = ({ open, onClose, reparacionId, costoManoObra = 
           <Loading message="Cargando detalles..." />
         ) : (
           <>
+            {servicios.length > 0 && (
+              <>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                  Servicios
+                </Typography>
+                <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1, mb: 3 }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Servicio</TableCell>
+                        <TableCell align="center">Cantidad</TableCell>
+                        <TableCell align="right">Precio Unit.</TableCell>
+                        <TableCell align="right">Subtotal</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {servicios.map((s) => (
+                        <TableRow key={s.id ?? s.servicioId}>
+                          <TableCell>{s.servicio?.nombre || `Servicio #${s.servicioId}`}</TableCell>
+                          <TableCell align="center">{s.cantidad}</TableCell>
+                          <TableCell align="right">${Number(s.precioUnitario).toFixed(2)}</TableCell>
+                          <TableCell align="right">${(s.cantidad * s.precioUnitario).toFixed(2)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <Divider sx={{ mb: 2 }} />
+              </>
+            )}
+
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end', mb: 3, flexWrap: 'wrap' }}>
               <TextField
                 select
@@ -202,7 +240,7 @@ const DetalleReparacionDialog = ({ open, onClose, reparacionId, costoManoObra = 
                 Total piezas: <strong>${totalPiezas.toFixed(2)}</strong>
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Mano de obra: <strong>${Number(costoManoObra).toFixed(2)}</strong>
+                Mano de obra: <strong>${manoObraEfectiva.toFixed(2)}</strong>
               </Typography>
               <Typography variant="h6" sx={{ mt: 1 }}>
                 Total general: <strong>${totalGeneral.toFixed(2)}</strong>

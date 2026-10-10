@@ -257,6 +257,36 @@ const ReparacionList = ({ onEdit, refreshToggle, onViewDetails }: Props) => {
                               </Typography>
                             )}
                           </Stack>
+                          {r.servicios && r.servicios.length > 0 && (
+                            <Box sx={{ mb: 2 }}>
+                              <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                                Servicios
+                              </Typography>
+                              <Table size="small" sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell>Servicio</TableCell>
+                                    <TableCell align="center">Cant.</TableCell>
+                                    <TableCell align="right">P. Unit.</TableCell>
+                                    <TableCell align="right">Subtotal</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {r.servicios.map((s) => (
+                                    <TableRow key={s.id ?? s.servicioId}>
+                                      <TableCell>{s.servicio?.nombre || `Servicio #${s.servicioId}`}</TableCell>
+                                      <TableCell align="center">{s.cantidad}</TableCell>
+                                      <TableCell align="right">${Number(s.precioUnitario).toFixed(2)}</TableCell>
+                                      <TableCell align="right">${(s.cantidad * s.precioUnitario).toFixed(2)}</TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                              <Typography variant="body2" align="right" sx={{ mt: 0.5 }}>
+                                <strong>Mano de obra:</strong> ${Number(r.costoManoObra).toFixed(2)}
+                              </Typography>
+                            </Box>
+                          )}
                           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                             <TextField
                               select

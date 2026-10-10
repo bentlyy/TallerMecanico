@@ -1,10 +1,17 @@
 import { ReparacionRepository } from '../domain/repositories/reparacionRepository';
+import { ReparacionServicioRepository } from '../domain/repositories/reparacionServicioRepository';
+import { ServicioRepository } from '../domain/repositories/servicioRepository';
 import { Reparacion, CreateReparacion, UpdateReparacion, EstadoReparacion } from '../domain/entities/reparacion';
+import { ReparacionServicio } from '../domain/entities/reparacionServicio';
 import { PaginatedResult } from '../domain/types/pagination';
 import { ConflictError, NotFoundError } from '../infrastructure/http/errors';
 
 export class ReparacionService {
-  constructor(private readonly reparacionRepository: ReparacionRepository) {}
+  constructor(
+    private readonly reparacionRepository: ReparacionRepository,
+    private readonly reparacionServicioRepository: ReparacionServicioRepository,
+    private readonly servicioRepository: ServicioRepository,
+  ) {}
 
   async getAllReparaciones(page = 1, limit = 20): Promise<PaginatedResult<Reparacion>> {
     const skip = (page - 1) * limit;
@@ -66,5 +73,53 @@ export class ReparacionService {
 
   async getReparacionesPorRecepcionista(usuarioId: number): Promise<Reparacion[]> {
     return this.reparacionRepository.getByRecepcionista(usuarioId);
+  }
+
+  async getServicios(reparacionId: number): Promise<ReparacionServicio[]> {
+    return this.reparacionServicioRepository.getByReparacion(reparacionId);
+  }
+
+  async addServicio(reparacionId: number, servicioId: number, cantidad: number): Promise<ReparacionServicio[]> {
+    const reparacion = await this.reparacionRepository.getById(reparacionId);
+    if (!reparacion) throw new NotFoundError('Reparación');
+    const servicio = await this.servicioRepository.getById(servicioId);
+    if (!servicio) throw new NotFoundError('Servicio');
+
+    const existing = await this.reparacionServicioRepository.getByReparacionAndServicio(reparacionId, servicioId);
+    if (existing) {
+      await this.reparacionServicioRepository.updateCantidad(
+        existing.id,
+        existing.cantidad + cantidad,
+        servicio.precioBase,
+      );
+    } else {
+      await this.reparacionServicioRepository.create({
+        reparacionId,
+        servicioId,
+        cantidad,
+        precioUnitario: servicio.precioBase,
+      });
+    }
+    await this.recalcularManoObra(reparacionId);
+    return this.reparacionServicioRepository.getByReparacion(reparacionId);
+  }
+
+  async setServicioCantidad(reparacionId: number, servicioId: number, cantidad: number): Promise<ReparacionServicio[]> {
+    const existing = await this.reparacionServicioRepository.getByReparacionAndServicio(reparacionId, servicioId);
+    if (!existing) throw new NotFoundError('Servicio de la reparación');
+    await this.reparacionServicioRepository.updateCantidad(existing.id, cantidad, existing.precioUnitario);
+    await this.recalcularManoObra(reparacionId);
+    return this.reparacionServicioRepository.getByReparacion(reparacionId);
+  }
+
+  async removeServicio(reparacionId: number, servicioId: number): Promise<ReparacionServicio[]> {
+    await this.reparacionServicioRepository.delete(reparacionId, servicioId);
+    await this.recalcularManoObra(reparacionId);
+    return this.reparacionServicioRepository.getByReparacion(reparacionId);
+  }
+
+  private async recalcularManoObra(reparacionId: number): Promise<void> {
+    const total = await this.reparacionServicioRepository.sumByReparacion(reparacionId);
+    await this.reparacionRepository.update(reparacionId, { costoManoObra: total });
   }
 }

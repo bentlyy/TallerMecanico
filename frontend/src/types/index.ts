@@ -52,6 +52,27 @@ export interface Pieza {
   empresaId: number;
 }
 
+export interface Servicio {
+  id: number;
+  nombre: string;
+  descripcion?: string | null;
+  problemaReportado?: string | null;
+  diagnostico?: string | null;
+  trabajosRealizados?: string | null;
+  precioBase: number;
+  activo: boolean;
+  empresaId?: number;
+}
+
+export interface ReparacionServicio {
+  id: number;
+  reparacionId: number;
+  servicioId: number;
+  cantidad: number;
+  precioUnitario: number;
+  servicio?: Servicio;
+}
+
 export type EstadoReparacion = 'EN_REVISION' | 'EN_REPARACION' | 'TERMINADO' | 'ENTREGADO';
 
 export interface Reparacion {
@@ -69,6 +90,7 @@ export interface Reparacion {
   recepcionistaId: number;
   vehiculo?: Vehiculo;
   mecanico?: Mecanico;
+  servicios?: ReparacionServicio[];
 }
 
 export interface DetalleReparacion {

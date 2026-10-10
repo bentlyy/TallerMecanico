@@ -121,6 +121,37 @@ export const schemas = {
     }),
   },
 
+  servicio: {
+    create: Joi.object({
+      nombre: Joi.string().trim().min(1).max(100).required(),
+      descripcion: Joi.string().trim().max(1000).allow('', null).optional(),
+      problemaReportado: Joi.string().trim().max(2000).allow('', null).optional(),
+      diagnostico: Joi.string().trim().max(2000).allow('', null).optional(),
+      trabajosRealizados: Joi.string().trim().max(2000).allow('', null).optional(),
+      precioBase: Joi.number().min(0).optional().default(0),
+      activo: Joi.boolean().optional().default(true),
+    }),
+    update: Joi.object({
+      nombre: Joi.string().trim().min(1).max(100).optional(),
+      descripcion: Joi.string().trim().max(1000).allow('', null).optional(),
+      problemaReportado: Joi.string().trim().max(2000).allow('', null).optional(),
+      diagnostico: Joi.string().trim().max(2000).allow('', null).optional(),
+      trabajosRealizados: Joi.string().trim().max(2000).allow('', null).optional(),
+      precioBase: Joi.number().min(0).optional(),
+      activo: Joi.boolean().optional(),
+    }),
+  },
+
+  reparacionServicio: {
+    create: Joi.object({
+      servicioId: Joi.number().integer().positive().required(),
+      cantidad: Joi.number().integer().min(1).optional().default(1),
+    }),
+    update: Joi.object({
+      cantidad: Joi.number().integer().min(1).required(),
+    }),
+  },
+
   usuario: {
     create: Joi.object({
       email: Joi.string().email().max(100).required(),

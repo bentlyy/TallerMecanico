@@ -6,7 +6,7 @@ export class PrismaReparacionRepository implements ReparacionRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   private toEntity(model: any): Reparacion {
-    return new Reparacion(
+    const rep = new Reparacion(
       model.id,
       model.descripcion,
       model.fechaEntrada,
@@ -20,11 +20,25 @@ export class PrismaReparacionRepository implements ReparacionRepository {
       model.diagnostico ?? null,
       model.trabajosRealizados ?? null,
     );
+    if (model.vehiculo !== undefined) (rep as any).vehiculo = model.vehiculo;
+    if (model.mecanico !== undefined) (rep as any).mecanico = model.mecanico;
+    if (model.servicios !== undefined) (rep as any).servicios = model.servicios;
+    return rep;
   }
 
+  private readonly includeRelations = {
+    vehiculo: true,
+    mecanico: { include: { usuario: true } },
+    servicios: { include: { servicio: true } },
+  };
+
   async getAll(skip?: number, limit?: number): Promise<Reparacion[]> {
-    const reps = await this.prisma.reparacion.findMany({ skip, take: limit });
-    return reps.map(this.toEntity);
+    const reps = await this.prisma.reparacion.findMany({
+      skip,
+      take: limit,
+      include: this.includeRelations,
+    });
+    return reps.map((r) => this.toEntity(r));
   }
 
   async count(): Promise<number> {
@@ -32,7 +46,7 @@ export class PrismaReparacionRepository implements ReparacionRepository {
   }
 
   async getById(id: number): Promise<Reparacion | null> {
-    const rep = await this.prisma.reparacion.findUnique({ where: { id } });
+    const rep = await this.prisma.reparacion.findUnique({ where: { id }, include: this.includeRelations });
     return rep ? this.toEntity(rep) : null;
   }
 

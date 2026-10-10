@@ -81,4 +81,32 @@ export class ReparacionController {
     const rs = await this.reparacionService.getReparacionesPorRecepcionista(usrId);
     res.json(rs);
   });
+
+  getServicios = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const servicios = await this.reparacionService.getServicios(id);
+    res.json(servicios);
+  });
+
+  addServicio = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const { servicioId, cantidad } = req.body;
+    const servicios = await this.reparacionService.addServicio(id, servicioId, cantidad ?? 1);
+    res.status(201).json(servicios);
+  });
+
+  setServicioCantidad = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const servicioId = parseInt(req.params.servicioId);
+    const { cantidad } = req.body;
+    const servicios = await this.reparacionService.setServicioCantidad(id, servicioId, cantidad);
+    res.json(servicios);
+  });
+
+  removeServicio = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const servicioId = parseInt(req.params.servicioId);
+    const servicios = await this.reparacionService.removeServicio(id, servicioId);
+    res.json(servicios);
+  });
 }

@@ -24,6 +24,7 @@ model Empresa {
   usuarios  Usuario[]
   clientes  Cliente[]
   piezas    Pieza[]
+  servicios Servicio[]
 
   @@map("empresas")
 }
@@ -80,6 +81,7 @@ model Reparacion {
   recepcionista   Usuario         @relation("reparacion_recepcionista", fields: [recepcionistaId], references: [id])
 
   detalleReparacion DetalleReparacion[]
+  servicios         ReparacionServicio[]
   facturas          Factura[]
 
   @@map("reparaciones")
@@ -127,6 +129,37 @@ model Factura {
   reparacion    Reparacion @relation(fields: [reparacionId], references: [id])
 
   @@map("facturas")
+}
+
+model Servicio {
+  id                 Int      @id @default(autoincrement())
+  nombre             String
+  descripcion        String?
+  problemaReportado  String?  @map("problema_reportado")
+  diagnostico        String?
+  trabajosRealizados String?  @map("trabajos_realizados")
+  precioBase         Float    @default(0.0) @map("precio_base")
+  activo             Boolean  @default(true)
+  empresaId          Int      @map("empresa_id")
+
+  empresa             Empresa              @relation(fields: [empresaId], references: [id])
+  reparacionServicios ReparacionServicio[]
+
+  @@map("servicios")
+}
+
+model ReparacionServicio {
+  id             Int   @id @default(autoincrement())
+  reparacionId   Int   @map("reparacion_id")
+  servicioId     Int   @map("servicio_id")
+  cantidad       Int   @default(1)
+  precioUnitario Float @map("precio_unitario")
+
+  reparacion Reparacion @relation(fields: [reparacionId], references: [id], onDelete: Cascade)
+  servicio   Servicio   @relation(fields: [servicioId], references: [id])
+
+  @@unique([reparacionId, servicioId])
+  @@map("reparacion_servicio")
 }
 
 model Usuario {

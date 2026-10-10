@@ -12,19 +12,33 @@ import {
   Alert,
   Autocomplete,
   Typography,
-  Chip,
   Stack,
   Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { createReparacion, updateReparacion } from '../../api/reparacionApi';
+import DeleteIcon from '@mui/icons-material/Delete';
+import {
+  createReparacion,
+  updateReparacion,
+  getServiciosReparacion,
+  addServicioReparacion,
+  updateServicioReparacion,
+  removeServicioReparacion,
+} from '../../api/reparacionApi';
 import { getVehiculosByCliente, createVehiculo, getVehiculo } from '../../api/vehiculoApi';
 import { getMecanicos } from '../../api/mecanicoApi';
 import { getClientes, createCliente } from '../../api/clienteApi';
+import { getServicios } from '../../api/servicioApi';
 import { getErrorMessage } from '../../api/errorMessage';
 import { useAuth } from '../../contexts/AuthContext';
-import { Reparacion, Vehiculo, Mecanico, Cliente } from '../../types';
-import { SERVICE_TEMPLATES, ServiceTemplate } from '../../constants/reparacionTemplates';
+import { Reparacion, Vehiculo, Mecanico, Cliente, Servicio } from '../../types';
 
 interface Props {
   open: boolean;
@@ -33,13 +47,20 @@ interface Props {
   initialData?: Reparacion | null;
 }
 
+interface ServiceLine {
+  servicioId: number;
+  nombre: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
 const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
   const { user } = useAuth();
   const [descripcion, setDescripcion] = useState('');
   const [problemaReportado, setProblemaReportado] = useState('');
   const [diagnostico, setDiagnostico] = useState('');
   const [trabajosRealizados, setTrabajosRealizados] = useState('');
-  const [costoManoObra, setCostoManoObra] = useState<number>(0);
+  const [costoManual, setCostoManual] = useState<number>(0);
   const [clienteId, setClienteId] = useState<number | ''>('');
   const [vehiculoId, setVehiculoId] = useState<number | ''>('');
   const [mecanicoId, setMecanicoId] = useState<number | ''>('');
@@ -47,6 +68,11 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
+  const [catalogo, setCatalogo] = useState<Servicio[]>([]);
+  const [lines, setLines] = useState<ServiceLine[]>([]);
+  const [originalLines, setOriginalLines] = useState<ServiceLine[]>([]);
+  const [servicioSel, setServicioSel] = useState<Servicio | null>(null);
+  const [cantidadSel, setCantidadSel] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [errorMsg, setErrorMsg] = useState('');
@@ -65,6 +91,8 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
   });
   const [savingVehiculo, setSavingVehiculo] = useState(false);
 
+  const manoObra = lines.reduce((sum, l) => sum + l.cantidad * l.precioUnitario, 0);
+
   useEffect(() => {
     if (!open) return;
     setErrors({});
@@ -73,13 +101,15 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
     setShowNewVehiculo(false);
     setNuevoCliente({ nombre: '', telefono: '', rut: '' });
     setNuevoVehiculo({ marca: '', modelo: '', patente: '', anio: '', kilometraje: '' });
+    setServicioSel(null);
+    setCantidadSel(1);
 
     if (initialData) {
       setDescripcion(initialData.descripcion || '');
       setProblemaReportado(initialData.problemaReportado || '');
       setDiagnostico(initialData.diagnostico || '');
       setTrabajosRealizados(initialData.trabajosRealizados || '');
-      setCostoManoObra(initialData.costoManoObra ?? 0);
+      setCostoManual(initialData.costoManoObra ?? 0);
       setVehiculoId(initialData.vehiculoId || '');
       setMecanicoId(initialData.mecanicoId ?? '');
       setRecepcionistaId(initialData.recepcionistaId || user?.id || '');
@@ -92,16 +122,43 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
       } else {
         setClienteId('');
       }
+
+      const toLines = (servs: Servicio[] | undefined, rs: Reparacion['servicios']): ServiceLine[] =>
+        (rs || []).map((r) => ({
+          servicioId: r.servicioId,
+          nombre: r.servicio?.nombre || `Servicio ${r.servicioId}`,
+          cantidad: r.cantidad,
+          precioUnitario: r.precioUnitario,
+        }));
+
+      if (initialData.servicios) {
+        const l = toLines(undefined, initialData.servicios);
+        setLines(l);
+        setOriginalLines(l);
+      } else {
+        getServiciosReparacion(initialData.id)
+          .then((res) => {
+            const l = toLines(undefined, res.data);
+            setLines(l);
+            setOriginalLines(l);
+          })
+          .catch(() => {
+            setLines([]);
+            setOriginalLines([]);
+          });
+      }
     } else {
       setDescripcion('');
       setProblemaReportado('');
       setDiagnostico('');
       setTrabajosRealizados('');
-      setCostoManoObra(0);
+      setCostoManual(0);
       setClienteId('');
       setVehiculoId('');
       setMecanicoId('');
       setRecepcionistaId(user?.id ?? '');
+      setLines([]);
+      setOriginalLines([]);
     }
   }, [open, initialData, user]);
 
@@ -113,6 +170,9 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
     getClientes()
       .then((res) => setClientes(res.data))
       .catch((err) => setErrorMsg(getErrorMessage(err, 'No se pudieron cargar los clientes')));
+    getServicios()
+      .then((res) => setCatalogo(res.data))
+      .catch((err) => setErrorMsg(getErrorMessage(err, 'No se pudo cargar el catálogo de servicios')));
   }, [open]);
 
   useEffect(() => {
@@ -128,11 +188,41 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
       });
   }, [open, clienteId]);
 
-  const applyTemplate = (tpl: ServiceTemplate) => {
-    setDescripcion(tpl.descripcion);
-    setProblemaReportado(tpl.problemaReportado);
-    setDiagnostico(tpl.diagnostico);
-    setTrabajosRealizados(tpl.trabajosRealizados);
+  const handleAddServicio = () => {
+    if (!servicioSel) return;
+    const cant = Math.max(1, Number(cantidadSel) || 1);
+    setLines((prev) => {
+      const existing = prev.find((l) => l.servicioId === servicioSel.id);
+      if (existing) {
+        return prev.map((l) => (l.servicioId === servicioSel.id ? { ...l, cantidad: l.cantidad + cant } : l));
+      }
+      return [
+        ...prev,
+        {
+          servicioId: servicioSel.id,
+          nombre: servicioSel.nombre,
+          cantidad: cant,
+          precioUnitario: servicioSel.precioBase,
+        },
+      ];
+    });
+    if (!descripcion.trim() && servicioSel.descripcion) setDescripcion(servicioSel.descripcion);
+    if (!problemaReportado.trim() && servicioSel.problemaReportado) setProblemaReportado(servicioSel.problemaReportado);
+    if (!diagnostico.trim() && servicioSel.diagnostico) setDiagnostico(servicioSel.diagnostico);
+    if (!trabajosRealizados.trim() && servicioSel.trabajosRealizados)
+      setTrabajosRealizados(servicioSel.trabajosRealizados);
+    setServicioSel(null);
+    setCantidadSel(1);
+  };
+
+  const handleCantidadLinea = (servicioId: number, cantidad: number) => {
+    setLines((prev) =>
+      prev.map((l) => (l.servicioId === servicioId ? { ...l, cantidad: Math.max(1, cantidad || 1) } : l)),
+    );
+  };
+
+  const handleRemoveLinea = (servicioId: number) => {
+    setLines((prev) => prev.filter((l) => l.servicioId !== servicioId));
   };
 
   const handleCreateCliente = async () => {
@@ -189,7 +279,6 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
     if (!descripcion.trim()) errs.descripcion = 'El resumen es requerido';
     if (!vehiculoId) errs.vehiculoId = 'Debe seleccionar un vehículo';
     if (!recepcionistaId) errs.recepcionistaId = 'No se pudo determinar el recepcionista';
-    if (costoManoObra < 0) errs.costoManoObra = 'El costo no puede ser negativo';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -198,12 +287,12 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const payload = {
+    const basePayload = {
       descripcion: descripcion.trim(),
       problemaReportado: problemaReportado.trim() || null,
       diagnostico: diagnostico.trim() || null,
       trabajosRealizados: trabajosRealizados.trim() || null,
-      costoManoObra,
+      costoManoObra: lines.length > 0 ? manoObra : costoManual,
       vehiculoId: Number(vehiculoId),
       mecanicoId: mecanicoId === '' ? null : Number(mecanicoId),
       recepcionistaId: Number(recepcionistaId),
@@ -212,11 +301,30 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
     try {
       setLoading(true);
       setErrorMsg('');
+
       if (initialData) {
-        await updateReparacion(initialData.id, payload);
+        await updateReparacion(initialData.id, basePayload);
+        for (const orig of originalLines) {
+          if (!lines.some((l) => l.servicioId === orig.servicioId)) {
+            await removeServicioReparacion(initialData.id, orig.servicioId);
+          }
+        }
+        for (const line of lines) {
+          const orig = originalLines.find((o) => o.servicioId === line.servicioId);
+          if (!orig) {
+            await addServicioReparacion(initialData.id, line.servicioId, line.cantidad);
+          } else if (orig.cantidad !== line.cantidad) {
+            await updateServicioReparacion(initialData.id, line.servicioId, line.cantidad);
+          }
+        }
       } else {
-        await createReparacion(payload);
+        const res = await createReparacion(basePayload);
+        const newId = res.data.id;
+        for (const line of lines) {
+          await addServicioReparacion(newId, line.servicioId, line.cantidad);
+        }
       }
+
       onSave();
       onClose();
     } catch (err) {
@@ -401,24 +509,115 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
           <Divider sx={{ my: 2 }} />
 
           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-            2. Trabajo a realizar
+            2. Servicios a realizar
           </Typography>
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            Plantillas rápidas (completan los campos de abajo):
-          </Typography>
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 1 }}>
-            {SERVICE_TEMPLATES.map((tpl) => (
-              <Chip
-                key={tpl.label}
-                label={tpl.label}
-                onClick={() => applyTemplate(tpl)}
-                variant="outlined"
-                color="primary"
-                size="small"
-              />
-            ))}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start" sx={{ mb: 1 }}>
+            <Autocomplete
+              fullWidth
+              options={catalogo}
+              value={servicioSel}
+              onChange={(_, value) => setServicioSel(value)}
+              getOptionLabel={(s) => `${s.nombre} · $${Number(s.precioBase).toFixed(2)}`}
+              isOptionEqualToValue={(a, b) => a.id === b.id}
+              renderInput={(params) => (
+                <TextField {...params} label="Servicio" placeholder="Buscar servicio del catálogo" />
+              )}
+            />
+            <TextField
+              label="Cantidad"
+              type="number"
+              value={cantidadSel}
+              onChange={(e) => setCantidadSel(Math.max(1, Number(e.target.value) || 1))}
+              sx={{ width: 110 }}
+              slotProps={{ htmlInput: { min: 1 } }}
+            />
+            <Button
+              variant="contained"
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={handleAddServicio}
+              disabled={!servicioSel}
+              sx={{ whiteSpace: 'nowrap', height: 56 }}
+            >
+              Agregar
+            </Button>
           </Stack>
+
+          <TableContainer sx={{ mb: 1 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Servicio</TableCell>
+                  <TableCell align="center" width={110}>
+                    Cantidad
+                  </TableCell>
+                  <TableCell align="right">Precio Unit.</TableCell>
+                  <TableCell align="right">Subtotal</TableCell>
+                  <TableCell align="center" width={60} />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {lines.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                        Sin servicios cargados. Podés ingresar la mano de obra manualmente abajo.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  lines.map((l) => (
+                    <TableRow key={l.servicioId}>
+                      <TableCell>{l.nombre}</TableCell>
+                      <TableCell align="center">
+                        <TextField
+                          type="number"
+                          size="small"
+                          value={l.cantidad}
+                          onChange={(e) => handleCantidadLinea(l.servicioId, Number(e.target.value))}
+                          slotProps={{ htmlInput: { min: 1, style: { textAlign: 'center' } } }}
+                        />
+                      </TableCell>
+                      <TableCell align="right">${Number(l.precioUnitario).toFixed(2)}</TableCell>
+                      <TableCell align="right">
+                        <Typography fontWeight={600}>${(l.cantidad * l.precioUnitario).toFixed(2)}</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton size="small" color="error" onClick={() => handleRemoveLinea(l.servicioId)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {lines.length > 0 ? (
+            <Box sx={{ textAlign: 'right', mb: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                Mano de obra (calculada): <strong>${manoObra.toFixed(2)}</strong>
+              </Typography>
+            </Box>
+          ) : (
+            <TextField
+              label="Costo Mano de Obra"
+              type="number"
+              value={costoManual}
+              onChange={(e) => setCostoManual(Number(e.target.value) || 0)}
+              fullWidth
+              margin="normal"
+              helperText="Sin servicios cargados, ingresá la mano de obra manualmente."
+              slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+            />
+          )}
+
+          <Divider sx={{ my: 2 }} />
+
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+            3. Descripción del trabajo
+          </Typography>
 
           <TextField
             label="Resumen"
@@ -428,9 +627,7 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
             required
             margin="normal"
             error={!!errors.descripcion}
-            helperText={
-              errors.descripcion || 'Resumen breve del trabajo (ej: "Service de mantenimiento preventivo 45.000 km")'
-            }
+            helperText={errors.descripcion || 'Se autocompleta al agregar un servicio.'}
           />
 
           <TextField
@@ -441,7 +638,6 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
             margin="normal"
             multiline
             rows={2}
-            placeholder="Qué refiere el cliente: síntomas, ruidos, fallas previas..."
           />
 
           <TextField
@@ -452,7 +648,6 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
             margin="normal"
             multiline
             rows={2}
-            placeholder="Hallazgos de la inspección y causa raíz del problema."
           />
 
           <TextField
@@ -463,7 +658,6 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
             margin="normal"
             multiline
             rows={2}
-            placeholder="Repuestos y tareas ejecutadas durante la reparación."
           />
 
           <TextField
@@ -481,18 +675,6 @@ const ReparacionForm = ({ open, onClose, onSave, initialData }: Props) => {
               </MenuItem>
             ))}
           </TextField>
-
-          <TextField
-            label="Costo Mano de Obra"
-            type="number"
-            value={costoManoObra}
-            onChange={(e) => setCostoManoObra(Number(e.target.value) || 0)}
-            fullWidth
-            margin="normal"
-            error={!!errors.costoManoObra}
-            helperText={errors.costoManoObra}
-            slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
-          />
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose} disabled={loading}>

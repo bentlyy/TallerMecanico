@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import ClientesPage from './pages/ClientesPage';
 import VehiculosPage from './pages/VehiculosPage';
 import ReparacionesPage from './pages/ReparacionesPage';
+import ServiciosPage from './pages/ServiciosPage';
 import PiezasPage from './pages/PiezasPage';
 import MecanicosPage from './pages/MecanicosPage';
 import FacturasPage from './pages/FacturasPage';
@@ -27,6 +28,7 @@ function App() {
               <Route path="/clientes" element={<ClientesPage />} />
               <Route path="/vehiculos" element={<VehiculosPage />} />
               <Route path="/reparaciones" element={<ReparacionesPage />} />
+              <Route path="/servicios" element={<ServiciosPage />} />
               <Route path="/piezas" element={<PiezasPage />} />
               <Route path="/mecanicos" element={<MecanicosPage />} />
               <Route path="/facturas" element={<FacturasPage />} />

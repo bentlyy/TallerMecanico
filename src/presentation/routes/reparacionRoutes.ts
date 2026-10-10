@@ -33,4 +33,23 @@ router.get(
   reparacionController.getPorRecepcionista.bind(reparacionController),
 );
 
+router.get('/:id/servicios', authMiddleware, reparacionController.getServicios.bind(reparacionController));
+router.post(
+  '/:id/servicios',
+  authMiddleware,
+  validate({ body: schemas.reparacionServicio.create }),
+  reparacionController.addServicio.bind(reparacionController),
+);
+router.put(
+  '/:id/servicios/:servicioId',
+  authMiddleware,
+  validate({ body: schemas.reparacionServicio.update }),
+  reparacionController.setServicioCantidad.bind(reparacionController),
+);
+router.delete(
+  '/:id/servicios/:servicioId',
+  authMiddleware,
+  reparacionController.removeServicio.bind(reparacionController),
+);
+
 export default router;
