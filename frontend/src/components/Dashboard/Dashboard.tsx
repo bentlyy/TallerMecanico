@@ -180,7 +180,7 @@ export default function Dashboard() {
         sx={{
           display: 'grid',
           gap: 2,
-          alignItems: 'start',
+          alignItems: 'stretch',
           gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 2fr) minmax(0, 1fr)' },
         }}
       >

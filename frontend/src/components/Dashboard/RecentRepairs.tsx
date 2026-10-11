@@ -55,8 +55,11 @@ export default function RecentRepairs({ reparaciones }: Props) {
   );
 
   return (
-    <Card variant="outlined" sx={{ boxShadow: 'none', borderRadius: 2 }}>
-      <CardContent sx={{ '&:last-child': { pb: 2 } }}>
+    <Card
+      variant="outlined"
+      sx={{ boxShadow: 'none', borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
+      <CardContent sx={{ '&:last-child': { pb: 2 }, flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Box
           sx={{
             display: 'flex',
@@ -79,8 +82,8 @@ export default function RecentRepairs({ reparaciones }: Props) {
             Ver todos
           </Button>
         </Box>
-        <TableContainer sx={{ overflowX: 'auto' }}>
-          <Table size="small" sx={{ minWidth: 640 }}>
+        <TableContainer sx={{ overflowX: 'auto', flex: 1 }}>
+          <Table size="small" sx={{ minWidth: 640, height: '100%' }}>
             <TableHead>
               <TableRow>
                 <TableCell>Patente</TableCell>
