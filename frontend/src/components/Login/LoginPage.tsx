@@ -1,9 +1,19 @@
-import { Box, Card, CardContent, Button, Typography, CircularProgress } from '@mui/material';
-import { Build, Login as LoginIcon } from '@mui/icons-material';
+import { useEffect } from 'react';
+import { Box, Card, CardContent, Typography, CircularProgress, Link } from '@mui/material';
+import { Build } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginPage() {
   const { login, loading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (loading) return;
+    if (isAuthenticated) {
+      window.location.replace('/dashboard');
+      return;
+    }
+    login();
+  }, [loading, isAuthenticated, login]);
 
   return (
     <Box
@@ -51,29 +61,18 @@ export default function LoginPage() {
             </Typography>
           </Box>
 
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : isAuthenticated ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 3 }}>
+            <CircularProgress />
             <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-              Redirigiendo...
+              {isAuthenticated ? 'Entrando al taller…' : 'Entrando con tu cuenta AMG…'}
             </Typography>
-          ) : (
-            <Button
-              fullWidth
-              variant="contained"
-              size="large"
-              startIcon={<LoginIcon />}
-              onClick={login}
-              sx={{ py: 1.5, fontSize: 16 }}
-            >
-              Iniciar sesión con AMG
-            </Button>
-          )}
+          </Box>
 
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 3, textAlign: 'center' }}>
-            El acceso lo gestiona la cuenta central de AMG.
+            El acceso lo gestiona la cuenta central de AMG.{' '}
+            <Link component="button" type="button" onClick={login} underline="hover" sx={{ cursor: 'pointer' }}>
+              Reintentar
+            </Link>
           </Typography>
         </CardContent>
       </Card>
