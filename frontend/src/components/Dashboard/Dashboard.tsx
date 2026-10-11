@@ -10,13 +10,15 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { getReparaciones } from '../../api/reparacionApi';
 import { getMecanicos } from '../../api/mecanicoApi';
 import { getPiezas } from '../../api/piezaApi';
+import { getUbicaciones } from '../../api/ubicacionApi';
 import { getErrorMessage } from '../../api/errorMessage';
 import Loading from '../common/Loading';
-import type { EstadoReparacion, Mecanico, Pieza, Reparacion } from '../../types';
+import type { EstadoReparacion, Mecanico, Pieza, Reparacion, Ubicacion } from '../../types';
 import DashboardKpiCard from './DashboardKpiCard';
 import RecentRepairs from './RecentRepairs';
 import RepairStatusSummary from './RepairStatusSummary';
 import LowStockAlerts from './LowStockAlerts';
+import OperationsBoard from './OperationsBoard';
 import QuickActions from './QuickActions';
 
 const ESTADOS_EN_TALLER: EstadoReparacion[] = ['EN_REVISION', 'EN_REPARACION', 'TERMINADO', 'FACTURADO', 'PAGADO'];
@@ -25,6 +27,7 @@ export default function Dashboard() {
   const [reparaciones, setReparaciones] = useState<Reparacion[]>([]);
   const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
   const [piezas, setPiezas] = useState<Pieza[]>([]);
+  const [ubicaciones, setUbicaciones] = useState<Ubicacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -33,10 +36,16 @@ export default function Dashboard() {
     if (silent) setRefreshing(true);
     else setLoading(true);
     try {
-      const [rRes, mRes, pRes] = await Promise.all([getReparaciones(), getMecanicos(), getPiezas()]);
+      const [rRes, mRes, pRes, uRes] = await Promise.all([
+        getReparaciones(),
+        getMecanicos(),
+        getPiezas(),
+        getUbicaciones(true),
+      ]);
       setReparaciones(rRes.data);
       setMecanicos(mRes.data);
       setPiezas(pRes.data);
+      setUbicaciones(uRes.data.filter((x) => x.activo));
       setErrorMsg('');
     } catch (err) {
       setErrorMsg(getErrorMessage(err, 'No se pudieron cargar los datos del panel'));
@@ -181,6 +190,13 @@ export default function Dashboard() {
           <LowStockAlerts piezas={piezas} />
         </Stack>
       </Box>
+      <OperationsBoard
+        reparaciones={reparaciones}
+        mecanicos={mecanicos}
+        ubicaciones={ubicaciones}
+        piezas={piezas}
+        onChanged={() => fetchData(true)}
+      />
       <QuickActions />
     </Box>
   );
