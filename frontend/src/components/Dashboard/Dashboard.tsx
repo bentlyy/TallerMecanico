@@ -35,6 +35,8 @@ import PersonIcon from '@mui/icons-material/Person';
 import PlaceIcon from '@mui/icons-material/Place';
 import BuildIcon from '@mui/icons-material/Build';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import HandymanIcon from '@mui/icons-material/Handyman';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { getReparaciones, patchReparacion } from '../../api/reparacionApi';
 import { getMecanicos } from '../../api/mecanicoApi';
 import { getUbicaciones } from '../../api/ubicacionApi';
@@ -258,6 +260,29 @@ export default function Dashboard() {
   const getUbicacionNombre = (u?: Ubicacion | null) => u?.nombre || '-';
   const reparacionesPorEstado = (estado: EstadoReparacion) => reparaciones.filter((r) => r.estado === estado);
 
+  const totalAutos = reparaciones.length;
+  const stockBajo = piezas.filter((p) => p.stock <= 5).length;
+  const todasColapsadas = columnasEstados.every((e) => !!colapsadas[e]);
+  const resumen = [
+    { label: 'Autos en taller', value: totalAutos, icon: <DirectionsCarIcon fontSize="small" /> },
+    { label: 'En revisión', value: reparacionesPorEstado('EN_REVISION').length, icon: <BuildIcon fontSize="small" /> },
+    {
+      label: 'En reparación',
+      value: reparacionesPorEstado('EN_REPARACION').length,
+      icon: <BuildIcon fontSize="small" />,
+    },
+    { label: 'Terminados', value: reparacionesPorEstado('TERMINADO').length, icon: <HandymanIcon fontSize="small" /> },
+    { label: 'Mecánicos', value: mecanicos.length, icon: <PersonIcon fontSize="small" /> },
+    { label: 'Repuestos bajo stock', value: stockBajo, icon: <WarningAmberIcon fontSize="small" /> },
+  ];
+  const expandirTodas = () => {
+    setColapsadas((prev) => {
+      const next = { ...prev };
+      for (const e of columnasEstados) next[e] = false;
+      return next;
+    });
+  };
+
   if (loading) return <Loading message="Cargando tablero..." />;
 
   return (
@@ -274,6 +299,55 @@ export default function Dashboard() {
         <Alert severity="error" onClose={() => setErrorMsg('')}>
           {errorMsg}
         </Alert>
+      )}
+      {todasColapsadas && (
+        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+          <CardContent sx={{ textAlign: 'center', py: 3 }}>
+            <DirectionsCarIcon sx={{ fontSize: 44, color: 'text.disabled', mb: 1 }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {totalAutos === 0 ? 'No hay vehículos en el taller' : 'Tablero plegado'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {totalAutos === 0
+                ? 'Cuando ingresen reparaciones aparecerán aquí, agrupadas por etapa.'
+                : 'Despliega una columna para ver el detalle, o mira el resumen rápido.'}
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(2, 1fr)',
+                  sm: 'repeat(3, 1fr)',
+                  md: `repeat(${resumen.length}, 1fr)`,
+                },
+                gap: 1.5,
+                maxWidth: 820,
+                mx: 'auto',
+                mb: 2,
+              }}
+            >
+              {resumen.map((s) => (
+                <Stack
+                  key={s.label}
+                  alignItems="center"
+                  spacing={0.5}
+                  sx={{ p: 1.25, bgcolor: 'action.hover', borderRadius: 2 }}
+                >
+                  <Box sx={{ color: 'primary.main', display: 'flex' }}>{s.icon}</Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>
+                    {s.value}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
+                    {s.label}
+                  </Typography>
+                </Stack>
+              ))}
+            </Box>
+            <Button variant="contained" size="small" onClick={expandirTodas} startIcon={<ExpandMoreIcon />}>
+              Expandir columnas
+            </Button>
+          </CardContent>
+        </Card>
       )}
       <Box
         sx={{
