@@ -257,7 +257,6 @@ export default function Dashboard() {
     n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
   const getMecanicoNombre = (m?: Mecanico | null) => m?.usuario?.nombre || '-';
-  const getUbicacionNombre = (u?: Ubicacion | null) => u?.nombre || '-';
   const reparacionesPorEstado = (estado: EstadoReparacion) => reparaciones.filter((r) => r.estado === estado);
 
   const totalAutos = reparaciones.length;
@@ -470,7 +469,7 @@ export default function Dashboard() {
                                 <PlaceIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
                                 {!r._editando ? (
                                   <Chip
-                                    label={getUbicacionNombre(r.ubicacion) || 'Sin ubicación'}
+                                    label={r.ubicacion?.nombre || 'Sin ubicación'}
                                     size="small"
                                     variant="outlined"
                                     sx={{
