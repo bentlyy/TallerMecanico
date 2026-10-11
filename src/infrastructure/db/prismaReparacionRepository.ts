@@ -20,6 +20,7 @@ export class PrismaReparacionRepository implements ReparacionRepository {
       model.diagnostico ?? null,
       model.trabajosRealizados ?? null,
       model.ubicacionId ?? null,
+      model.observaciones ?? null,
     );
     if (model.vehiculo !== undefined) (rep as any).vehiculo = model.vehiculo;
     if (model.mecanico !== undefined) (rep as any).mecanico = model.mecanico;
@@ -29,7 +30,7 @@ export class PrismaReparacionRepository implements ReparacionRepository {
   }
 
   private readonly includeRelations = {
-    vehiculo: true,
+    vehiculo: { include: { cliente: true } },
     mecanico: { include: { usuario: true } },
     servicios: { include: { servicio: true } },
     ubicacion: true,

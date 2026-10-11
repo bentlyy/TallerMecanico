@@ -34,6 +34,20 @@ export class ReparacionService {
     return this.reparacionRepository.update(id, data);
   }
 
+  async patchReparacion(id: number, data: Partial<UpdateReparacion>): Promise<Reparacion | null> {
+    const reparacion = await this.reparacionRepository.getById(id);
+    if (!reparacion) throw new NotFoundError('Reparación');
+
+    if (data.estado && data.estado === EstadoReparacion.ENTREGADO) {
+      const facturas = await this.reparacionRepository.countFacturas(id);
+      if (facturas === 0) {
+        throw new ConflictError('No se puede entregar: la reparación no tiene factura');
+      }
+    }
+
+    return this.reparacionRepository.update(id, data);
+  }
+
   async deleteReparacion(id: number): Promise<void> {
     const reparacion = await this.reparacionRepository.getById(id);
     if (!reparacion) throw new NotFoundError('Reparación');

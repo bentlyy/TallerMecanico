@@ -16,11 +16,16 @@ export class Reparacion {
     public diagnostico: string | null = null,
     public trabajosRealizados: string | null = null,
     public ubicacionId: number | null = null,
+    public observaciones: string | null = null,
   ) {}
 }
 
 export type CreateReparacion = Omit<Reparacion, 'id' | 'fechaEntrada' | 'fechaSalida' | 'estado' | 'ubicacionId'> & {
   ubicacionId?: number | null;
+  estado?: EstadoReparacion;
+  fechaEntrada?: Date;
+  fechaSalida?: Date | null;
+  observaciones?: string | null;
 };
 export type UpdateReparacion = Partial<CreateReparacion>;
 export { EstadoReparacion };

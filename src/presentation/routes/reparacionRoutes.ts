@@ -19,6 +19,7 @@ router.put(
   validate({ body: schemas.reparacion.update }),
   reparacionController.update.bind(reparacionController),
 );
+router.patch('/:id', authMiddleware, reparacionController.patch.bind(reparacionController));
 router.delete('/:id', authMiddleware, reparacionController.delete.bind(reparacionController));
 
 router.patch('/:id/estado', authMiddleware, reparacionController.cambiarEstado.bind(reparacionController));

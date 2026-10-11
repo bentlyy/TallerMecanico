@@ -34,6 +34,39 @@ export class ReparacionController {
     res.json(updated);
   });
 
+  patch = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id);
+    const {
+      estado,
+      mecanicoId,
+      ubicacionId,
+      fechaEntrada,
+      fechaSalida,
+      observaciones,
+      descripcion,
+      diagnostico,
+      trabajosRealizados,
+      problemaReportado,
+      costoManoObra,
+    } = req.body;
+
+    const updated = await this.reparacionService.patchReparacion(id, {
+      estado,
+      mecanicoId: mecanicoId === null ? null : mecanicoId,
+      ubicacionId: ubicacionId === undefined ? undefined : ubicacionId === null ? null : Number(ubicacionId),
+      fechaEntrada: fechaEntrada ? new Date(fechaEntrada) : undefined,
+      fechaSalida: fechaSalida ? new Date(fechaSalida) : undefined,
+      observaciones,
+      descripcion,
+      diagnostico,
+      trabajosRealizados,
+      problemaReportado,
+      costoManoObra: costoManoObra !== undefined ? Number(costoManoObra) : undefined,
+    });
+    if (!updated) throw new NotFoundError('Reparación');
+    res.json(updated);
+  });
+
   delete = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
     await this.reparacionService.deleteReparacion(id);

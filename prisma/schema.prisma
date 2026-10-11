@@ -94,6 +94,7 @@ model Reparacion {
   problemaReportado  String?         @map("problema_reportado")
   diagnostico        String?
   trabajosRealizados String?         @map("trabajos_realizados")
+  observaciones      String?
   fechaEntrada       DateTime        @default(now()) @map("fecha_entrada")
   fechaSalida     DateTime?       @map("fecha_salida")
   estado          EstadoReparacion @default(EN_REVISION)

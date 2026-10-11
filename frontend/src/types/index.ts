@@ -17,6 +17,7 @@ export interface Vehiculo {
   patente: string;
   kilometraje?: number;
   clienteId: number;
+  cliente?: Cliente;
 }
 
 export interface Rol {
@@ -129,6 +130,7 @@ export interface Reparacion {
   trabajosRealizados?: string | null;
   fechaEntrada: string;
   fechaSalida?: string | null;
+  observaciones?: string | null;
   estado: EstadoReparacion;
   costoManoObra: number;
   vehiculoId: number;
