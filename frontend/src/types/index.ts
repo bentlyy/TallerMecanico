@@ -170,22 +170,22 @@ export interface CreateFactura {
   total: number;
 }
 
-export interface LoginRequest {
+export interface InicioUsuario {
+  id: number;
   email: string;
-  password: string;
+  nombre: string;
+  rolId: number;
+  rolNombre: string | null;
+  empresaId: number;
+  plan?: string;
 }
 
-export interface LoginResponse {
-  token: string;
-  usuario: {
-    id: number;
-    email: string;
-    nombre: string;
-    rolId: number;
-    rolNombre: string;
-    empresaId: number;
-    plan?: string;
-  };
+export interface InicioResponse {
+  usuario: InicioUsuario;
+  organizacion: { id: string; slug: string; nombre: string };
+  rol: 'owner' | 'admin' | 'member';
+  herramienta: string;
+  herramientas: { slug: string; name: string; url: string }[];
 }
 
 export interface DashboardStats {

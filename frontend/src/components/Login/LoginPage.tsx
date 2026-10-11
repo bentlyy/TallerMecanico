@@ -1,47 +1,9 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  CircularProgress,
-  InputAdornment,
-  IconButton,
-} from '@mui/material';
-import { Visibility, VisibilityOff, Build } from '@mui/icons-material';
+import { Box, Card, CardContent, Button, Typography, CircularProgress } from '@mui/material';
+import { Build, Login as LoginIcon } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
-import { getErrorMessage } from '../../api/errorMessage';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setError('Completa todos los campos');
-      return;
-    }
-    setError('');
-    setLoading(true);
-    try {
-      await login({ email, password });
-      navigate('/dashboard');
-    } catch (err) {
-      setError(getErrorMessage(err, 'Credenciales inválidas'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { login, loading, isAuthenticated } = useAuth();
 
   return (
     <Box
@@ -88,65 +50,31 @@ export default function LoginPage() {
               Sistema de Gestión de Talleres Mecánicos
             </Typography>
           </Box>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              sx={{ mb: 2 }}
-              autoFocus
-            />
-            <TextField
-              fullWidth
-              label="Contraseña"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ mb: 3 }}
-            />
+
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : isAuthenticated ? (
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+              Redirigiendo...
+            </Typography>
+          ) : (
             <Button
-              type="submit"
               fullWidth
               variant="contained"
               size="large"
-              disabled={loading}
+              startIcon={<LoginIcon />}
+              onClick={login}
               sx={{ py: 1.5, fontSize: 16 }}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Iniciar Sesión'}
+              Iniciar sesión con AMG
             </Button>
-          </Box>
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-              Credenciales de prueba:
-            </Typography>
-            <Typography variant="caption" display="block">
-              Admin: admin@taller.com / admin123
-            </Typography>
-            <Typography variant="caption" display="block">
-              Recepcionista: recepcion@taller.com / admin123
-            </Typography>
-            <Typography variant="caption" display="block">
-              Mecánico: mecanico@taller.com / admin123
-            </Typography>
-          </Box>
+          )}
+
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 3, textAlign: 'center' }}>
+            El acceso lo gestiona la cuenta central de AMG.
+          </Typography>
         </CardContent>
       </Card>
     </Box>

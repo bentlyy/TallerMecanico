@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../api/axios';
-import type { LoginResponse, LoginRequest } from '../types';
+import type { InicioResponse } from '../types';
 
 interface AuthContextType {
-  user: LoginResponse['usuario'] | null;
-  token: string | null;
+  user: InicioResponse['usuario'] | null;
+  org: InicioResponse['organizacion'] | null;
+  herramientas: InicioResponse['herramientas'];
   loading: boolean;
-  login: (data: LoginRequest) => Promise<void>;
+  login: () => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -14,39 +15,43 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<LoginResponse['usuario'] | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<InicioResponse['usuario'] | null>(null);
+  const [org, setOrg] = useState<InicioResponse['organizacion'] | null>(null);
+  const [herramientas, setHerramientas] = useState<InicioResponse['herramientas']>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('usuario');
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await api.get<InicioResponse>('/auth/inicio');
+        if (cancelled) return;
+        setUser(res.data.usuario);
+        setOrg(res.data.organizacion);
+        setHerramientas(res.data.herramientas);
+      } catch {
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const login = useCallback(async (data: LoginRequest) => {
-    const res = await api.post<LoginResponse>('/usuarios/login', data);
-    const { token, usuario } = res.data;
-    localStorage.setItem('token', token);
-    localStorage.setItem('usuario', JSON.stringify(usuario));
-    setToken(token);
-    setUser(usuario);
+  const login = useCallback(() => {
+    window.location.href = '/api/auth/login';
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    setToken(null);
-    setUser(null);
-    window.location.href = '/login';
+    window.location.href = '/auth/logout';
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, org, herramientas, loading, login, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

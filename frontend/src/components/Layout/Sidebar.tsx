@@ -54,7 +54,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   const visibleItems = menuItems.filter((item) => {
     if (!user) return false;
-    if (!item.roles.includes(user.rolNombre)) return false;
+    if (!item.roles.includes(user.rolNombre ?? '')) return false;
     if ((item as any).premium && user.plan !== 'PREMIUM') return false;
     return true;
   });

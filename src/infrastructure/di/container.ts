@@ -1,5 +1,3 @@
-import bcrypt from 'bcrypt';
-import { generateToken } from '../http/authMiddleware';
 import { prisma } from '../db/prisma';
 
 import { PrismaClienteRepository } from '../db/prismaClienteRepository';
@@ -77,72 +75,6 @@ const detalleReparacionController = new DetalleReparacionController(detalleRepar
 const facturaController = new FacturaController(facturaService);
 const servicioController = new ServicioController(servicioService);
 const ubicacionController = new UbicacionController(ubicacionService);
-
-export async function loginService(
-  email: string,
-  password: string,
-): Promise<{
-  token: string;
-  usuario: {
-    id: number;
-    email: string;
-    nombre: string;
-    rolId: number;
-    rolNombre: string;
-    empresaId: number;
-    plan: string;
-  };
-} | null> {
-  const user = await prisma.usuario.findFirst({
-    where: { email },
-    include: { rol: true, empresa: true },
-  });
-  if (!user) return null;
-  if (!user.activo) return null;
-
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
-    throw new Error('Cuenta bloqueada temporalmente. Intenta de nuevo más tarde.');
-  }
-
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) {
-    const attempts = user.loginAttempts + 1;
-    const updateData: any = { loginAttempts: attempts };
-    if (attempts >= 5) {
-      updateData.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
-      updateData.loginAttempts = 0;
-    }
-    await prisma.usuario.update({ where: { id: user.id }, data: updateData });
-    return null;
-  }
-
-  await prisma.usuario.update({
-    where: { id: user.id },
-    data: { loginAttempts: 0, lockedUntil: null },
-  });
-
-  const token = generateToken({
-    id: user.id,
-    email: user.email,
-    rolId: user.rolId,
-    empresaId: user.empresaId,
-    rolNombre: user.rol.nombre,
-    plan: user.empresa.plan,
-  });
-
-  return {
-    token,
-    usuario: {
-      id: user.id,
-      email: user.email,
-      nombre: user.nombre,
-      rolId: user.rolId,
-      rolNombre: user.rol.nombre,
-      empresaId: user.empresaId,
-      plan: user.empresa.plan,
-    },
-  };
-}
 
 export {
   clienteRepository,

@@ -66,19 +66,4 @@ export class UsuarioController {
     if (!usuario) throw new NotFoundError('Usuario');
     res.json(usuario);
   });
-
-  login = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      res.status(400).json({ error: 'Email y password son requeridos' });
-      return;
-    }
-    const { loginService } = await import('../../infrastructure/di/container');
-    const result = await loginService(email, password);
-    if (!result) {
-      res.status(401).json({ error: 'Credenciales inválidas' });
-      return;
-    }
-    res.json(result);
-  });
 }

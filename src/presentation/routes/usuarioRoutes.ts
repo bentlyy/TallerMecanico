@@ -1,20 +1,12 @@
 import { Router } from 'express';
 import { usuarioController } from '../../infrastructure/di/container';
-import { authMiddleware, requireRol, LOGIN_RATE_LIMIT } from '../../infrastructure/http/authMiddleware';
+import { authMiddleware, requireRol } from '../../infrastructure/http/authMiddleware';
 import { ACCOUNT_CREATE_LIMIT } from '../../infrastructure/http/rateLimits';
 import { validate, schemas } from '../../infrastructure/http/validationMiddleware';
 import rateLimit from 'express-rate-limit';
 
 const usuarioRouter = Router();
-const loginLimiter = rateLimit(LOGIN_RATE_LIMIT);
 const createUserLimiter = rateLimit(ACCOUNT_CREATE_LIMIT);
-
-usuarioRouter.post(
-  '/login',
-  loginLimiter,
-  validate({ body: schemas.login }),
-  usuarioController.login.bind(usuarioController),
-);
 
 usuarioRouter.get('/', authMiddleware, requireRol('ADMIN'), usuarioController.getAll.bind(usuarioController));
 usuarioRouter.get('/:id', authMiddleware, requireRol('ADMIN'), usuarioController.getById.bind(usuarioController));

@@ -2,6 +2,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
+COPY vendor ./vendor
 RUN npm ci --only=production --ignore-scripts && cp -r node_modules /node_modules_prod && npm ci
 COPY . .
 ENV DATABASE_URL="postgresql://p:p@localhost:5432/db"

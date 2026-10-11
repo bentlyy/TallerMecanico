@@ -6,6 +6,7 @@ import express from 'express';
 import * as client from 'prom-client';
 import { configureSecurity } from './infrastructure/http/securityMiddleware';
 import { authMiddleware } from './infrastructure/http/authMiddleware';
+import { mountAmgAuthMiddleware, amgRouter } from './infrastructure/sso/amgSso';
 import { healthRouter } from './infrastructure/http/health';
 import { errorHandler } from './infrastructure/http/errorHandler';
 import logger from './infrastructure/logger/logger';
@@ -41,6 +42,14 @@ app.use(
 
 app.use(express.json());
 
+// Identidad del Core (SSO): valida la cookie, canjea /auth/callback, redirige
+// al login central cuando no hay sesión y deja `req.amg` en las rutas.
+app.use(mountAmgAuthMiddleware());
+
+const apiPrefix = `/api/${config.apiVersion}`;
+app.use(apiPrefix, amgRouter);
+app.use('/api', amgRouter);
+
 const swaggerSpec = swaggerJsdoc({
   definition: {
     openapi: '3.0.0',
@@ -72,7 +81,6 @@ app.get('/', (req, res) => {
 
 app.use('/health', healthRouter);
 
-const apiPrefix = `/api/${config.apiVersion}`;
 app.use(`${apiPrefix}/clientes`, clienteRoutes);
 app.use(`${apiPrefix}/vehiculos`, vehiculoRoutes);
 app.use(`${apiPrefix}/roles`, rolRoutes);

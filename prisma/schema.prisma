@@ -45,6 +45,7 @@ model Empresa {
   activa    Boolean    @default(true)
   plan      PlanEmpresa @default(NORMAL)
   createdAt DateTime   @default(now()) @map("created_at")
+  ssoOrgId  String?    @unique @map("sso_org_id")
 
   usuarios    Usuario[]
   clientes    Cliente[]
@@ -217,6 +218,7 @@ model Usuario {
   lockedUntil  DateTime? @map("locked_until")
   rolId        Int      @map("rol_id")
   empresaId    Int      @map("empresa_id")
+  ssoSub       String?  @unique @map("sso_sub")
 
   rol          Rol      @relation(fields: [rolId], references: [id])
   empresa      Empresa  @relation(fields: [empresaId], references: [id])

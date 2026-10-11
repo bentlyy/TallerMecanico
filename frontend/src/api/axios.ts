@@ -19,14 +19,6 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 api.interceptors.response.use(
   (response) => {
     if (isPaginatedEnvelope(response.data)) {
@@ -36,9 +28,11 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('usuario');
-      window.location.href = '/login';
+      // Sin sesión en el Core: mandamos al login central. El backend incluye el
+      // loginUrl en el cuerpo del 401; si no está, usamos la ruta local que
+      // redirige al Core.
+      const loginUrl = error.response?.data?.loginUrl as string | undefined;
+      window.location.href = loginUrl || '/api/auth/login';
     }
     return Promise.reject(error);
   },

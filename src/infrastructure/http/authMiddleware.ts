@@ -1,43 +1,47 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import config from '../../../config/env';
+import type { AmgIdentity } from '../sso/amgTypes';
+import { buildLoginUrl, ssoConfig } from '../sso/amgSso';
+import { resolveLocalUser, type LocalAccount } from '../sso/localAccount';
 
-const JWT_SECRET = config.jwtSecret;
-
+/**
+ * Identidad del usuario de la aplicación, desde el Core.
+ *
+ * La forma se mantiene igual que el `req.usuario` de siempre ({ id, email,
+ * rolId, empresaId, rolNombre, plan }), pero el origen ya no es un JWT local:
+ * es la identidad SSO verificada por mountAmgAuth (req.amg) traducida a la
+ * cuenta local del taller.
+ */
 export interface AuthRequest extends Request {
-  usuario?: { id: number; email: string; rolId: number; empresaId: number; rolNombre: string; plan?: string };
+  usuario?: LocalAccount;
 }
 
-export interface TokenPayload {
-  id: number;
-  email: string;
-  rolId: number;
-  empresaId: number;
-  rolNombre: string;
-  plan?: string;
-}
-
-export function generateToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
-}
-
-export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction): void {
-  const header = req.headers.authorization;
-  if (!header || !header.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Token requerido' });
+/**
+ * Protege una ruta con la identidad del Core.
+ *
+ * mountAmgAuth (montado a nivel de app) ya validó la cookie y dejó `req.amg`.
+ * Este middleware resuelve la cuenta local del taller y la deja en
+ * `req.usuario`, igual que hacía el middleware de JWT anterior.
+ */
+export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  const amg = req.amg as AmgIdentity | undefined;
+  if (!amg) {
+    res.status(401).json({
+      error: 'sin-sesion',
+      message: 'Tu sesión expiró o no existe. Iniciá sesión para continuar.',
+      loginUrl: buildLoginUrl(ssoConfig, '/'),
+    });
     return;
   }
 
-  const token = header.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
-    req.usuario = decoded;
+    req.usuario = await resolveLocalUser(amg);
     next();
-  } catch {
-    res.status(401).json({ error: 'Token inválido o expirado' });
+  } catch (err) {
+    next(err);
   }
 }
 
+/** Restricción por rol del taller (ADMIN, OPERADOR, ...). */
 export function requireRol(...roles: string[]) {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     if (!req.usuario) {
@@ -45,7 +49,7 @@ export function requireRol(...roles: string[]) {
       return;
     }
 
-    if (roles.length > 0 && !roles.includes(req.usuario.rolNombre)) {
+    if (roles.length > 0 && !roles.includes(req.usuario.rolNombre ?? '')) {
       res.status(403).json({ error: 'No tienes permisos para esta acción' });
       return;
     }
@@ -54,6 +58,7 @@ export function requireRol(...roles: string[]) {
   };
 }
 
+/** Restricción por plan del taller (legacy: el acceso real lo decide el Core). */
 export function requirePremium(req: AuthRequest, res: Response, next: NextFunction): void {
   if (!req.usuario) {
     res.status(401).json({ error: 'No autenticado' });
@@ -65,12 +70,3 @@ export function requirePremium(req: AuthRequest, res: Response, next: NextFuncti
   }
   next();
 }
-
-export const LOGIN_RATE_LIMIT = {
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: { error: 'Demasiados intentos de inicio de sesión. Intenta de nuevo en 15 minutos.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true,
-};
