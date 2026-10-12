@@ -4,20 +4,20 @@ Sistema full-stack **multi-tenant** para la gestión integral de talleres mecán
 
 ## Stack Tecnológico
 
-| Capa                  | Tecnología                                            |
-| --------------------- | ----------------------------------------------------- |
-| **Backend**           | Node.js 20, TypeScript 5.8, Express 5, Prisma 6       |
-| **Frontend**          | React 18, TypeScript, Vite 5, Material UI 7           |
-| **Base de datos**     | PostgreSQL 15                                         |
-| **Autenticación**     | JWT + bcrypt + bloqueo por intentos fallidos          |
-| **Validación**        | Joi (backend), react-hook-form (frontend)             |
-| **Testing**           | Jest 30 + Supertest (backend), Vitest 3 (frontend)    |
-| **Logging**           | Pino (JSON estructurado)                              |
-| **Monitoreo**         | Prometheus + Grafana                                  |
-| **Documentación API** | Swagger / OpenAPI 3                                   |
-| **Contenedores**      | Docker multi-stage + Docker Compose                   |
-| **CI/CD**             | GitHub Actions (lint, typecheck, test, build, docker) |
-| **Calidad**           | ESLint, Prettier, Husky + lint-staged                 |
+| Capa                  | Tecnología                                                 |
+| --------------------- | ---------------------------------------------------------- |
+| **Backend**           | Node.js 20, TypeScript 5.8, Express 5, Prisma 6            |
+| **Frontend**          | React 18, TypeScript, Vite 5, Material UI 7                |
+| **Base de datos**     | PostgreSQL 15                                              |
+| **Autenticación**     | SSO con el Core (identidad central) vía `@amg/auth-client` |
+| **Validación**        | Joi (backend), react-hook-form (frontend)                  |
+| **Testing**           | Jest 30 + Supertest (backend), Vitest 3 (frontend)         |
+| **Logging**           | Pino (JSON estructurado)                                   |
+| **Monitoreo**         | Prometheus + Grafana                                       |
+| **Documentación API** | Swagger / OpenAPI 3                                        |
+| **Contenedores**      | Docker multi-stage + Docker Compose                        |
+| **CI/CD**             | GitHub Actions (lint, typecheck, test, build, docker)      |
+| **Calidad**           | ESLint, Prettier, Husky + lint-staged                      |
 
 ## Arquitectura
 
@@ -52,18 +52,18 @@ empresas
 └── piezas
 ```
 
-| Entidad               | Relaciones clave                                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **Empresa**           | Raíz multitenant; cada empresa posee sus datos de forma aislada                                                     |
-| **Cliente**           | Tiene `Vehiculo[]` y `Factura[]`; email único por empresa                                                           |
-| **Vehículo**          | Pertenece a un `Cliente`; patente única por empresa; tiene `Reparacion[]`                                           |
-| **Reparación**        | Flujo de estados: `EN_REVISION → EN_REPARACION → TERMINADO → ENTREGADO`. Vincula vehículo, mecánico y recepcionista |
-| **DetalleReparación** | M:N entre reparaciones y piezas con cantidad y precio unitario                                                      |
-| **Pieza**             | Inventario con código, stock y precio; código único por empresa                                                     |
-| **Factura**           | Vinculada a `Cliente` y `Reparacion`; total calculado                                                               |
-| **Usuario**           | Autenticación JWT + bcrypt; bloqueo tras 5 intentos fallidos (15 min); email único por empresa                      |
-| **Rol**               | RBAC con permisos en JSON (ADMIN, RECEPCIONISTA, MECANICO)                                                          |
-| **Mecánico**          | Extensión 1:1 de `Usuario` con especialidad                                                                         |
+| Entidad               | Relaciones clave                                                                                                     |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Empresa**           | Raíz multitenant; cada empresa posee sus datos de forma aislada; `sso_org_id` la enlaza con la organización del Core |
+| **Cliente**           | Tiene `Vehiculo[]` y `Factura[]`; email único por empresa                                                            |
+| **Vehículo**          | Pertenece a un `Cliente`; patente única por empresa; tiene `Reparacion[]`                                            |
+| **Reparación**        | Flujo de estados: `EN_REVISION → EN_REPARACION → TERMINADO → ENTREGADO`. Vincula vehículo, mecánico y recepcionista  |
+| **DetalleReparación** | M:N entre reparaciones y piezas con cantidad y precio unitario                                                       |
+| **Pieza**             | Inventario con código, stock y precio; código único por empresa                                                      |
+| **Factura**           | Vinculada a `Cliente` y `Reparacion`; total calculado                                                                |
+| **Usuario**           | Identidad vía SSO del Core (`sso_sub`); sin contraseña local; se enlaza por email; email único por empresa           |
+| **Rol**               | RBAC con permisos en JSON (ADMIN, RECEPCIONISTA, MECANICO)                                                           |
+| **Mecánico**          | Extensión 1:1 de `Usuario` con especialidad                                                                          |
 
 ## Funcionalidades
 
@@ -74,12 +74,23 @@ empresas
 
 ### Autenticación y Autorización
 
-- **JWT** con expiración configurable y refresh implícito
-- **Bcrypt** para hash de contraseñas
-- **RBAC** con 3 roles predefinidos: `ADMIN`, `RECEPCIONISTA`, `MECANICO`
-- Permisos flexibles basados en JSONB
-- Bloqueo automático tras 5 intentos fallidos de inicio de sesión (15 min de enfriamiento)
-- Middleware `requireRol()` para protección de rutas
+El taller **ya no tiene login propio**: la identidad la emite el **Core** (plataforma AMG) y
+el taller la consume vía SSO con el paquete `@amg/auth-client`.
+
+- **SSO central**: al entrar sin sesión, el taller redirige (`302`) al login del Core
+  (`GET /api/auth/login`). El Core valida usuario, organización y suscripción, y devuelve la
+  cookie de sesión `app_session`; `mountAmgAuth` la valida en cada request y deja la identidad
+  verificada en `req.amg`.
+- **Identidad → cuenta local**: `resolveLocalUser` traduce la identidad del Core a las filas del
+  taller — organización del Core → `empresa` (por `sso_org_id`) y usuario del Core → `usuario`
+  (por `sso_sub`). Si no existen, se crean al vuelo; si existen sembradas, se enlazan por email.
+- **RBAC local**: el rol de plataforma decide el rol por defecto del taller
+  (`owner`/`admin` → `ADMIN`; `member` → `OPERADOR`). Los permisos finos siguen siendo del taller
+  (middleware `requireRol()`).
+- **Sin contraseñas locales**: el taller no guarda credenciales de usuario; solo el Core las
+  conoce. El acceso al producto lo decide la suscripción activa en el Core.
+- **Plan**: el acceso real lo determina el Core; el `plan` local es informativo
+  (`requirePremium` es legacy).
 
 ### Gestión de Reparaciones
 
@@ -184,6 +195,9 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ## Credenciales de Prueba (post seed)
 
+Cuentas locales sembradas por el seed. Con SSO se **enlazan por email** con la identidad del
+Core en el primer ingreso; el acceso se inicia en el login central del Core, no aquí.
+
 | Rol               | Email                | Contraseña |
 | ----------------- | -------------------- | ---------- |
 | **Admin**         | admin@taller.com     | admin123   |
@@ -192,16 +206,23 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ## Variables de Entorno
 
-| Variable         | Descripción                                  | Valor por defecto       |
-| ---------------- | -------------------------------------------- | ----------------------- |
-| `DATABASE_URL`   | Conexión PostgreSQL                          | `postgresql://...`      |
-| `JWT_SECRET`     | Secreto para tokens JWT (mín. 16 caracteres) | —                       |
-| `JWT_EXPIRES_IN` | Expiración del token                         | `8h`                    |
-| `PORT`           | Puerto del servidor                          | `3000`                  |
-| `NODE_ENV`       | Entorno de ejecución                         | `development`           |
-| `CORS_ORIGIN`    | Origen permitido para CORS                   | `http://localhost:3043` |
-| `LOG_LEVEL`      | Nivel de logging (debug, info, warn, error)  | `info`                  |
-| `API_VERSION`    | Versión de la API                            | `v1`                    |
+| Variable                | Descripción                                    | Valor por defecto                    |
+| ----------------------- | ---------------------------------------------- | ------------------------------------ |
+| `DATABASE_URL`          | Conexión PostgreSQL                            | `postgresql://...`                   |
+| `JWT_SECRET`            | Secreto JWT (legacy; ya no autentica usuarios) | —                                    |
+| `JWT_EXPIRES_IN`        | Expiración del token (legacy)                  | `8h`                                 |
+| `PORT`                  | Puerto del servidor                            | `3000`                               |
+| `NODE_ENV`              | Entorno de ejecución                           | `development`                        |
+| `CORS_ORIGIN`           | Origen permitido para CORS                     | `http://localhost:3043`              |
+| `LOG_LEVEL`             | Nivel de logging (debug, info, warn, error)    | `info`                               |
+| `API_VERSION`           | Versión de la API                              | `v1`                                 |
+| `CORE_URL`              | URL base del Core para el SSO                  | `https://desarrollo.amgdeveloper.cl` |
+| `APP_URL`               | URL pública de este producto (SSO)             | `https://taller.amgdeveloper.cl`     |
+| `AMG_SSO_CLIENT_ID`     | Identificador del cliente SSO                  | `taller`                             |
+| `AMG_SSO_CLIENT_SECRET` | Secreto SSO del producto (obligatorio)         | —                                    |
+
+> El secreto SSO se obtiene del Core: `npm run sso:secret -w @amg/platform -- taller`.
+> `AMG_SSO_CLIENT_SECRET` es obligatorio: el arranque falla si no está definido.
 
 ## Scripts (Backend)
 
@@ -221,14 +242,19 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ## API REST
 
-Todas las rutas están prefijadas con `/api/v1` y protegidas con autenticación JWT (excepto `/auth/login` y `/health`).
+Todas las rutas están prefijadas con `/api/v1` y protegidas con la sesión SSO del Core (excepto `/auth/login`, `/`, `/api-docs`, `/api-docs.json`, `/favicon.ico` y `/health`).
 
-### Autenticación
+### Autenticación (SSO con el Core)
 
-| Método | Ruta                    | Descripción                  |
-| ------ | ----------------------- | ---------------------------- |
-| `POST` | `/api/v1/auth/login`    | Iniciar sesión (retorna JWT) |
-| `POST` | `/api/v1/auth/register` | Registrar nuevo usuario      |
+| Método | Ruta               | Descripción                                                   |
+| ------ | ------------------ | ------------------------------------------------------------- |
+| `GET`  | `/api/auth/login`  | Redirige (`302`) al login del Core (vuelve con `return_to=/`) |
+| `GET`  | `/api/auth/me`     | Identidad del Core ya verificada                              |
+| `GET`  | `/api/auth/inicio` | Shell inicial: usuario local + organización + herramientas    |
+| `GET`  | `/auth/callback`   | Canjea el código SSO emitido por el Core                      |
+| `GET`  | `/auth/logout`     | Cierra la sesión central                                      |
+
+Las rutas SSO se montan tanto en `/api/v1/auth/*` como en `/api/auth/*`.
 
 ### Módulos CRUD
 
@@ -315,7 +341,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ## CI/CD (GitHub Actions)
 
-Pipeline automatizado en cada push y PR a `main`:
+Pipeline automatizado en cada push y PR a `master`:
 
 1. **Lint** — ESLint + Prettier check
 2. **TypeScript type check** — `tsc --noEmit`
