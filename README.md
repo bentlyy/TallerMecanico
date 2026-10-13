@@ -31,9 +31,9 @@ src/
 └── presentation/     → Controladores y rutas Express
 
 frontend/src/
-├── api/              → Módulos Axios por entidad (con interceptor JWT)
+├── api/              → Módulos Axios por entidad (cookie de sesión same-origin)
 ├── components/       → Componentes CRUD (Form + List) por módulo
-├── contexts/         → AuthContext (manejo de JWT y sesión)
+├── contexts/         → AuthContext (usuario y organización desde /auth/inicio)
 ├── pages/            → Páginas por módulo
 └── types/            → Interfaces TypeScript
 ```
@@ -153,7 +153,7 @@ npm install
 
 # 2. Configurar variables de entorno
 cp .env.example .env
-# Editar .env según sea necesario (JWT_SECRET, etc.)
+# Editar .env (DATABASE_URL, AMG_SSO_CLIENT_SECRET, etc.)
 
 # 3. Iniciar base de datos
 docker-compose up -d
@@ -193,16 +193,17 @@ docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-## Credenciales de Prueba (post seed)
+## Cuentas locales sembradas (post seed)
 
-Cuentas locales sembradas por el seed. Con SSO se **enlazan por email** con la identidad del
-Core en el primer ingreso; el acceso se inicia en el login central del Core, no aquí.
+Cuentas locales que crea el seed. Con SSO se **enlazan por email** con la identidad del Core en
+el primer ingreso; el acceso se inicia en el login central del Core, no aquí. Las contraseñas
+listadas son del seed local y **no** otorgan acceso: la autenticación la resuelve el Core.
 
-| Rol               | Email                | Contraseña |
-| ----------------- | -------------------- | ---------- |
-| **Admin**         | admin@taller.com     | admin123   |
-| **Recepcionista** | recepcion@taller.com | admin123   |
-| **Mecánico**      | mecanico@taller.com  | admin123   |
+| Rol               | Email                | Contraseña local |
+| ----------------- | -------------------- | ---------------- |
+| **Admin**         | admin@taller.com     | admin123         |
+| **Recepcionista** | recepcion@taller.com | admin123         |
+| **Mecánico**      | mecanico@taller.com  | admin123         |
 
 ## Variables de Entorno
 
