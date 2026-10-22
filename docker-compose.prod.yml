@@ -11,7 +11,7 @@ services:
     environment:
       DATABASE_URL: 'postgresql://${DB_USER:?DB_USER no definida en .env}:${DB_PASSWORD:?DB_PASSWORD no definida en .env}@db:5432/${DB_NAME:?DB_NAME no definida en .env}?schema=public'
       NODE_ENV: production
-      CORE_URL: ${CORE_URL:-https://desarrollo.amgdeveloper.cl}
+      CORE_URL: ${CORE_URL:-https://amgdeveloper.cl}
       APP_URL: ${APP_URL:-https://taller.amgdeveloper.cl}
       AMG_SSO_CLIENT_ID: ${AMG_SSO_CLIENT_ID:-taller}
       AMG_SSO_CLIENT_SECRET: ${AMG_SSO_CLIENT_SECRET:?AMG_SSO_CLIENT_SECRET no definida en .env}

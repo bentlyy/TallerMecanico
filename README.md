@@ -217,7 +217,7 @@ listadas son del seed local y **no** otorgan acceso: la autenticación la resuel
 | `CORS_ORIGIN`           | Origen permitido para CORS                     | `http://localhost:3043`              |
 | `LOG_LEVEL`             | Nivel de logging (debug, info, warn, error)    | `info`                               |
 | `API_VERSION`           | Versión de la API                              | `v1`                                 |
-| `CORE_URL`              | URL base del Core para el SSO                  | `https://desarrollo.amgdeveloper.cl` |
+| `CORE_URL`              | URL base del Core para el SSO                  | `https://amgdeveloper.cl` |
 | `APP_URL`               | URL pública de este producto (SSO)             | `https://taller.amgdeveloper.cl`     |
 | `AMG_SSO_CLIENT_ID`     | Identificador del cliente SSO                  | `taller`                             |
 | `AMG_SSO_CLIENT_SECRET` | Secreto SSO del producto (obligatorio)         | —                                    |
